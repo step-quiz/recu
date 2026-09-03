@@ -1,0 +1,363 @@
+/* ===========================================================================
+   Eina de recuperació — estils de pantalla.
+   La paleta ve de `repas` (paper mil·limetrat) perquè aquesta eina n'és el
+   germà del costat del professorat i comparteix banc de preguntes.
+   Cap tipografia web: al centre hi ha un filtre que bloqueja els CDN i
+   l'eina ha de funcionar amb doble clic i sense xarxa.
+   =========================================================================== */
+
+:root{
+  --paper:#F1F4F8;
+  --tinta:#16202E;
+  --apagat:#5D6B7E;
+  --vora:#DCE2EA;
+  --vora-forta:#C2CCD8;
+  --card:#FFFFFF;
+  --blau:#2455A4;
+  --blau-suau:#E7EEF9;
+  --verd:#17795E;
+  --verd-suau:#E3F2EC;
+  --ambre:#9A6100;
+  --ambre-suau:#FBF1DE;
+  --vermell:#B23A31;
+
+  --ui:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --doc:Georgia,"Iowan Old Style","Times New Roman",serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+
+  --rail:20.5rem;
+  --panell:20.5rem;
+  --zoom:1;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:var(--ui);
+  font-size:15px;
+  line-height:1.5;
+  color:var(--tinta);
+  background:var(--paper);
+  -webkit-font-smoothing:antialiased;
+}
+
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--blau);outline-offset:2px;border-radius:3px}
+
+/* ---------------------------------------------------------------- esquelet */
+.app{
+  display:grid;
+  grid-template-columns:var(--rail) minmax(0,1fr) var(--panell);
+  grid-template-rows:auto minmax(0,1fr);
+  height:100dvh;
+}
+.barra{grid-column:1/-1}
+.rail{grid-column:1;border-right:1px solid var(--vora)}
+.taula{grid-column:2}
+.panell{grid-column:3;border-left:1px solid var(--vora)}
+.rail,.panell{background:var(--card);overflow-y:auto;overscroll-behavior:contain}
+.taula{overflow:auto;background:var(--paper)}
+
+/* ------------------------------------------------------------------- barra */
+.barra{
+  display:flex;align-items:center;gap:1rem;
+  padding:.55rem 1rem;
+  background:var(--card);
+  border-bottom:1px solid var(--vora);
+}
+.marca{display:flex;align-items:baseline;gap:.55rem;min-width:0}
+.marca strong{font-size:1rem;font-weight:650;letter-spacing:-.012em;white-space:nowrap}
+.marca span{color:var(--apagat);font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.barra .buit{flex:1}
+.barra-accions{display:flex;gap:.4rem;align-items:center}
+
+/* ------------------------------------------------------------------ botons */
+.btn{
+  display:inline-flex;align-items:center;gap:.4rem;
+  border:1px solid var(--vora-forta);background:var(--card);color:var(--tinta);
+  border-radius:7px;padding:.4rem .75rem;font-size:.875rem;font-weight:550;
+  cursor:pointer;white-space:nowrap;
+}
+.btn:hover:not(:disabled){background:#F6F8FB;border-color:var(--apagat)}
+.btn:disabled{opacity:.42;cursor:not-allowed}
+.btn.principal{background:var(--tinta);border-color:var(--tinta);color:#fff}
+.btn.principal:hover:not(:disabled){background:#22304400;background-color:#243247}
+.btn.petit{padding:.22rem .5rem;font-size:.8rem;border-radius:6px}
+.btn.nu{border-color:transparent;background:transparent;padding:.25rem .4rem}
+.btn.nu:hover:not(:disabled){background:#EEF1F6;border-color:transparent}
+
+/* ------------------------------------------------------- rail: el currículum
+   L'estructura de l'esquerra és el document del departament, no un menú:
+   curs -> sentit -> saber, amb les hores com a quantitat real. */
+.rail-cap{
+  position:sticky;top:0;z-index:2;background:var(--card);
+  padding:.85rem 1rem .6rem;border-bottom:1px solid var(--vora);
+}
+.rail-cap h2{margin:0 0 .15rem;font-size:.9rem;font-weight:650}
+.rail-cap p{margin:0;font-size:.78rem;color:var(--apagat)}
+.cerca{
+  width:100%;margin-top:.6rem;padding:.38rem .55rem;
+  border:1px solid var(--vora-forta);border-radius:7px;background:#FAFBFD;font-size:.85rem;
+}
+
+.curs{border-bottom:1px solid var(--vora)}
+.curs-cap{
+  display:flex;align-items:center;gap:.55rem;width:100%;
+  padding:.6rem 1rem;background:#F7F9FC;border:0;cursor:pointer;text-align:left;
+}
+.curs-cap:hover{background:#F1F5FA}
+.curs-cap strong{font-size:.88rem;font-weight:650;flex:1}
+.curs-cap .compte{font-size:.76rem;color:var(--apagat);font-variant-numeric:tabular-nums}
+
+.sentit{padding:.15rem 0 .5rem}
+.sentit-tit{
+  padding:.5rem 1rem .2rem;font-size:.72rem;font-weight:650;
+  color:var(--apagat);letter-spacing:.01em;
+}
+
+.saber{
+  display:grid;grid-template-columns:1.05rem 1fr;gap:.55rem;
+  padding:.32rem 1rem .32rem 1.35rem;cursor:pointer;align-items:start;
+}
+.saber:hover{background:#F5F8FC}
+.saber.buit{cursor:default;opacity:.55}
+.saber.buit:hover{background:transparent}
+.saber input{margin:.28rem 0 0;accent-color:var(--blau);width:1.05rem;height:1.05rem}
+.saber-cos{min-width:0}
+.saber-tit{font-size:.855rem;line-height:1.35}
+.saber-meta{
+  display:flex;align-items:center;gap:.45rem;margin-top:.12rem;
+  font-size:.74rem;color:var(--apagat);font-variant-numeric:tabular-nums;
+}
+/* Les hores, com a barra: és el que pondera l'examen per defecte. */
+.hores{display:inline-block;height:3px;background:var(--vora-forta);border-radius:2px;min-width:2px}
+.saber input:checked ~ .saber-cos .hores{background:var(--blau)}
+.saber.buit .saber-meta{color:var(--ambre)}
+.saber-detall{
+  grid-column:2;font-size:.76rem;color:var(--apagat);line-height:1.4;
+  margin-top:.25rem;padding-left:0;
+}
+
+/* --------------------------------------------------- panell de composició */
+.panell-cap{
+  position:sticky;top:0;z-index:2;background:var(--card);
+  padding:.85rem 1rem .6rem;border-bottom:1px solid var(--vora);
+}
+.panell-cap h2{margin:0;font-size:.9rem;font-weight:650}
+.grup{padding:.85rem 1rem;border-bottom:1px solid var(--vora)}
+.grup > h3{
+  margin:0 0 .55rem;font-size:.78rem;font-weight:650;color:var(--apagat);
+}
+.camp{display:block;margin-bottom:.6rem}
+.camp:last-child{margin-bottom:0}
+.camp > span{display:block;font-size:.79rem;color:var(--apagat);margin-bottom:.2rem}
+.camp input[type=text],.camp input[type=date],.camp select,.camp input[type=number]{
+  width:100%;padding:.35rem .5rem;border:1px solid var(--vora-forta);
+  border-radius:6px;background:#FAFBFD;font-size:.85rem;
+}
+.camp input[type=range]{width:100%;accent-color:var(--blau)}
+.fila{display:flex;gap:.5rem}
+.fila > *{flex:1;min-width:0}
+.check{display:flex;align-items:center;gap:.45rem;font-size:.83rem;margin-bottom:.4rem;cursor:pointer}
+.check input{accent-color:var(--blau);width:1rem;height:1rem;margin:0}
+
+/* segmentat: perfil de dificultat i pes */
+.seg{display:flex;border:1px solid var(--vora-forta);border-radius:7px;overflow:hidden}
+.seg button{
+  flex:1;border:0;background:var(--card);padding:.35rem .3rem;font-size:.8rem;
+  cursor:pointer;border-right:1px solid var(--vora);
+}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed=true]{background:var(--blau);color:#fff;font-weight:600}
+
+/* llista de preguntes triades */
+.llista{padding:.4rem .55rem 4rem}
+.buida{padding:1.6rem 1rem;color:var(--apagat);font-size:.85rem;line-height:1.5}
+.q{
+  position:relative;
+  display:grid;grid-template-columns:1.4rem 1fr;gap:.4rem;align-items:start;
+  padding:.4rem .35rem;border-radius:7px;font-size:.8rem;
+}
+.q:hover{background:#F5F8FC}
+.q.marcada{background:var(--blau-suau)}
+.q-num{color:var(--apagat);font-variant-numeric:tabular-nums;padding-top:.05rem}
+.q-cos{min-width:0}
+.q-tit{
+  display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:.79rem;line-height:1.3;
+}
+.q-saber{
+  display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:var(--apagat);font-size:.72rem;
+}
+/* Les eines es posen a sobre de la fila, no en una columna pròpia: així el
+   text de la pregunta disposa de tota l'amplada del panell, que és on
+   escasseja. */
+.q-eines{
+  position:absolute;right:.2rem;top:50%;transform:translateY(-50%);
+  display:flex;gap:.1rem;visibility:hidden;
+  background:linear-gradient(to right,transparent,#EDF2F9 12px,#EDF2F9);
+  padding:.15rem .1rem .15rem 14px;border-radius:6px;
+}
+.q:hover .q-eines,.q:focus-within .q-eines{visibility:visible}
+.q.marcada .q-eines{background:linear-gradient(to right,transparent,var(--blau-suau) 12px,var(--blau-suau))}
+.q-eines button{
+  border:0;background:transparent;cursor:pointer;color:var(--apagat);
+  padding:.12rem .28rem;border-radius:5px;font-size:.8rem;line-height:1;
+}
+.q-eines button:hover{background:#E4EAF2;color:var(--tinta)}
+
+.avis{
+  margin:.55rem 0 0;padding:.5rem .6rem;border-radius:7px;
+  background:var(--ambre-suau);color:#6E4400;font-size:.78rem;line-height:1.45;
+}
+
+/* ------------------------------------------------- taula: el full A4 viu
+   Aquesta és l'única superfície amb ombra de tota l'eina: és un objecte
+   físic, la resta són panells. */
+.taula-eines{
+  position:sticky;top:0;z-index:3;
+  display:flex;align-items:center;gap:.5rem;
+  padding:.45rem .9rem;background:rgba(241,244,248,.92);
+  backdrop-filter:blur(6px);border-bottom:1px solid var(--vora);
+}
+.taula-eines .buit{flex:1}
+.pestanyes{display:flex;gap:.15rem}
+.pestanyes button{
+  border:0;background:transparent;padding:.3rem .7rem;border-radius:7px;
+  font-size:.85rem;cursor:pointer;color:var(--apagat);
+}
+.pestanyes button[aria-selected=true]{background:var(--card);color:var(--tinta);font-weight:600;box-shadow:0 1px 2px rgba(22,32,46,.08)}
+.zoom{display:flex;align-items:center;gap:.3rem;font-size:.78rem;color:var(--apagat)}
+
+.escena{padding:1.4rem 1rem 5rem;display:flex;justify-content:center}
+.full{
+  width:210mm;min-height:297mm;background:#fff;
+  padding:18mm 16mm 20mm;
+  box-shadow:0 1px 3px rgba(22,32,46,.12),0 12px 32px rgba(22,32,46,.10);
+  transform:scale(var(--zoom));transform-origin:top center;
+  font-family:var(--doc);color:#000;
+}
+
+/* ----------------------------------------------- el document imprimible */
+.doc-cap{border-bottom:1.5px solid #000;padding-bottom:3mm;margin-bottom:5mm}
+.doc-cap .centre{font-family:var(--ui);font-size:9.5pt;letter-spacing:.02em;color:#333}
+.doc-cap h1{margin:1mm 0 0;font-size:14pt;font-weight:700;line-height:1.25}
+.doc-cap .subtitol{margin:.8mm 0 0;font-size:10pt;color:#333}
+
+.doc-dades{
+  display:grid;grid-template-columns:1fr auto;gap:2mm 6mm;
+  margin:4mm 0 5mm;font-family:var(--ui);font-size:9.5pt;
+}
+.doc-dades .linia{border-bottom:.6px solid #666;min-height:6mm;display:flex;align-items:flex-end;padding-bottom:.6mm}
+.doc-dades .etq{color:#444}
+
+.doc-instruccions{
+  border:.8px solid #999;padding:2.5mm 3mm;margin-bottom:6mm;
+  font-family:var(--ui);font-size:9pt;line-height:1.45;color:#222;
+}
+.doc-instruccions p{margin:0 0 1mm}
+.doc-instruccions p:last-child{margin:0}
+
+.preguntes{counter-reset:q}
+.pregunta{margin-bottom:var(--separacio,5mm);break-inside:avoid;page-break-inside:avoid}
+.pregunta-cap{display:flex;gap:2.5mm;align-items:baseline}
+.pregunta-num{
+  font-weight:700;font-size:10.5pt;min-width:7mm;
+  font-variant-numeric:tabular-nums;
+}
+.pregunta-cos{flex:1;min-width:0;font-size:10.5pt;line-height:1.45}
+.pregunta-cos .encap{display:block;margin-bottom:.8mm;color:#222}
+.pregunta-punts{
+  font-family:var(--ui);font-size:8.5pt;color:#444;white-space:nowrap;
+  border:.6px solid #999;border-radius:3px;padding:.3mm 1.2mm;
+}
+.figura-cont{margin:2mm 0 0;text-align:center}
+.figura{max-width:52mm;height:auto;color:#000;overflow:visible;--fig-plena:#EFEFEF;--fig-marca:#000}
+.fig-etq{font:600 12px var(--ui);fill:#000}
+.fig-etq.petita{font-size:10.5px;fill:#333}
+
+/* espai de resposta: quadrícula de 5 mm, com el paper de mates */
+.espai{margin:2mm 0 0 9.5mm;height:var(--espai,22mm);border:.5px solid #C8C8C8}
+/* La quadrícula, amb una rajola SVG i no amb gradients CSS. Provat: un
+   `repeating-linear-gradient` amb període en mm surt imprès a 12,7 mm en
+   comptes de 5, i un gradient amb `background-size` perd la línia de
+   0,4 px en rasteritzar. Una rajola SVG escalada amb `background-size`
+   dona el mateix resultat a pantalla i al PDF. */
+.espai.quadricula{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Cpath d='M20 0H0V20' fill='none' stroke='%23D9DEE5' stroke-width='1'/%3E%3C/svg%3E");
+  background-size:5mm 5mm;
+}
+.espai.ratlles{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Cpath d='M0 19.5H20' stroke='%23D4D9E0' stroke-width='1'/%3E%3C/svg%3E");
+  background-size:100% 8mm;
+}
+.espai.blanc{background:none}
+
+/* peu que es repeteix a totes les pàgines impreses */
+.doc-peu{
+  margin-top:8mm;padding-top:2mm;border-top:.5px solid #BBB;
+  font-family:var(--ui);font-size:8pt;color:#555;
+  display:flex;justify-content:space-between;gap:4mm;
+}
+
+/* ------------------------------------------------------- clau de correcció */
+.clau-taula{width:100%;border-collapse:collapse;font-size:9.5pt;margin-top:3mm}
+.clau-taula th,.clau-taula td{border:.5px solid #AAA;padding:1.6mm 2mm;text-align:left;vertical-align:top}
+.clau-taula th{background:#EFEFEF;font-family:var(--ui);font-size:8.5pt;font-weight:650}
+.clau-taula td.n{width:8mm;text-align:center;font-weight:700}
+.clau-taula td.p{width:12mm;text-align:center;font-variant-numeric:tabular-nums}
+.clau-passos{margin:1mm 0 0;padding-left:4mm;color:#222}
+.clau-passos li{margin-bottom:.5mm}
+.clau-resposta{font-weight:700}
+.clau-origen{font-family:var(--mono);font-size:8pt;color:#666}
+
+.graella{width:100%;border-collapse:collapse;font-family:var(--ui);font-size:9pt;margin-top:4mm}
+.graella th,.graella td{border:.5px solid #888;padding:1.6mm 1mm;text-align:center}
+.graella th{background:#F2F2F2;font-weight:650}
+.graella td.buida{height:9mm}
+
+/* --------------------------------------------------------- pla de repàs */
+.pla-sec{margin-bottom:6mm}
+.pla-sec li{break-inside:avoid}
+.pla-sec h2{font-size:11pt;margin:0 0 1.5mm;padding-bottom:1mm;border-bottom:.8px solid #000}
+.pla-sec ul{margin:0;padding-left:5mm;font-size:10pt;line-height:1.5}
+.pla-sec li{margin-bottom:.8mm}
+.pla-sec .font{font-family:var(--ui);font-size:8.5pt;color:#555}
+
+/* ------------------------------------------------------------- responsiu */
+.mobil-pestanyes{display:none}
+@media (max-width:1180px){
+  :root{--rail:17.5rem;--panell:16.5rem}
+  .full{transform:scale(calc(var(--zoom) * .8));transform-origin:top center}
+}
+@media (max-width:900px){
+  /* minmax(0,1fr) i no 1fr: el full fa 210 mm i, sense el mínim a zero,
+     estira la columna de la graella i se'n va la barra fora de pantalla. */
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr)}
+  .barra{flex-wrap:wrap;row-gap:.4rem}
+  .barra-accions{flex:1;justify-content:flex-end}
+  .mobil-pestanyes{
+    display:flex;grid-column:1;gap:.15rem;padding:.4rem .8rem;
+    background:var(--card);border-bottom:1px solid var(--vora);
+  }
+  .mobil-pestanyes button{
+    flex:1;border:0;background:transparent;padding:.45rem;border-radius:7px;
+    font-size:.85rem;cursor:pointer;color:var(--apagat);
+  }
+  .mobil-pestanyes button[aria-selected=true]{background:var(--paper);color:var(--tinta);font-weight:600}
+  .rail,.taula,.panell{grid-column:1;grid-row:3;border:0}
+  .app[data-vista=curriculum] .taula,.app[data-vista=curriculum] .panell,
+  .app[data-vista=full] .rail,.app[data-vista=full] .panell,
+  .app[data-vista=composicio] .rail,.app[data-vista=composicio] .taula{display:none}
+  .full{transform:scale(calc(var(--zoom) * .52));transform-origin:top left}
+  .escena{justify-content:flex-start;overflow:auto}
+  .marca span{display:none}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+}

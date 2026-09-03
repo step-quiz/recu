@@ -1,0 +1,54 @@
+/* ===========================================================================
+   Impressió. El que es veu a pantalla dins de .full ÉS el que s'imprimeix:
+   no hi ha una segona maquetació. Aquí només s'apaga la interfície i es
+   treuen la caixa i l'escala del full.
+
+   Al diàleg d'impressió del navegador cal desmarcar "capçaleres i peus de
+   pàgina" i deixar els marges en "per defecte": els marges reals els posa
+   la regla @page d'aquí sota.
+   =========================================================================== */
+
+@page{
+  size:A4 portrait;
+  margin:18mm 16mm 16mm;
+}
+
+@media print{
+  html,body{
+    height:auto;background:#fff;
+    /* Cap ajust automàtic: 10,5 pt ha de sortir 10,5 pt. */
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+
+  .barra,.rail,.panell,.taula-eines,.mobil-pestanyes{display:none!important}
+
+  .app{display:block;height:auto}
+  .taula{overflow:visible;background:#fff}
+  .escena{padding:0;display:block}
+
+  /* El full deixa de ser un objecte damunt d'una taula i passa a ser
+     la pàgina: fora ombra, fora amplada fixa, fora marges propis
+     (ja els posa @page) i fora escala de pantalla. */
+  .full{
+    width:auto;min-height:0;padding:0;margin:0;
+    box-shadow:none;transform:none;
+  }
+
+  /* Es protegeix la unitat petita, no la secció sencera: una secció més
+     alta que una pàgina amb `break-inside:avoid` fa que el navegador la
+     desplaci a la pàgina següent i la trenqui igualment, i llavors la
+     capçalera es queda sola en una pàgina en blanc. */
+  .pregunta,.pla-sec li,.clau-taula tr,.doc-instruccions{break-inside:avoid;page-break-inside:avoid}
+  .pla-sec h2,.doc-cap{break-after:avoid;page-break-after:avoid}
+  .clau-taula thead{display:table-header-group}
+
+  /* Peu repetit a cada pàgina: Chrome i Edge repeteixen els elements
+     fixats. A Firefox només surt a la primera; és degradació acceptable. */
+  .doc-peu{
+    position:fixed;bottom:0;left:0;right:0;
+    margin:0;padding-top:1.5mm;background:#fff;
+  }
+  .full{padding-bottom:10mm}
+
+  a[href]::after{content:none}
+}

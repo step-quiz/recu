@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prova de recuperació — Matemàtiques ESO</title>
+
+<link rel="stylesheet" href="assets/lib/katex/katex.min.css">
+<link rel="stylesheet" href="assets/css/eina.css">
+<link rel="stylesheet" href="assets/css/imprimir.css" media="print">
+</head>
+<body>
+
+<div class="app" id="app" data-vista="full">
+
+  <!-- ------------------------------------------------------------- barra -->
+  <header class="barra">
+    <div class="marca">
+      <strong>Prova de recuperació</strong>
+      <span>Matemàtiques · 1r i 2n d'ESO</span>
+    </div>
+    <div class="buit"></div>
+    <div class="barra-accions">
+      <button class="btn" id="altra" title="Genera una altra tria de preguntes (Ctrl+G)">Altres preguntes</button>
+      <button class="btn principal" id="imprimeix">Imprimeix la prova</button>
+    </div>
+  </header>
+
+  <!-- pestanyes per a pantalles estretes -->
+  <nav class="mobil-pestanyes" role="tablist">
+    <button role="tab" data-mobil="curriculum" aria-selected="false">Continguts</button>
+    <button role="tab" data-mobil="full" aria-selected="true">Full</button>
+    <button role="tab" data-mobil="composicio" aria-selected="false">Ajustos</button>
+  </nav>
+
+  <!-- ------------------------------------------------ rail: el currículum -->
+  <aside class="rail">
+    <div class="rail-cap">
+      <h2>Continguts a recuperar</h2>
+      <p>Repartiment de continguts ESO, curs 2025-26.</p>
+      <input class="cerca" id="cerca" type="search" placeholder="Cerca un contingut…" aria-label="Cerca un contingut">
+    </div>
+    <div id="rail-cos"></div>
+  </aside>
+
+  <!-- ---------------------------------------------------- taula: el full -->
+  <main class="taula">
+    <div class="taula-eines">
+      <div class="pestanyes" role="tablist">
+        <button role="tab" data-doc="prova" aria-selected="true">Prova</button>
+        <button role="tab" data-doc="clau" aria-selected="false">Correcció</button>
+        <button role="tab" data-doc="pla" aria-selected="false">Pla de repàs</button>
+      </div>
+      <div class="buit"></div>
+      <label class="zoom">
+        <span>Zoom</span>
+        <input type="range" id="zoom" min="0.5" max="1.3" step="0.05" value="1" style="width:90px">
+        <span id="zoom-valor">100 %</span>
+      </label>
+    </div>
+    <div class="escena">
+      <article class="full" id="full"></article>
+    </div>
+  </main>
+
+  <!-- ------------------------------------------------ panell: composició -->
+  <aside class="panell">
+    <div class="panell-cap"><h2>La prova</h2></div>
+
+    <div class="grup">
+      <h3>Composició</h3>
+      <label class="camp">
+        <span>Preguntes: <b id="nombre-valor">14</b></span>
+        <input type="range" id="nombre" min="3" max="30" step="1" value="14">
+      </label>
+
+      <label class="camp">
+        <span>Nivell</span>
+        <div class="seg" role="group" aria-label="Nivell de les preguntes">
+          <button type="button" data-perfil="minims" aria-pressed="true">Mínims</button>
+          <button type="button" data-perfil="equilibrat" aria-pressed="false">Equilibrat</button>
+          <button type="button" data-perfil="exigent" aria-pressed="false">Exigent</button>
+        </div>
+      </label>
+
+      <label class="camp">
+        <span>Reparteix les preguntes segons</span>
+        <div class="seg" role="group" aria-label="Criteri de repartiment">
+          <button type="button" data-pes="hores" aria-pressed="true">Hores</button>
+          <button type="button" data-pes="items" aria-pressed="false">Banc</button>
+          <button type="button" data-pes="igual" aria-pressed="false">Igual</button>
+        </div>
+      </label>
+
+      <div class="fila">
+        <label class="camp">
+          <span>Ordre</span>
+          <select id="ordre">
+            <option value="curriculum">Del currículum</option>
+            <option value="dificultat">De fàcil a difícil</option>
+            <option value="barrejat">Barrejat</option>
+          </select>
+        </label>
+        <label class="camp">
+          <span>Punts en total</span>
+          <input type="number" id="punts" min="1" max="100" step="0.5" value="10">
+        </label>
+      </div>
+      <p style="margin:.1rem 0 0;font-size:.75rem;color:var(--apagat)">
+        Codi de la tria: <b id="llavor" style="font-family:var(--mono)"></b>
+      </p>
+    </div>
+
+    <div class="grup">
+      <h3>Preguntes</h3>
+      <div class="llista" id="llista" style="padding:0"></div>
+      <button class="btn petit" id="obre-propia" style="margin-top:.5rem">+ Pregunta pròpia</button>
+      <div id="propia" hidden style="margin-top:.6rem">
+        <label class="camp">
+          <span>Enunciat (el LaTeX va entre dòlars: $x^2$)</span>
+          <textarea id="propia-enunciat" rows="3" style="width:100%;padding:.35rem .5rem;border:1px solid var(--vora-forta);border-radius:6px;background:#FAFBFD;font-size:.82rem;resize:vertical"></textarea>
+        </label>
+        <label class="camp">
+          <span>Solució, per al full de correcció</span>
+          <textarea id="propia-solucio" rows="2" style="width:100%;padding:.35rem .5rem;border:1px solid var(--vora-forta);border-radius:6px;background:#FAFBFD;font-size:.82rem;resize:vertical"></textarea>
+        </label>
+        <div class="fila">
+          <button class="btn petit principal" id="afegeix-propia">Afegeix-la</button>
+          <button class="btn petit" id="cancella-propia">Cancel·la</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grup">
+      <h3>Full</h3>
+      <label class="camp">
+        <span>Espai per respondre: <b id="espai-valor">24 mm</b></span>
+        <input type="range" id="espai" min="0" max="70" step="2" value="24">
+      </label>
+      <label class="camp">
+        <span>Fons de l'espai</span>
+        <select id="paper">
+          <option value="quadricula">Quadrícula de 5 mm</option>
+          <option value="ratlles">Ratlles</option>
+          <option value="blanc">En blanc</option>
+        </select>
+      </label>
+      <label class="check"><input type="checkbox" id="figures" checked> Inclou les figures</label>
+      <label class="check"><input type="checkbox" id="encapcalaments" checked> Inclou els enunciats generals</label>
+      <label class="check"><input type="checkbox" id="mostraPunts" checked> Mostra els punts de cada pregunta</label>
+    </div>
+
+    <div class="grup">
+      <h3>Capçalera</h3>
+      <label class="camp"><span>Centre o departament</span><input type="text" id="centre"></label>
+      <label class="camp"><span>Títol</span><input type="text" id="titol"></label>
+      <div class="fila">
+        <label class="camp"><span>Alumne/a</span><input type="text" id="alumne" placeholder="(en blanc)"></label>
+        <label class="camp"><span>Grup</span><input type="text" id="grup" placeholder="3r A"></label>
+      </div>
+      <div class="fila">
+        <label class="camp"><span>Data</span><input type="date" id="data"></label>
+        <label class="camp"><span>Model</span><input type="text" id="model" placeholder="A"></label>
+      </div>
+      <label class="camp">
+        <span>Instruccions</span>
+        <textarea id="instruccions" rows="4" style="width:100%;padding:.35rem .5rem;border:1px solid var(--vora-forta);border-radius:6px;background:#FAFBFD;font-size:.82rem;resize:vertical"></textarea>
+      </label>
+    </div>
+  </aside>
+</div>
+
+<script src="assets/lib/katex/katex.min.js"></script>
+<script src="assets/lib/katex/contrib/auto-render.min.js"></script>
+<script src="assets/js/mapa.js"></script>
+<script src="assets/js/banc.js"></script>
+<script src="assets/js/atzar.js"></script>
+<script src="assets/js/composa.js"></script>
+<script src="assets/js/full.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
