@@ -17,12 +17,12 @@
   <header class="barra">
     <div class="marca">
       <strong>Prova de recuperació</strong>
-      <span>Matemàtiques · 1r i 2n d'ESO</span>
+      <span>Matemàtiques · 1r, 2n i 3r d'ESO</span>
     </div>
     <div class="buit"></div>
     <div class="barra-accions">
       <button class="btn" id="altra" title="Genera una altra tria de preguntes (Ctrl+G)">Altres preguntes</button>
-      <button class="btn principal" id="imprimeix">Imprimeix la prova</button>
+      <button class="btn principal" id="imprimeix">Imprimeix la prova<small id="pagines"></small></button>
     </div>
   </header>
 
@@ -70,12 +70,12 @@
     <div class="grup">
       <h3>Composició</h3>
       <label class="camp">
-        <span>Preguntes: <b id="nombre-valor">14</b></span>
-        <input type="range" id="nombre" min="3" max="30" step="1" value="14">
+        <span>Preguntes: <b id="nombre-valor">10</b></span>
+        <input type="range" id="nombre" min="3" max="15" step="1" value="10">
       </label>
 
       <label class="camp">
-        <span>Nivell</span>
+        <span>Nivell de les preguntes</span>
         <div class="seg" role="group" aria-label="Nivell de les preguntes">
           <button type="button" data-perfil="minims" aria-pressed="true">Mínims</button>
           <button type="button" data-perfil="equilibrat" aria-pressed="false">Equilibrat</button>
@@ -106,6 +106,14 @@
           <input type="number" id="punts" min="1" max="100" step="0.5" value="10">
         </label>
       </div>
+      <label class="camp">
+        <span>Els punts es reparteixen</span>
+        <div class="seg" role="group" aria-label="Criteri de puntuació">
+          <button type="button" data-criteri="igual" aria-pressed="false">Igual</button>
+          <button type="button" data-criteri="nivell" aria-pressed="true">Per nivell</button>
+          <button type="button" data-criteri="hores" aria-pressed="false">Per hores</button>
+        </div>
+      </label>
       <p style="margin:.1rem 0 0;font-size:.75rem;color:var(--apagat)">
         Codi de la tria: <b id="llavor" style="font-family:var(--mono)"></b>
       </p>
@@ -134,8 +142,8 @@
     <div class="grup">
       <h3>Full</h3>
       <label class="camp">
-        <span>Espai per respondre: <b id="espai-valor">24 mm</b></span>
-        <input type="range" id="espai" min="0" max="70" step="2" value="24">
+        <span>Espai per respondre: <b id="espai-valor">38 mm</b></span>
+        <input type="range" id="espai" min="0" max="90" step="2" value="38">
       </label>
       <label class="camp">
         <span>Fons de l'espai</span>
@@ -147,7 +155,7 @@
       </label>
       <label class="check"><input type="checkbox" id="figures" checked> Inclou les figures</label>
       <label class="check"><input type="checkbox" id="encapcalaments" checked> Inclou els enunciats generals</label>
-      <label class="check"><input type="checkbox" id="mostraPunts" checked> Mostra els punts de cada pregunta</label>
+      <label class="check"><input type="checkbox" id="mostraPunts"> Mostra els punts de cada pregunta</label>
     </div>
 
     <div class="grup">

@@ -97,7 +97,11 @@
              '<div class="pregunta-cap">' +
                '<span class="pregunta-num">' + (i + 1) + '.</span>' +
                '<div class="pregunta-cos">' +
-                 (it.cap && cfg.encapcalaments
+                 /* `capCal`: 213 ítems es queden en un nombre solt sense
+                    l'encapçalament ("$3850$"). Aquests el conserven encara
+                    que el professor apagui l'opció, o el full sortiria amb
+                    preguntes sense consigna. */
+                 (it.cap && (cfg.encapcalaments || it.capCal)
                    ? '<span class="encap">' + it.cap + '</span>' : '') +
                  it.enunciat +
                  (it.figura && cfg.figures

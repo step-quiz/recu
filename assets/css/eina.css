@@ -84,10 +84,13 @@ button,input,select,textarea{font:inherit;color:inherit}
 .btn:hover:not(:disabled){background:#F6F8FB;border-color:var(--apagat)}
 .btn:disabled{opacity:.42;cursor:not-allowed}
 .btn.principal{background:var(--tinta);border-color:var(--tinta);color:#fff}
-.btn.principal:hover:not(:disabled){background:#22304400;background-color:#243247}
+.btn.principal small{
+  font-size:.75rem;font-weight:500;opacity:.72;
+  padding-left:.5rem;margin-left:.5rem;border-left:1px solid rgba(255,255,255,.28);
+}
+.btn.principal small:empty{display:none}
+.btn.principal:hover:not(:disabled){background-color:#243247}
 .btn.petit{padding:.22rem .5rem;font-size:.8rem;border-radius:6px}
-.btn.nu{border-color:transparent;background:transparent;padding:.25rem .4rem}
-.btn.nu:hover:not(:disabled){background:#EEF1F6;border-color:transparent}
 
 /* ------------------------------------------------------- rail: el currículum
    L'estructura de l'esquerra és el document del departament, no un menú:
@@ -105,41 +108,62 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .curs{border-bottom:1px solid var(--vora)}
 .curs-cap{
-  display:flex;align-items:center;gap:.55rem;width:100%;
-  padding:.6rem 1rem;background:#F7F9FC;border:0;cursor:pointer;text-align:left;
+  display:flex;align-items:center;gap:.55rem;
+  padding:.6rem 1rem;background:#F7F9FC;
 }
-.curs-cap:hover{background:#F1F5FA}
 .curs-cap strong{font-size:.88rem;font-weight:650;flex:1}
 .curs-cap .compte{font-size:.76rem;color:var(--apagat);font-variant-numeric:tabular-nums}
 
 .sentit{padding:.15rem 0 .5rem}
 .sentit-tit{
+  display:flex;align-items:center;gap:.5rem;
   padding:.5rem 1rem .2rem;font-size:.72rem;font-weight:650;
   color:var(--apagat);letter-spacing:.01em;
 }
+.sentit-tit span{flex:1}
+
+/* Botó de selecció en bloc: un a cada sentit i un a cada curs. */
+.mini{
+  border:1px solid var(--vora-forta);background:var(--card);color:var(--apagat);
+  border-radius:5px;padding:.1rem .4rem;font-size:.7rem;font-weight:600;
+  cursor:pointer;white-space:nowrap;
+}
+.mini:hover{border-color:var(--blau);color:var(--blau)}
+.mini[aria-pressed=true]{background:var(--blau-suau);border-color:var(--blau);color:var(--blau)}
+
+.curs-peu{
+  margin:0;padding:.15rem 1rem .7rem 1.35rem;
+  font-size:.72rem;line-height:1.4;color:var(--apagat);
+}
 
 .saber{
-  display:grid;grid-template-columns:1.05rem 1fr;gap:.55rem;
-  padding:.32rem 1rem .32rem 1.35rem;cursor:pointer;align-items:start;
+  display:flex;align-items:flex-start;gap:.35rem;
+  padding:.32rem .7rem .32rem 1.35rem;
 }
 .saber:hover{background:#F5F8FC}
-.saber.buit{cursor:default;opacity:.55}
-.saber.buit:hover{background:transparent}
+.saber-marca{
+  flex:1;min-width:0;display:grid;grid-template-columns:1.05rem 1fr;gap:.55rem;
+  align-items:start;cursor:pointer;
+}
+/* "+" per demanar una pregunta més d'aquest contingut concret. Va fora del
+   <label>, o el clic marcaria també la casella. */
+.mes{
+  flex:none;border:1px solid var(--vora-forta);background:var(--card);
+  color:var(--apagat);width:1.35rem;height:1.35rem;border-radius:5px;
+  font-size:.9rem;line-height:1;cursor:pointer;margin-top:.15rem;
+}
+.mes:hover{border-color:var(--blau);color:var(--blau);background:var(--blau-suau)}
+.a-prova{color:var(--verd);font-weight:600}
 .saber input{margin:.28rem 0 0;accent-color:var(--blau);width:1.05rem;height:1.05rem}
 .saber-cos{min-width:0}
 .saber-tit{font-size:.855rem;line-height:1.35}
 .saber-meta{
-  display:flex;align-items:center;gap:.45rem;margin-top:.12rem;
+  display:flex;align-items:center;flex-wrap:wrap;gap:.1rem .4rem;margin-top:.12rem;
   font-size:.74rem;color:var(--apagat);font-variant-numeric:tabular-nums;
 }
 /* Les hores, com a barra: és el que pondera l'examen per defecte. */
 .hores{display:inline-block;height:3px;background:var(--vora-forta);border-radius:2px;min-width:2px}
 .saber input:checked ~ .saber-cos .hores{background:var(--blau)}
-.saber.buit .saber-meta{color:var(--ambre)}
-.saber-detall{
-  grid-column:2;font-size:.76rem;color:var(--apagat);line-height:1.4;
-  margin-top:.25rem;padding-left:0;
-}
 
 /* --------------------------------------------------- panell de composició */
 .panell-cap{
@@ -178,7 +202,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .buida{padding:1.6rem 1rem;color:var(--apagat);font-size:.85rem;line-height:1.5}
 .q{
   position:relative;
-  display:grid;grid-template-columns:1.4rem 1fr;gap:.4rem;align-items:start;
+  display:grid;grid-template-columns:1.4rem 1fr auto;gap:.4rem;align-items:start;
   padding:.4rem .35rem;border-radius:7px;font-size:.8rem;
 }
 .q:hover{background:#F5F8FC}
@@ -193,23 +217,27 @@ button,input,select,textarea{font:inherit;color:inherit}
   display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   color:var(--apagat);font-size:.72rem;
 }
-/* Les eines es posen a sobre de la fila, no en una columna pròpia: així el
-   text de la pregunta disposa de tota l'amplada del panell, que és on
-   escasseja. */
-.q-eines{
-  position:absolute;right:.2rem;top:50%;transform:translateY(-50%);
-  display:flex;gap:.1rem;visibility:hidden;
-  background:linear-gradient(to right,transparent,#EDF2F9 12px,#EDF2F9);
-  padding:.15rem .1rem .15rem 14px;border-radius:6px;
+/* Sempre visibles. Amagades fins al `:hover` eren inabastables en tàctil i
+   invisibles en escriptori, i són la funció més útil del panell. */
+.q-eines{grid-column:2;display:flex;gap:.1rem;margin-top:.2rem}
+
+/* Punts editables per pregunta: un valor escrit a mà es queda fix i la
+   resta es reparteixen el que sobra. */
+.q-punts{display:flex;align-items:center;gap:.15rem;font-size:.75rem;color:var(--apagat)}
+.q-punts input{
+  width:3.1rem;padding:.12rem .25rem;border:1px solid var(--vora);
+  border-radius:5px;background:#FAFBFD;font-size:.76rem;text-align:right;
+  font-variant-numeric:tabular-nums;
 }
-.q:hover .q-eines,.q:focus-within .q-eines{visibility:visible}
-.q.marcada .q-eines{background:linear-gradient(to right,transparent,var(--blau-suau) 12px,var(--blau-suau))}
+.q-punts input.fixat{border-color:var(--blau);background:var(--blau-suau);font-weight:600}
 .q-eines button{
   border:0;background:transparent;cursor:pointer;color:var(--apagat);
   padding:.12rem .28rem;border-radius:5px;font-size:.8rem;line-height:1;
 }
-.q-eines button:hover{background:#E4EAF2;color:var(--tinta)}
+.q-eines button:hover:not(:disabled){background:#E4EAF2;color:var(--tinta)}
+.q-eines button:disabled{opacity:.3;cursor:default}
 
+.avis .mini{margin-left:.3rem}
 .avis{
   margin:.55rem 0 0;padding:.5rem .6rem;border-radius:7px;
   background:var(--ambre-suau);color:#6E4400;font-size:.78rem;line-height:1.45;
@@ -276,6 +304,11 @@ button,input,select,textarea{font:inherit;color:inherit}
   border:.6px solid #999;border-radius:3px;padding:.3mm 1.2mm;
 }
 .figura-cont{margin:2mm 0 0;text-align:center}
+/* Taules de dades dels ítems propis (llegir una taula és el saber que
+   s'avalua, o sigui que ha de sortir com una taula de debò). */
+.dades{border-collapse:collapse;margin:1.5mm 0;font-size:10pt}
+.dades th,.dades td{border:.5px solid #888;padding:.8mm 2.5mm;text-align:center}
+.dades th{background:#F0F0F0;font-family:var(--ui);font-size:9pt}
 .figura{max-width:52mm;height:auto;color:#000;overflow:visible;--fig-plena:#EFEFEF;--fig-marca:#000}
 .fig-etq{font:600 12px var(--ui);fill:#000}
 .fig-etq.petita{font-size:10.5px;fill:#333}
