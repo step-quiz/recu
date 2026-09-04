@@ -1,0 +1,32 @@
+name: Extract and commit zip uploads
+
+on:
+  push:
+    paths:
+      - '_uploads/**.zip'
+
+permissions:
+  contents: write
+
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Unzip uploaded files
+        run: |
+          shopt -s nullglob
+          for z in _uploads/*.zip; do
+            echo "Processing $z"
+            unzip -o "$z" -d .
+            rm "$z"
+          done
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "Auto-extract uploaded zip"
+          git push
