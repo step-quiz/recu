@@ -66,6 +66,23 @@ const path = require('path');
   const despres = await pag.evaluate(() => document.querySelectorAll('.q').length);
   console.log('EDICIÓ:', abans, '->', despres);
 
+  /* El full s'ha d'imprimir des de qualsevol pestanya. En imprimir, les
+     media queries es mesuren contra l'amplada del paper (uns 794 px), i per
+     això la maquetació estreta s'activa sempre: si les seves regles amaguen
+     .taula, surt un full en blanc. */
+  const fs = require('fs');
+  for (const vista of ['full', 'curriculum', 'composicio']) {
+    await pag.evaluate(v => { document.querySelector('#app').dataset.vista = v; }, vista);
+    await pag.waitForTimeout(200);
+    const tmp = path.join(arrel, '_v.pdf');
+    await pag.pdf({ path: tmp, format: 'A4', printBackground: true });
+    const cru = fs.readFileSync(tmp);
+    fs.unlinkSync(tmp);
+    console.log(`IMPRESSIÓ des de «${vista}»:`,
+      cru.length > 40000 ? 'amb contingut' : '*** BUIDA ***');
+  }
+  await pag.evaluate(() => { document.querySelector('#app').dataset.vista = 'full'; });
+
   console.log('ERRORS:', errors.length ? errors : 'cap');
   await nav.close();
 })();

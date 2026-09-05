@@ -280,6 +280,14 @@ node tools/tests.js       # 64 comprovacions, cap dependència
 node tools/prova.js       # obre l'eina en un navegador i genera els tres PDF
 ```
 
+`prova.js` comprova, entre altres coses, que el full surti imprès des de
+qualsevol de les tres pestanyes. No és paranoia: en imprimir, el navegador
+mesura les media queries contra l'amplada del **paper** (uns 794 px a A4) i no
+contra la de la finestra, o sigui que la maquetació estreta s'activa sempre. Amb
+les regles de pantalla escrites com `@media (max-width:900px)` en comptes de
+`@media screen and (max-width:900px)`, la regla que amaga el full a la pestanya
+«Continguts» s'aplicava també al paper i sortia un full en blanc.
+
 `tests.js` comprova les tres coses que fan mal en paper: que els punts sumin
 exactament el total, que no es repeteixi cap pregunta (ni cap exercici pare
 mentre en quedin d'altres), i que el mateix codi doni sempre el mateix examen.

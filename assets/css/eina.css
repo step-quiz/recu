@@ -369,11 +369,16 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 /* ------------------------------------------------------------- responsiu */
 .mobil-pestanyes{display:none}
-@media (max-width:1180px){
+/* `screen and`, no només `max-width`: en imprimir, les media queries es
+   mesuren contra l'amplada del PAPER (uns 794 px a A4), no contra la de la
+   finestra. Sense `screen and`, la maquetació estreta s'activava sempre en
+   imprimir i, si l'app estava a la pestanya «Continguts» o «Ajustos», la
+   regla que amaga .taula deixava el full en blanc. */
+@media screen and (max-width:1180px){
   :root{--rail:17.5rem;--panell:16.5rem}
   .full{transform:scale(calc(var(--zoom) * .8));transform-origin:top center}
 }
-@media (max-width:900px){
+@media screen and (max-width:900px){
   /* minmax(0,1fr) i no 1fr: el full fa 210 mm i, sense el mínim a zero,
      estira la columna de la graella i se'n va la barra fora de pantalla. */
   .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr)}

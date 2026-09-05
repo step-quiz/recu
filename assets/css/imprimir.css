@@ -23,7 +23,10 @@
   .barra,.rail,.panell,.taula-eines,.mobil-pestanyes{display:none!important}
 
   .app{display:block;height:auto}
-  .taula{overflow:visible;background:#fff}
+  /* Xarxa de seguretat: el full s'imprimeix passi el que passi a pantalla.
+     Qualsevol regla futura que l'amagui en una vista concreta no ha de poder
+     buidar el paper. */
+  .taula{display:block!important;overflow:visible;background:#fff}
   .escena{padding:0;display:block}
 
   /* El full deixa de ser un objecte damunt d'una taula i passa a ser
