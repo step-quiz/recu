@@ -147,12 +147,16 @@ button,input,select,textarea{font:inherit;color:inherit}
 }
 /* "+" per demanar una pregunta més d'aquest contingut concret. Va fora del
    <label>, o el clic marcaria també la casella. */
-.mes{
-  flex:none;border:1px solid var(--vora-forta);background:var(--card);
+.quants{flex:none;display:flex;gap:.15rem;margin-top:.15rem}
+.mes,.menys{
+  border:1px solid var(--vora-forta);background:var(--card);
   color:var(--apagat);width:1.35rem;height:1.35rem;border-radius:5px;
-  font-size:.9rem;line-height:1;cursor:pointer;margin-top:.15rem;
+  font-size:.9rem;line-height:1;cursor:pointer;padding:0;
 }
-.mes:hover{border-color:var(--blau);color:var(--blau);background:var(--blau-suau)}
+.mes:hover:not(:disabled),.menys:hover:not(:disabled){
+  border-color:var(--blau);color:var(--blau);background:var(--blau-suau);
+}
+.mes:disabled,.menys:disabled{opacity:.3;cursor:default}
 .a-prova{color:var(--verd);font-weight:600}
 .saber input{margin:.28rem 0 0;accent-color:var(--blau);width:1.05rem;height:1.05rem}
 .saber-cos{min-width:0}
@@ -175,6 +179,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .grup > h3{
   margin:0 0 .55rem;font-size:.78rem;font-weight:650;color:var(--apagat);
 }
+.ajuda{margin:0 0 .55rem;font-size:.77rem;line-height:1.45;color:var(--apagat)}
+.ajuda:empty{display:none}
 .camp{display:block;margin-bottom:.6rem}
 .camp:last-child{margin-bottom:0}
 .camp > span{display:block;font-size:.79rem;color:var(--apagat);margin-bottom:.2rem}

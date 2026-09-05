@@ -38,6 +38,16 @@ comprova('els ítems sense enunciat conserven la consigna encara que s\'apaguin'
   window.BANC.items.filter(i => !i.enunciat).every(i => i.cap && i.capCal));
 comprova('cap saber del currículum es queda sense preguntes',
   cursos.every(c => c.sabers.every(s => s.items.length)));
+/* Cap equació amb denominadors al nivell mínim: resoldre x/5 = 3 no és de
+   mínims per a qui ve de suspendre tot el curs, encara que sigui d'un pas. */
+comprova('cap ítem de nivell 1 porta fraccions fora del seu tema',
+  window.BANC.items.filter(i => i.nivell === 1 && /\\d?frac/.test(i.enunciat))
+    .every(i => ['fraccions', 'decimals', 'percentatges',
+                 'factor_multiplicador', 'directa_inversa'].includes(i.bloc)),
+  window.BANC.items.filter(i => i.nivell === 1 && /\\d?frac/.test(i.enunciat))
+    .map(i => i.id + '/' + i.bloc).slice(0, 5).join());
+comprova('el bloc de fraccions conserva els seus ítems de nivell 1',
+  window.BANC.items.filter(i => i.bloc === 'fraccions' && i.nivell === 1).length > 10);
 comprova('tots els sabers tenen almenys un ítem de nivell 1',
   cursos.every(c => c.sabers.every(s => s.perNivell[0] > 0)),
   cursos.flatMap(c => c.sabers).filter(s => !s.perNivell[0]).map(s => s.id).join());

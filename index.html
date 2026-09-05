@@ -22,6 +22,7 @@
     <div class="buit"></div>
     <div class="barra-accions">
       <button class="btn" id="altra" title="Genera una altra tria de preguntes (Ctrl+G)">Altres preguntes</button>
+      <button class="btn" id="desa-fitxer" title="Baixa un fitxer que torna a obrir aquesta prova exacta">Desa la prova</button>
       <button class="btn principal" id="imprimeix">Imprimeix la prova<small id="pagines"></small></button>
     </div>
   </header>
@@ -174,6 +175,21 @@
         <span>Instruccions</span>
         <textarea id="instruccions" rows="4" style="width:100%;padding:.35rem .5rem;border:1px solid var(--vora-forta);border-radius:6px;background:#FAFBFD;font-size:.82rem;resize:vertical"></textarea>
       </label>
+    </div>
+
+    <div class="grup">
+      <h3>Els meus valors inicials</h3>
+      <p class="ajuda">Deixa-ho tot com t'agrada —continguts, nivell, format del
+        full, capçalera— i desa-ho: cada vegada que obris l'eina en aquest
+        navegador la trobaràs així. No es desen el nom de l'alumne, el grup, la
+        data ni el model.</p>
+      <p class="ajuda" id="inicials-nota" hidden><b>Estàs fent servir els teus
+        valors inicials.</b></p>
+      <div class="fila">
+        <button class="btn petit" id="desa-inicials">Desa'ls</button>
+        <button class="btn petit" id="oblida-inicials">Oblida'ls</button>
+      </div>
+      <p class="ajuda" id="inicials-avis" role="status" aria-live="polite"></p>
     </div>
   </aside>
 </div>

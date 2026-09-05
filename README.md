@@ -27,6 +27,17 @@ Genera tres documents des d'una sola selecció de continguts:
    i deixa els marges *Per defecte*: els marges reals els posa `@page`.
    «Desa com a PDF» dona el PDF.
 
+**Desa la prova** baixa un fitxer HTML petit que només conté l'adreça d'aquesta
+prova exacta, amb el codi i el model ben visibles. Obre'l amb doble clic i tens
+la prova tal com la vas deixar. Va bé per guardar-la a la carpeta del curs o per
+passar-la a un company. Si mous la carpeta de l'eina, l'enllaç deixa de
+funcionar: apunta al lloc on hi havia `index.html`.
+
+**Els meus valors inicials** desa al navegador com vols trobar l'eina cada
+vegada: continguts marcats, nivell, criteri de punts, format del full i
+capçalera. No s'hi desen el nom de l'alumne, el grup, la data, el model ni el
+codi de la tria, perquè aquests han de començar de zero cada cop.
+
 Cada prova porta un **codi de cinc caràcters** al peu. Mateix codi, mateixa
 prova, sempre. L'adreça de la pàgina el guarda, així que pots desar l'enllaç i
 recuperar l'examen mesos després. Per fer models A i B del mateix examen: prem
@@ -42,8 +53,15 @@ mancances grosses:
 - **quant ha de llegir** — caràcters de l'encapçalament *i* de l'enunciat, i
   quantes dades ha de processar (una llista de 50 valors és lectura pura);
 - **com són els nombres** — el més gran de l'enunciat, el més gran de la
-  solució, el denominador més gran del resultat, i si hi ha una arrel no
-  exacta *donada a l'enunciat*.
+  solució, el denominador més gran del resultat, si hi ha una arrel no exacta
+  *donada a l'enunciat*, i si hi ha fraccions a l'enunciat quan el tema no són
+  les fraccions.
+
+L'última també ve del departament: `x/5 = 3` es resol en un pas, però una
+equació amb denominadors no és de mínims per a qui ve de suspendre tot el curs.
+Les fraccions només compten com a càrrega fora dels blocs on la fracció és el
+contingut que s'avalua (la llista és `BLOCS_DE_FRACCIONS`, a
+`tools/mapa_curricular.py`).
 
 L'última distinció importa: `\sqrt{89}` com a **resultat** de la diagonal d'un
 rectangle de 5×8 és normal i no penalitza; `\sqrt{164}` com a **alçada donada**
@@ -70,9 +88,10 @@ disponibles. `Igual` dona el mateix nombre a cada contingut.
 preguntes*, `⟳` la canvia per una altra del mateix contingut, `↑ ↓` la mou,
 `✕` la treu.
 
-**El «+» de cada contingut** afegeix una pregunta més d'aquell contingut sense
-refer la prova. És el que cal quan la recuperació s'ha de construir sobre els
-criteris concrets que l'alumne no va assolir, i no sobre un total global.
+**El «+» i el «−» de cada contingut** afegeixen o treuen una pregunta d'aquell
+contingut sense refer la prova. És el que cal quan la recuperació s'ha de
+construir sobre els criteris concrets que l'alumne no va assolir, i no sobre un
+total global. Al costat hi surt quantes n'hi ha triades.
 
 **Els punts es reparteixen.** `Igual` dona el mateix a totes; `Per nivell` fa
 que una de nivell 3 valgui el doble que una d'1; `Per hores` segueix les hores

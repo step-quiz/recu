@@ -363,6 +363,14 @@ VETOS = [
     (r"[−-]\s*\d", ["1eso-num-divisibilitat", "2eso-num-divisibilitat"]),
 ]
 
+# Blocs on la fracció ÉS el contingut que s'avalua. A la resta, una fracció
+# a l'enunciat és maquinària que s'hi afegeix (una equació amb denominadors,
+# una funció amb pendent fraccionària) i treu l'exercici del nivell mínim:
+# no és de mínims demanar a qui ve de suspendre tot el curs que resolgui
+# x/5 = 3 abans d'haver-se refet amb les equacions senzilles.
+BLOCS_DE_FRACCIONS = {"fraccions", "decimals", "percentatges",
+                      "factor_multiplicador", "directa_inversa"}
+
 # Ítems fora del banc a tot arreu. El banc de repàs és de resposta múltiple i
 # aquests tres enunciats es refereixen a unes opcions que aquí no s'imprimeixen
 # ("quin d'aquests valors pot tenir x?"). Sense la llista, no es poden respondre.

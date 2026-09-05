@@ -38,7 +38,7 @@
   }
 
   /* ---------------------------------------------------------------- estat */
-  var CAPCALERA_DESADA = 'recuperacio-eso:capcalera';
+  var CAPCALERA_DESADA = 'recuperacio-eso:inicials';
 
   var estat = {
     sabers: [],
@@ -78,25 +78,61 @@
     }
   };
 
-  /* Centre, títol i instruccions es reescrivien cada sessió. El nom de
-     l'alumne i el grup no es desen a propòsit. */
-  function desaCapcalera() {
+  /* Els valors inicials: com vols trobar l'eina cada vegada que l'obris en
+     aquest navegador. Es desa tota la configuració menys el que és d'una
+     prova concreta —l'alumne, el grup, la data, el model i el codi de la
+     tria—, perquè aquests han de tornar a començar de zero cada cop.
+
+     Els continguts marcats sí que s'hi desen: qui recupera 2n d'ESO ho fa
+     moltes vegades seguides i tornar-los a marcar cada cop és feina inútil. */
+  var CAMPS_INICIALS = ['centre', 'titol', 'instruccions', 'espai', 'paper',
+                        'figures', 'encapcalaments', 'mostraPunts'];
+  var SPEC_INICIALS = ['nombre', 'perfil', 'pes', 'ordre', 'punts', 'criteriPunts'];
+
+  function desaInicials() {
     try {
-      localStorage.setItem(CAPCALERA_DESADA, JSON.stringify({
-        centre: estat.cfg.centre, titol: estat.cfg.titol,
-        instruccions: estat.cfg.instruccions
-      }));
-    } catch (e) { /* mode privat o emmagatzematge ple: no és crític */ }
+      var cfg = {}, spec = {};
+      CAMPS_INICIALS.forEach(function (k) { cfg[k] = estat.cfg[k]; });
+      SPEC_INICIALS.forEach(function (k) { spec[k] = estat.spec[k]; });
+      localStorage.setItem(CAPCALERA_DESADA, JSON.stringify(
+        { cfg: cfg, spec: spec, sabers: estat.sabers }));
+      avisaInicials('Desat. En obrir l\'eina en aquest navegador, la trobaràs així.');
+    } catch (e) {
+      avisaInicials('No s\'han pogut desar: el navegador no ho permet ' +
+                    '(finestra privada?).');
+    }
   }
 
-  function recuperaCapcalera() {
+  function oblidaInicials() {
+    try { localStorage.removeItem(CAPCALERA_DESADA); } catch (e) { /* res */ }
+    avisaInicials('Oblidats. La pròxima vegada l\'eina s\'obrirà de sèrie.');
+  }
+
+  function avisaInicials(text) {
+    var n = $('#inicials-avis');
+    if (!n) return;
+    n.textContent = text;
+    clearTimeout(avisaInicials.t);
+    avisaInicials.t = setTimeout(function () { n.textContent = ''; }, 4000);
+  }
+
+  function recuperaInicials() {
     try {
       var d = JSON.parse(localStorage.getItem(CAPCALERA_DESADA) || 'null');
-      if (!d) return;
-      if (d.centre != null) estat.cfg.centre = d.centre;
-      if (d.titol) estat.cfg.titol = d.titol;
-      if (d.instruccions != null) estat.cfg.instruccions = d.instruccions;
-    } catch (e) { /* ignora */ }
+      if (!d) return false;
+      // Format antic (només la capçalera): es llegeix igualment.
+      var cfg = d.cfg || d, spec = d.spec || {};
+      CAMPS_INICIALS.forEach(function (k) {
+        if (cfg[k] !== undefined) estat.cfg[k] = cfg[k];
+      });
+      SPEC_INICIALS.forEach(function (k) {
+        if (spec[k] !== undefined) estat.spec[k] = spec[k];
+      });
+      if (d.sabers) {
+        estat.sabers = d.sabers.filter(function (id) { return sabersPerId[id]; });
+      }
+      return true;
+    } catch (e) { return false; }
   }
 
   function subtitolAutomatic() {
@@ -256,6 +292,13 @@
     desaAlHash();
   }
 
+  /** Una pregunta menys d'un contingut concret: treu l'última que en ve. */
+  function treuDelSaber(saberId) {
+    for (var i = estat.preguntes.length - 1; i >= 0; i--) {
+      if (estat.preguntes[i].saberId === saberId) { treu(i); return; }
+    }
+  }
+
   /* --------------------------------------------------- preguntes pròpies */
   var comptadorPropies = 0;
 
@@ -362,9 +405,15 @@
               '</div>' +
             '</div>' +
           '</label>' +
-          '<button class="mes" data-mes="' + esc(s.id) + '" ' +
-            'title="Afegeix una pregunta d\'aquest contingut" ' +
-            'aria-label="Afegeix una pregunta de ' + esc(s.titol) + '">+</button>' +
+          '<span class="quants">' +
+            '<button class="menys" data-menys="' + esc(s.id) + '"' +
+              (quantes ? '' : ' disabled') +
+              ' title="Treu una pregunta d\'aquest contingut"' +
+              ' aria-label="Treu una pregunta de ' + esc(s.titol) + '">\u2212</button>' +
+            '<button class="mes" data-mes="' + esc(s.id) + '" ' +
+              'title="Afegeix una pregunta d\'aquest contingut" ' +
+              'aria-label="Afegeix una pregunta de ' + esc(s.titol) + '">+</button>' +
+          '</span>' +
         '</div>';
       });
 
@@ -564,6 +613,69 @@
     } catch (e) { return false; }
   }
 
+  /* ------------------------------------------- desar la prova en un fitxer
+     Un HTML petit que només conté l'adreça d'aquesta prova exacta. Obrir-lo
+     amb doble clic la torna a muntar tal com era. No hi ha servidor ni base
+     de dades: el fitxer és el registre, i es pot desar a la carpeta del curs
+     o passar-lo a un company. La idea ve de l'eina de prova inicial de 1r. */
+  function fitxerDeLaProva() {
+    var u = location.href;
+    var avui = new Date().toLocaleDateString('ca-ES');
+    var cursos = {};
+    estat.sabers.forEach(function (id) { cursos[id.slice(0, 4)] = true; });
+    var quins = MAPA.cursos.filter(function (c) { return cursos[c.id]; })
+                           .map(function (c) { return c.titol; }).join(' i ') || '—';
+
+    return '<!DOCTYPE html>\n<html lang="ca"><head><meta charset="utf-8">' +
+      '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+      '<title>' + esc(estat.cfg.titol) + ' \u00b7 codi ' + esc(estat.cfg.llavor) + '</title>' +
+      '<style>' +
+      'body{font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;' +
+      'background:#F1F4F8;margin:0;padding:40px 16px;color:#16202E}' +
+      'main{max-width:640px;margin:0 auto;background:#fff;border-radius:10px;' +
+      'padding:32px 34px;box-shadow:0 1px 6px rgba(22,32,46,.14)}' +
+      'h1{color:#2455A4;font-size:22px;margin:0 0 4px}' +
+      '.sub{color:#5D6B7E;margin:0 0 22px}' +
+      '.dades{background:#E7EEF9;border-radius:7px;padding:12px 16px;' +
+      'margin:0 0 22px;font-size:15px}.dades b{color:#2455A4}' +
+      'a.boto{display:inline-block;background:#16202E;color:#fff;' +
+      'text-decoration:none;font-weight:700;padding:12px 22px;border-radius:7px}' +
+      'textarea{width:100%;height:88px;margin-top:8px;font:12px/1.4 ui-monospace,' +
+      'Menlo,Consolas,monospace;border:1px solid #C2CCD8;border-radius:6px;' +
+      'padding:8px;resize:vertical;color:#333}' +
+      '.peu{color:#5D6B7E;font-size:13px;margin-top:22px}' +
+      '</style></head><body><main>' +
+      '<h1>' + esc(estat.cfg.titol) + '</h1>' +
+      '<p class="sub">' + esc(quins) + ' \u00b7 ' + estat.preguntes.length + ' preguntes</p>' +
+      '<div class="dades">codi <b>' + esc(estat.cfg.llavor) + '</b>' +
+      (estat.cfg.model ? ' \u00b7 model <b>' + esc(estat.cfg.model) + '</b>' : '') +
+      '<br>Aquesta adre\u00e7a torna a muntar exactament la mateixa prova: ' +
+      'les mateixes preguntes, en el mateix ordre i amb els mateixos punts.</div>' +
+      '<p><a class="boto" href="' + esc(u) + '">Obre la prova</a></p>' +
+      '<p class="peu">Si l\u2019enlla\u00e7 no s\u2019obre, copia aquesta adre\u00e7a ' +
+      'al navegador:</p>' +
+      '<textarea readonly onclick="this.select()">' + esc(u) + '</textarea>' +
+      '<p class="peu">Desat el ' + avui + '. Aquest fitxer nom\u00e9s guarda ' +
+      'l\u2019adre\u00e7a; la prova es munta al navegador quan l\u2019obres. Si mous ' +
+      'la carpeta de l\u2019eina, l\u2019enlla\u00e7 deixa de funcionar: apunta al lloc ' +
+      'on hi havia <code>index.html</code>.</p>' +
+      '</main></body></html>';
+  }
+
+  function desaFitxer() {
+    var b = new Blob([fitxerDeLaProva()], { type: 'text/html;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = 'prova-' + estat.cfg.llavor +
+      (estat.cfg.model ? '-model-' + estat.cfg.model : '') + '.html';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () {
+      URL.revokeObjectURL(a.href);
+      a.parentNode.removeChild(a);
+    }, 2000);
+  }
+
   /* ---------------------------------------------------------------- lligams */
   function sincronitzaControls() {
     $('#nombre').value = estat.spec.nombre;
@@ -609,6 +721,7 @@
       var filtre = plana($('#cerca').value.trim());
 
       if (b.dataset.mes) { afegeixDelSaber(b.dataset.mes); return; }
+      if (b.dataset.menys) { treuDelSaber(b.dataset.menys); return; }
 
       if (b.dataset.curs) {
         var curs = MAPA.cursos.filter(function (c) { return c.id === b.dataset.curs; })[0];
@@ -730,13 +843,11 @@
       $('#' + k).addEventListener('input', function () {
         estat.cfg[k] = this.value;
         if (k === 'model') desaAlHash();
-        if (k === 'centre' || k === 'titol') desaCapcalera();
         pintaFull();
       });
     });
     $('#instruccions').addEventListener('input', function () {
       estat.cfg.instruccions = this.value;
-      desaCapcalera();
       pintaFull();
     });
 
@@ -758,6 +869,9 @@
     });
 
     $('#imprimeix').addEventListener('click', function () { window.print(); });
+    $('#desa-fitxer').addEventListener('click', desaFitxer);
+    $('#desa-inicials').addEventListener('click', desaInicials);
+    $('#oblida-inicials').addEventListener('click', oblidaInicials);
 
     $('#obre-propia').addEventListener('click', function () {
       $('#propia').hidden = false;
@@ -802,10 +916,11 @@
   }
 
   function arrenca() {
-    recuperaCapcalera();
+    var teInicials = recuperaInicials();
     var delHash = llegeixDelHash();
     sincronitzaControls();
     lliga();
+    if (teInicials && !delHash) $('#inicials-nota').hidden = false;
     if (delHash && estat.editat) { pinta(); } else { recomposa(); }
   }
 

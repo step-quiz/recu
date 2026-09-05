@@ -24,7 +24,8 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from mapa_curricular import CURSOS, SENTITS, BOGDAN, VETOS, EXCLOSOS  # noqa: E402
+from mapa_curricular import (CURSOS, SENTITS, BOGDAN, VETOS, EXCLOSOS,  # noqa: E402
+                             BLOCS_DE_FRACCIONS)
 from generador import genera as genera_propis  # noqa: E402
 
 
@@ -74,7 +75,7 @@ def arrels_lletges(text):
     return out
 
 
-def calcula_nivell(item, resolucio, resposta, cap):
+def calcula_nivell(item, resolucio, resposta, cap, bloc=""):
     """
     Nivell 1..3 recalculat, que NO és el `dif` del banc.
 
@@ -154,6 +155,11 @@ def calcula_nivell(item, resolucio, resposta, cap):
     if arrels_lletges(cap + " " + item["enunciat"]):
         punts += 3
 
+    # Una fracció a l'enunciat, quan el tema NO són les fraccions, és
+    # maquinària afegida: `x/5 = 3` no és una equació de mínims encara que
+    # es resolgui en un pas.
+    if bloc not in BLOCS_DE_FRACCIONS and re.search(r"\\d?frac", item["enunciat"]):
+        punts += 2
     if re.search(r"frac\{[^{}]*\\d?frac", item["enunciat"]):   # fraccions imbricades
         punts += 1
     if item["dif"] == 3:
@@ -248,7 +254,7 @@ def main():
                                 "ex": it["ex"],
                                 "ap": it["ap"],
                                 "dif": it["dif"],
-                                "nivell": calcula_nivell(it, resolucio, correcta, cap),
+                                "nivell": calcula_nivell(it, resolucio, correcta, cap, bloc),
                                 "passos": len(resolucio),
                                 "cap": cap,
                                 # Sense l'encapçalament, 180 ítems del banc es
@@ -285,7 +291,8 @@ def main():
                         "dif": it["dif"],
                         "nivell": calcula_nivell(
                             {"enunciat": it["enunciat"], "dif": it["dif"]},
-                            it["passos"], it["resposta"], it["cap"]),
+                            it["passos"], it["resposta"], it["cap"],
+                            it["origen"]),
                         "passos": len(it["passos"]),
                         "cap": it["cap"],
                         "capCal": len(text_pla(it["enunciat"])) < 25,
