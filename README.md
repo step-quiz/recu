@@ -317,3 +317,12 @@ solucions. Les solucions van codificades en base64 dins de `banc.js` — que és
 higiene, no seguretat: qualsevol que sàpiga què és el base64 les llegeix. Si
 publiques aquest lloc en un servidor, publica'l en un lloc que l'alumnat no
 pugui obrir, igual que ja fas amb els `REVISIO-fullN.html` de `repas`.
+
+<!-- atribucio-centre:inici -->
+
+---
+
+Material desenvolupat per **David Arso Civil** per al Departament de Matemàtiques de l'INS Miquel Tarradell.
+Contingut sota CC BY-NC-SA 4.0, codi sota llicència MIT. Vegeu [`LLICENCIA.md`](LLICENCIA.md).
+
+<!-- atribucio-centre:final -->
