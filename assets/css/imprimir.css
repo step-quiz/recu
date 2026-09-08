@@ -21,6 +21,8 @@
   }
 
   .barra,.rail,.panell,.taula-eines,.mobil-pestanyes{display:none!important}
+  /* Les eines de cada pregunta són interfície, no document. */
+  .pregunta-eines{display:none!important}
 
   .app{display:block;height:auto}
   /* Xarxa de seguretat: el full s'imprimeix passi el que passi a pantalla.

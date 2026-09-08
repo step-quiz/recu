@@ -74,7 +74,11 @@
       paper: 'quadricula',
       figures: true,
       encapcalaments: true,
-      mostraPunts: false
+      mostraPunts: false,
+      // On és publicada l'eina. Si es deixa en blanc, el fitxer que baixa
+      // «Desa la prova» apunta a l'adreça d'ara mateix, que amb doble clic
+      // és un `file:///...` i deixa de funcionar si mous la carpeta.
+      baseUrl: ''
     }
   };
 
@@ -86,7 +90,7 @@
      Els continguts marcats sí que s'hi desen: qui recupera 2n d'ESO ho fa
      moltes vegades seguides i tornar-los a marcar cada cop és feina inútil. */
   var CAMPS_INICIALS = ['centre', 'titol', 'instruccions', 'espai', 'paper',
-                        'figures', 'encapcalaments', 'mostraPunts'];
+                        'figures', 'encapcalaments', 'mostraPunts', 'baseUrl'];
   var SPEC_INICIALS = ['nombre', 'perfil', 'pes', 'ordre', 'punts', 'criteriPunts'];
 
   function desaInicials() {
@@ -511,6 +515,8 @@
   function pintaFull() {
     var cfg = Object.create(estat.cfg);
     cfg.subtitol = estat.cfg.subtitol || subtitolAutomatic();
+    cfg.editable = estat.vista === 'prova';
+    cfg.fixades = estat.fixades;
 
     var dades = { cfg: cfg, preguntes: estat.preguntes, sabers: estat.sabers };
     var html = estat.vista === 'clau' ? window.Full.clau(dades, banc, sabersPerId)
@@ -618,8 +624,18 @@
      amb doble clic la torna a muntar tal com era. No hi ha servidor ni base
      de dades: el fitxer és el registre, i es pot desar a la carpeta del curs
      o passar-lo a un company. La idea ve de l'eina de prova inicial de 1r. */
+  /** L'adreça que ha de portar el fitxer desat. */
+  function adreca() {
+    var base = (estat.cfg.baseUrl || '').trim();
+    if (!base) return location.href;
+    if (!/^https?:\/\//i.test(base)) base = 'https://' + base;
+    return base.replace(/[#?].*$/, '').replace(/\/+$/, '/') +
+           (base.slice(-1) === '/' ? '' : '/') + location.hash;
+  }
+
   function fitxerDeLaProva() {
-    var u = location.href;
+    var u = adreca();
+    var local = u.indexOf('file:') === 0;
     var avui = new Date().toLocaleDateString('ca-ES');
     var cursos = {};
     estat.sabers.forEach(function (id) { cursos[id.slice(0, 4)] = true; });
@@ -656,9 +672,12 @@
       'al navegador:</p>' +
       '<textarea readonly onclick="this.select()">' + esc(u) + '</textarea>' +
       '<p class="peu">Desat el ' + avui + '. Aquest fitxer nom\u00e9s guarda ' +
-      'l\u2019adre\u00e7a; la prova es munta al navegador quan l\u2019obres. Si mous ' +
-      'la carpeta de l\u2019eina, l\u2019enlla\u00e7 deixa de funcionar: apunta al lloc ' +
-      'on hi havia <code>index.html</code>.</p>' +
+      'l\u2019adre\u00e7a; la prova es munta al navegador quan l\u2019obres.' +
+      (local
+        ? ' Apunta a la c\u00f2pia de l\u2019eina d\u2019aquest ordinador: si mous ' +
+          'la carpeta, l\u2019enlla\u00e7 deixa de funcionar. Per evitar-ho, posa ' +
+          'l\u2019adre\u00e7a p\u00fablica de l\u2019eina al panell d\u2019ajustos.'
+        : '') + '</p>' +
       '</main></body></html>';
   }
 
@@ -691,6 +710,7 @@
     $('#grup').value = estat.cfg.grup;
     $('#data').value = estat.cfg.data;
     $('#model').value = estat.cfg.model;
+    $('#baseUrl').value = estat.cfg.baseUrl;
     $('#instruccions').value = estat.cfg.instruccions;
     $('#figures').checked = estat.cfg.figures;
     $('#encapcalaments').checked = estat.cfg.encapcalaments;
@@ -754,7 +774,12 @@
       desaAlHash();
     });
 
-    $('#llista').addEventListener('click', function (ev) {
+    /* El mateix gestor per als dos llocs: els botons del full i els del
+       panell fan servir els mateixos `data-*`. */
+    $('#full').addEventListener('click', accioPregunta);
+    $('#llista').addEventListener('click', accioPregunta);
+
+    function accioPregunta(ev) {
       if (ev.target.id === 'allibera') {
         estat.preguntes.forEach(function (q) { delete q.fix; });
         reparteixPunts();
@@ -774,9 +799,10 @@
         if (estat.fixades[q.itemId]) delete estat.fixades[q.itemId];
         else estat.fixades[q.itemId] = true;
         pintaLlista();
+        pintaFull();
         desaAlHash();
       }
-    });
+    }
 
     $('#nombre').addEventListener('input', function () {
       estat.spec.nombre = +this.value;
@@ -839,7 +865,7 @@
         estat.cfg[k] = this.checked; pintaFull(); desaAlHash();
       });
     });
-    ['centre', 'titol', 'alumne', 'grup', 'data', 'model'].forEach(function (k) {
+    ['centre', 'titol', 'alumne', 'grup', 'data', 'model', 'baseUrl'].forEach(function (k) {
       $('#' + k).addEventListener('input', function () {
         estat.cfg[k] = this.value;
         if (k === 'model') desaAlHash();

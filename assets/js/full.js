@@ -69,6 +69,28 @@
     '</footer>';
   }
 
+  /* ------------------------------------------------ eines sobre el full
+     Els `data-*` són els mateixos que fa servir la llista del panell, de
+     manera que el controlador té un sol gestor de clics per als dos llocs. */
+  function eines(i, q, total, saber, cfg) {
+    var b = function (attr, txt, titol, off) {
+      return '<button data-' + attr + '="' + i + '" title="' + esc(titol) + '"' +
+             (off ? ' disabled' : '') + '>' + txt + '</button>';
+    };
+    /* Sense etiqueta de contingut: el panell de la dreta ja diu de quin
+       saber és cada pregunta i amb quin nivell, i repetir-ho damunt del
+       full trepitjava l'enunciat. */
+    return '<div class="pregunta-eines" contenteditable="false" ' +
+           'title="' + esc(saber ? saber.titol : 'Pregunta pròpia') + '">' +
+      b('fixa', (cfg.fixades && cfg.fixades[q.itemId]) ? '\u2605' : '\u2606',
+        'Conserva-la en tornar a generar') +
+      b('canvia', '\u27f3', 'Canvia-la per una altra del mateix contingut', !saber) +
+      b('amunt', '\u2191', 'Amunt', i === 0) +
+      b('avall', '\u2193', 'Avall', i === total - 1) +
+      b('treu', '\u2715', 'Treu-la de la prova') +
+    '</div>';
+  }
+
   /* ---------------------------------------------------------------- prova */
   function prova(estat, banc, sabersPerId) {
     var cfg = estat.cfg, p = estat.preguntes;
@@ -110,6 +132,13 @@
                (cfg.mostraPunts
                  ? '<span class="pregunta-punts">' + num(q.punts) + ' p</span>' : '') +
              '</div>' +
+             /* Els controls van damunt del full i no en un panell a part:
+                per decidir si una pregunta et va bé, l'has d'estar mirant.
+                `imprimir.css` els amaga sempre, i en pantalla estreta els
+                amaga el CSS i els torna a treure el panell, on sí que es
+                poden tocar amb el dit. */
+             (cfg.editable
+               ? eines(i, q, p.length, sabersPerId[q.saberId], cfg) : '') +
              (cfg.espai > 0
                ? '<div class="espai ' + esc(cfg.paper) + '" style="--espai:' +
                  cfg.espai + 'mm"></div>' : '') +

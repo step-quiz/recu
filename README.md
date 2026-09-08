@@ -30,8 +30,14 @@ Genera tres documents des d'una sola selecció de continguts:
 **Desa la prova** baixa un fitxer HTML petit que només conté l'adreça d'aquesta
 prova exacta, amb el codi i el model ben visibles. Obre'l amb doble clic i tens
 la prova tal com la vas deixar. Va bé per guardar-la a la carpeta del curs o per
-passar-la a un company. Si mous la carpeta de l'eina, l'enllaç deixa de
-funcionar: apunta al lloc on hi havia `index.html`.
+passar-la a un company.
+
+Si l'eina està publicada en un web, escriu-ne l'adreça al camp **Adreça pública
+de l'eina** (a *Capçalera*): el fitxer desat hi apuntarà i funcionarà des de
+qualsevol ordinador. En blanc, l'enllaç apunta a la còpia d'aquest ordinador
+(`file:///…`), i el mateix fitxer t'avisa que si mous la carpeta deixarà de
+funcionar. L'adreça es desa amb els valors inicials, o sigui que s'escriu un
+cop.
 
 **Els meus valors inicials** desa al navegador com vols trobar l'eina cada
 vegada: continguts marcats, nivell, criteri de punts, format del full i
@@ -84,9 +90,14 @@ document del departament: si Equacions són 9 h i Percentatges 4 h, la prova
 respecta aquesta proporció. `Banc` reparteix segons quantes preguntes hi ha
 disponibles. `Igual` dona el mateix nombre a cada contingut.
 
-**Les icones de cada pregunta**: `☆` la fixa perquè sobrevisqui a *Altres
+**Les icones de cada pregunta** viuen **al marge esquerre del full**, al costat
+de la pregunta a què afecten: `☆` la fixa perquè sobrevisqui a *Altres
 preguntes*, `⟳` la canvia per una altra del mateix contingut, `↑ ↓` la mou,
-`✕` la treu.
+`✕` la treu. Per decidir si una pregunta et va bé, l'has d'estar mirant.
+
+En pantalla estreta el full es dibuixa a escala reduïda i uns botons de 19 px en
+quedarien 10, o sigui que allà les icones passen al panell d'ajustos. És el
+mateix joc de botons: canvia on són, no què fan.
 
 **El «+» i el «−» de cada contingut** afegeixen o treuen una pregunta d'aquell
 contingut sense refer la prova. És el que cal quan la recuperació s'ha de
@@ -317,12 +328,3 @@ solucions. Les solucions van codificades en base64 dins de `banc.js` — que és
 higiene, no seguretat: qualsevol que sàpiga què és el base64 les llegeix. Si
 publiques aquest lloc en un servidor, publica'l en un lloc que l'alumnat no
 pugui obrir, igual que ja fas amb els `REVISIO-fullN.html` de `repas`.
-
-<!-- atribucio-centre:inici -->
-
----
-
-Material desenvolupat per **David Arso Civil** per al Departament de Matemàtiques de l'INS Miquel Tarradell.
-Contingut sota CC BY-NC-SA 4.0, codi sota llicència MIT. Vegeu [`LLICENCIA.md`](LLICENCIA.md).
-
-<!-- atribucio-centre:final -->
