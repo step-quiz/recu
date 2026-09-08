@@ -72,9 +72,25 @@ const path = require('path');
   console.log('AMB 1r+2n:', JSON.stringify(desp, null, 1));
   await pag.screenshot({ path: path.join(arrel, '_prova-pantalla2.png') });
 
-  // canviar una pregunta i treure'n una
+  /* Edició: la volta ha d'oferir preguntes noves i no repetir-ne cap fins
+     haver-les mostrat totes. És el bug de A, B, B, A, C. */
   const abans = await pag.evaluate(() => document.querySelectorAll('.q').length);
-  await pag.evaluate(() => document.querySelector('[data-canvia="0"]').click());
+  const firma = () => pag.evaluate(() => {
+    const c = document.querySelector('.pregunta-cos');
+    const g = c.querySelector('svg');
+    return c.textContent.replace(/\s+/g, ' ').trim() + '|' + (g ? g.outerHTML.length : 0);
+  });
+  const vistes = [await firma()];
+  for (let k = 0; k < 12; k++) {
+    await pag.evaluate(() => document.querySelector('.pregunta-eines [data-seguent]').click());
+    await pag.waitForTimeout(90);
+    vistes.push(await firma());
+  }
+  let seguides = 0;
+  for (let k = 1; k < vistes.length; k++) if (vistes[k] === vistes[k - 1]) seguides++;
+  console.log('VOLTA: 13 clics ->', new Set(vistes).size, 'preguntes diferents,',
+    seguides, 'repeticions immediates');
+
   await pag.evaluate(() => document.querySelector('[data-treu="1"]').click());
   await pag.waitForTimeout(400);
   const despres = await pag.evaluate(() => document.querySelectorAll('.q').length);

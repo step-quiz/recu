@@ -84,13 +84,14 @@
            'title="' + esc(saber ? saber.titol : 'Pregunta pròpia') + '">' +
       b('fixa', (cfg.fixades && cfg.fixades[q.itemId]) ? '\u2605' : '\u2606',
         'Conserva-la en tornar a generar') +
-      /* Dos botons diferents a propòsit. ↻ només surt quan la pregunta ve
-         d'un generador propi: llavors se'n poden demanar uns altres nombres
-         sense sortir del tipus, i el pou és infinit. Les 592 preguntes del
-         banc de `repas` són text fix i només es poden intercanviar (⟳). */
+      /* ⟲ i ⟳ recorren TOTES les preguntes del contingut en un ordre fix,
+         endarrere i endavant: abans de repetir-ne cap les hauràs vistes
+         totes. ↻ és un altre eix i només surt quan la pregunta ve d'un
+         generador propi: uns altres nombres sense sortir del tipus. */
+      b('anterior', '\u27f2', 'La pregunta anterior d\'aquest contingut', !saber) +
+      b('seguent', '\u27f3', 'La pregunta següent d\'aquest contingut', !saber) +
       (it && it.gen
         ? b('nombres', '\u21bb', 'Uns altres nombres, la mateixa pregunta') : '') +
-      b('canvia', '\u27f3', 'Canvia-la per una altra del mateix contingut', !saber) +
       b('amunt', '\u2191', 'Amunt', i === 0) +
       b('avall', '\u2193', 'Avall', i === total - 1) +
       b('treu', '\u2715', 'Treu-la de la prova') +

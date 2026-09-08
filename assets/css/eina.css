@@ -208,12 +208,18 @@ button,input,select,textarea{font:inherit;color:inherit}
 .buida{padding:1.6rem 1rem;color:var(--apagat);font-size:.85rem;line-height:1.5}
 .q{
   position:relative;
-  display:grid;grid-template-columns:1.4rem 1fr auto;gap:.4rem;align-items:start;
+  display:grid;grid-template-columns:2.5rem 1fr auto;gap:.4rem;align-items:start;
   padding:.4rem .35rem;border-radius:7px;font-size:.8rem;
 }
 .q:hover{background:#F5F8FC}
 .q.marcada{background:var(--blau-suau)}
-.q-num{color:var(--apagat);font-variant-numeric:tabular-nums;padding-top:.05rem}
+/* La posició és editable: escriure-hi un número mou la pregunta allà. */
+.q-num{
+  width:2.5rem;padding:.1rem .2rem;border:1px solid transparent;border-radius:5px;
+  background:transparent;color:var(--apagat);font-size:.78rem;text-align:center;
+  font-variant-numeric:tabular-nums;
+}
+.q-num:hover,.q-num:focus{border-color:var(--vora-forta);background:#FAFBFD;color:var(--tinta)}
 .q-cos{min-width:0}
 .q-tit{
   display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
@@ -320,8 +326,11 @@ button,input,select,textarea{font:inherit;color:inherit}
    se superposen al marge esquerre, fora del flux. */
 .pregunta{position:relative}
 .pregunta-eines{
-  position:absolute;left:-13mm;top:0;
-  display:flex;flex-direction:column;align-items:flex-start;gap:.1rem;
+  position:absolute;left:-14mm;top:0;
+  /* Dues columnes: en una sola fila vertical, set botons feien 38 mm i
+     envaïen la pregunta de sota quan l'espai de resposta era petit. */
+  display:grid;grid-template-columns:repeat(2,17px);gap:2px;
+  align-content:start;
   /* Visibles sempre, encara que apagades: amagar-les fins al `hover` és el
      que feia que la funció més útil de l'eina fos la que no es trobava. Al
      marge esquerre no molesten la lectura del full. */
@@ -330,7 +339,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .pregunta:hover .pregunta-eines,
 .pregunta-eines:focus-within{opacity:1}
 .pregunta-eines button{
-  width:19px;height:19px;padding:0;line-height:1;
+  width:17px;height:17px;padding:0;line-height:1;
   border:1px solid var(--vora-forta);background:#fff;color:var(--apagat);
   border-radius:5px;font-size:11px;font-family:var(--ui);cursor:pointer;
 }

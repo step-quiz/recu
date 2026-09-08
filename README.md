@@ -108,16 +108,34 @@ el compilador. Una comprovació de `tests.js` recorre les quatre combinacions
 dels dos interruptors i verifica que cap ítem no es quedi buit amb cap.
 
 **Les icones de cada pregunta** viuen **al marge esquerre del full**, al costat
-de la pregunta a què afecten: `↻` demana uns altres nombres, `☆` la fixa perquè
-sobrevisqui a *Altres preguntes*, `⟳` la canvia per una altra del mateix
-contingut, `↑ ↓` la mou, `✕` la treu.
-
-`↻` i `⟳` no fan el mateix, i només un dels dos surt sempre:
+de la pregunta a què afecten:
 
 | | Què fa | On surt |
 |---|---|---|
-| `↻` | uns altres nombres, **la mateixa pregunta** | preguntes del material propi |
-| `⟳` | una altra pregunta del mateix contingut | totes |
+| `⟲ ⟳` | la pregunta anterior i la següent d'aquest contingut | totes |
+| `↻` | uns altres nombres, **la mateixa pregunta** | material propi |
+| `☆` | la fixa perquè sobrevisqui a *Altres preguntes* | totes |
+| `↑ ↓` | la mou una posició | totes |
+| `✕` | la treu de la prova | totes |
+
+**`⟲` i `⟳` no tiren un dau cada cop.** L'atzar decideix una sola vegada en
+quin ordre sortiran totes les preguntes del contingut, i els dos botons
+recorren aquesta llista endavant i endarrere. Abans de repetir-ne cap, les
+hauràs vistes totes: en un contingut de 31 preguntes calen 31 clics per
+tornar a veure la primera. Amb una tria a l'atzar cada clic, el que sortia
+era A, B, B, A, C, B, C — tres preguntes vistes de trenta-una.
+
+Quan el contingut té material propi, la volta no s'acaba mai: en arribar al
+final s'hi afegeixen variants noves en comptes de tornar a començar.
+
+**La posició de cada pregunta és un camp** al panell de la dreta: escriure-hi
+un número la porta allà d'una passa. Les fletxes `↑ ↓` són per a l'ajust fi;
+per anar de la catorzena a la tercera no cal fer onze clics.
+
+**Les preguntes noves s'insereixen al seu lloc**, no al final: si afegeixes un
+contingut de 1r d'ESO a una prova de 2n, la pregunta va on li toca segons el
+currículum. Amb l'ordre «Barrejat» o «De fàcil a difícil» s'afegeix al final,
+perquè allà la posició curricular no vol dir res.
 
 `↻` només pot existir on la pregunta ve d'un generador. Les 592 preguntes que
 venen del banc de `repas` són text ja escrit i no es poden reparametritzar; les

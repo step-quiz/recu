@@ -339,7 +339,7 @@
       for (var j = te; j < quotes[k]; j++) {
         var nou = triaItem(s, atzar);
         if (!nou) break;
-        estat.preguntes.push({ itemId: nou.id, saberId: s.id, punts: 0 });
+        inserisc({ itemId: nou.id, saberId: s.id, punts: 0 });
       }
     });
 
@@ -385,6 +385,10 @@
    * Les preguntes pròpies i les fixades amb ☆ se salven fins i tot aquí.
    */
   function recomposa() {
+    // L'ordre de les voltes es fixa amb el codi de la tria: si el codi
+    // canvia, l'ordre també, o «Altres preguntes» oferiria sempre la
+    // mateixa seqüència en clicar les fletxes.
+    voltes = {};
     var conserva = estat.preguntes.filter(function (q) {
       return estat.fixades[q.itemId] || estat.propies[q.itemId];
     });
@@ -415,28 +419,119 @@
    * Uns altres nombres per a la mateixa pregunta. Només per als ítems que
    * venen d'un generador; el pou és infinit.
    */
+  /* ------------------------------------------------------ la volta d'un saber
+     El ⟳ triava un ítem a l'atzar cada vegada. Amb quinze ítems disponibles
+     això donava seqüències com A, B, B, A, C, B, C: repeticions immediates i
+     només tres preguntes vistes de quinze. Ara l'atzar decideix UNA vegada en
+     quin ordre sortiran, i els botons recorren aquesta llista endavant i
+     endarrere. Abans de repetir-ne cap, les hauràs vistes totes. */
+  var voltes = {};
+
+  function volta(saberId) {
+    if (!voltes[saberId]) {
+      var s = sabersPerId[saberId];
+      voltes[saberId] = new window.Atzar('volta|' + estat.spec.llavor + '|' + saberId)
+        .barreja(s ? s.items : []);
+    }
+    return voltes[saberId];
+  }
+
+  /**
+   * Allarga la volta d'un saber amb una variant nova d'algun dels seus
+   * generadors. Serveix per no haver de tornar a començar quan s'ha donat
+   * tota la volta: el material propi no s'acaba mai.
+   */
+  function allargaVolta(saberId) {
+    var gens = gensPerSaber[saberId] || [];
+    if (!gens.length) return false;
+    var v = volta(saberId);
+    var vistes = {};
+    v.forEach(function (id) { if (banc[id]) vistes[firma(banc[id])] = true; });
+
+    var atzar = new window.Atzar('allarga|' + saberId + '|' + v.length);
+    for (var t = 0; t < 40; t++) {
+      var g = atzar.tria(gens);
+      var nou = variant(g.id, novaLlavor(g.id));
+      if (nou && !vistes[firma(nou)]) { v.push(nou.id); return true; }
+    }
+    return false;
+  }
+
+  /**
+   * Avança o retrocedeix una pregunta dins de la volta del seu contingut.
+   * `dir` val +1 (sentit horari) o -1 (antihorari).
+   */
+  function passa(i, dir) {
+    var q = estat.preguntes[i];
+    if (!q.saberId) return;                     // pregunta pròpia: no té volta
+    var v = volta(q.saberId);
+    if (!v.length) return;
+
+    // On som ara. Si l'ítem no és a la volta (ve d'una variant demanada amb
+    // ↻), s'hi afegeix perquè la volta no perdi el fil.
+    var pos = v.indexOf(q.itemId);
+    if (pos < 0) { v.push(q.itemId); pos = v.length - 1; }
+
+    // Ocupats per ALTRES preguntes: se salten, però sense sortir de l'ordre.
+    var ocupats = {};
+    estat.preguntes.forEach(function (x, k) { if (k !== i) ocupats[x.itemId] = true; });
+
+    for (var t = 0; t < v.length + 40; t++) {
+      pos += dir;
+      if (pos >= v.length) {
+        // S'ha acabat la volta: si el contingut té generadors, se n'hi
+        // afegeix una de nova; si no, es torna a començar.
+        if (!allargaVolta(q.saberId)) pos = 0;
+      } else if (pos < 0) {
+        pos = v.length - 1;
+      }
+      var cand = v[pos];
+      if (cand && cand !== q.itemId && !ocupats[cand] && banc[cand]) {
+        if (estat.fixades[q.itemId]) {
+          delete estat.fixades[q.itemId];
+          estat.fixades[cand] = true;
+        }
+        q.itemId = cand;
+        estat.editat = true;
+        pinta();
+        desaAlHash();
+        return;
+      }
+    }
+  }
+
+  /** El que fa que dues preguntes siguin «la mateixa» per a l'ull. */
+  function firma(it) {
+    return (it.cap || '') + '|' + (it.enunciat || '') + '|' + (it.figura || '');
+  }
+
   function altresNombres(i) {
     var q = estat.preguntes[i], it = banc[q.itemId];
     if (!it || !it.gen) return;
 
-    /* Es torna a tirar fins que surti una variant que no sigui la d'ara ni
-       cap altra que ja estigui a la prova. Sense això, dues tirades
-       seguides podien donar el mateix nombre i semblava que el botó no
-       feia res. Trenta intents és de sobres per a qualsevol generador; si
-       el pou és una llista tancada i curta, es queda amb l'última. */
+    /* Igual que la volta d'un saber, però dins d'un sol generador: uns
+       altres nombres per a la mateixa mena d'exercici. Es descarten les
+       variants que ja són a la prova i les que ja s'han vist en aquesta
+       pregunta, de manera que cada clic mostra una cosa nova de debò. */
     var fora = {};
     estat.preguntes.forEach(function (x) {
       if (banc[x.itemId]) fora[firma(banc[x.itemId])] = true;
     });
+    (q.vistes || []).forEach(function (f) { fora[f] = true; });
 
     var nou = null;
-    for (var t = 0; t < 30; t++) {
+    for (var t = 0; t < 60 && !nou; t++) {
       var cand = variant(it.gen, novaLlavor(it.gen));
       if (!cand) return;
-      nou = cand;
-      if (!fora[firma(cand)]) break;
+      if (!fora[firma(cand)]) nou = cand;
     }
-    if (!nou) return;
+    if (!nou) {
+      // Exhaurit el que és nou de debò: es torna a començar el cicle.
+      q.vistes = [];
+      nou = variant(it.gen, novaLlavor(it.gen));
+      if (!nou) return;
+    }
+    q.vistes = (q.vistes || []).concat(firma(it)).slice(-40);
 
     if (estat.fixades[q.itemId]) {
       delete estat.fixades[q.itemId];
@@ -453,37 +548,13 @@
     return (it.cap || '') + '|' + (it.enunciat || '') + '|' + (it.figura || '');
   }
 
-  function reemplaca(i) {
-    var q = estat.preguntes[i];
-    var saber = sabersPerId[q.saberId];
-    if (!saber) return;                       // pregunta pròpia: no té banc
-
-    var usats = {}, pares = {};
-    estat.preguntes.forEach(function (x) {
-      usats[x.itemId] = true;
-      var it = banc[x.itemId];
-      if (it && x !== q) pares[it.full + '-' + it.ex] = true;
-    });
-
-    var lliures = saber.items.map(function (id) { return banc[id]; })
-      .filter(function (it) { return it && !usats[it.id] && !pares[it.full + '-' + it.ex]; });
-    if (!lliures.length) {
-      lliures = saber.items.map(function (id) { return banc[id]; })
-        .filter(function (it) { return it && !usats[it.id]; });
-    }
-    if (!lliures.length) return;
-
-    // El `|| PERFILS.minims` és imprescindible: amb un perfil desconegut
-    // (un enllaç vell) això petava amb "Cannot read properties of undefined".
-    var pes = window.Composa.PERFILS[estat.spec.perfil] || window.Composa.PERFILS.minims;
-    var atzar = new window.Atzar(estat.spec.llavor + '|canvi|' + q.itemId + '|' + Date.now());
-    var nou = atzar.triaPonderada(lliures, function (it) { return pes[it.nivell] || 0.02; });
-
-    delete estat.fixades[q.itemId];
-    q.itemId = nou.id;
-    estat.editat = true;
-    pinta();
-    desaAlHash();
+  /** Porta la pregunta `i` a la posició `desti` (1..n) d'una sola passa. */
+  function mouA(i, desti) {
+    desti = Math.max(1, Math.min(estat.preguntes.length, desti)) - 1;
+    if (desti === i) return;
+    var q = estat.preguntes.splice(i, 1)[0];
+    estat.preguntes.splice(desti, 0, q);
+    acabaCanvi();
   }
 
   function mou(i, delta) {
@@ -511,6 +582,26 @@
    * control que faltava per construir la recuperació sobre els criteris que
    * l'alumne no va assolir, en comptes de sobre un total global.
    */
+  /**
+   * On ha d'anar una pregunta nova. Amb l'ordre del currículum s'insereix al
+   * seu lloc en comptes d'anar a parar a la posició catorze quan li tocava
+   * la tercera: moure-la amunt onze vegades era una feina absurda.
+   */
+  function inserisc(q) {
+    if (estat.spec.ordre !== 'curriculum' || !q.saberId) {
+      estat.preguntes.push(q);
+      return;
+    }
+    var idx = ordreSabers.indexOf(q.saberId);
+    var on = estat.preguntes.length;
+    for (var i = estat.preguntes.length - 1; i >= 0; i--) {
+      var j = ordreSabers.indexOf(estat.preguntes[i].saberId);
+      if (j >= 0 && j <= idx) { on = i + 1; break; }
+      on = i;
+    }
+    estat.preguntes.splice(on, 0, q);
+  }
+
   function afegeixDelSaber(saberId) {
     var saber = sabersPerId[saberId];
     if (!saber || !saber.items.length) return;
@@ -529,7 +620,7 @@
     // d'incloure el que s'avalua.
     if (estat.sabers.indexOf(saberId) < 0) marca([saberId], true);
 
-    estat.preguntes.push({ itemId: nou.id, saberId: saberId, punts: 0 });
+    inserisc({ itemId: nou.id, saberId: saberId, punts: 0 });
     acabaCanvi();
   }
 
@@ -717,7 +808,12 @@
         var saber = sabersPerId[q.saberId];
         if (!it) return;
         h += '<div class="q' + (estat.fixades[q.itemId] ? ' marcada' : '') + '">' +
-          '<span class="q-num">' + (i + 1) + '</span>' +
+          /* La posició és un camp: escriure-hi 3 la porta a la tercera
+             d'una passa. Amb només les fletxes, passar de la catorzena a
+             la tercera eren onze clics. */
+          '<input class="q-num" type="number" min="1" max="' + estat.preguntes.length +
+            '" value="' + (i + 1) + '" data-posicio="' + i +
+            '" aria-label="Posició de la pregunta ' + (i + 1) + '">' +
           '<span class="q-cos">' +
             '<span class="q-tit">' + esc(resumeix(it.cap) || resumeix(it.enunciat) || it.id) + '</span>' +
             '<span class="q-saber">' + esc(saber ? saber.titol : it.blocTitol) +
@@ -734,11 +830,13 @@
             '<button data-fixa="' + i + '" title="Conserva-la en tornar a generar" ' +
               'aria-label="Fixa la pregunta ' + (i + 1) + '">' +
               (estat.fixades[q.itemId] ? '★' : '☆') + '</button>' +
+            '<button data-anterior="' + i + '" title="L\'anterior d\'aquest contingut"' +
+              (saber ? '' : ' disabled') + '>\u27f2</button>' +
+            '<button data-seguent="' + i + '" title="La següent d\'aquest contingut"' +
+              (saber ? '' : ' disabled') + '>\u27f3</button>' +
             (it.gen
               ? '<button data-nombres="' + i + '" title="Uns altres nombres, ' +
                 'la mateixa pregunta">\u21bb</button>' : '') +
-            '<button data-canvia="' + i + '" title="Canvia-la per una altra"' +
-              (saber ? '' : ' disabled') + '>\u27f3</button>' +
             '<button data-amunt="' + i + '" title="Amunt"' + (i ? '' : ' disabled') + '>↑</button>' +
             '<button data-avall="' + i + '" title="Avall"' +
               (i === estat.preguntes.length - 1 ? ' disabled' : '') + '>↓</button>' +
@@ -1101,7 +1199,7 @@
           if (!s2 || !s2.items.length) return;
           if (estat.preguntes.some(function (q) { return q.saberId === id; })) return;
           var nou = triaItem(s2, atzar);
-          if (nou) estat.preguntes.push({ itemId: nou.id, saberId: id, punts: 0 });
+          if (nou) inserisc({ itemId: nou.id, saberId: id, punts: 0 });
         });
       } else {
         llista.forEach(treuTotsDelSaber);
@@ -1112,6 +1210,8 @@
     $('#cerca').addEventListener('input', pintaRail);
 
     $('#llista').addEventListener('change', function (ev) {
+      var pos = ev.target.dataset && ev.target.dataset.posicio;
+      if (pos != null) { mouA(+pos, +ev.target.value); return; }
       var i = ev.target.dataset && ev.target.dataset.punts;
       if (i == null) return;
       var v = parseFloat(ev.target.value);
@@ -1139,7 +1239,8 @@
       if (!b || b.disabled) return;
       var d = b.dataset;
       if (d.nombres != null) altresNombres(+d.nombres);
-      else if (d.canvia != null) reemplaca(+d.canvia);
+      else if (d.seguent != null) passa(+d.seguent, 1);
+      else if (d.anterior != null) passa(+d.anterior, -1);
       else if (d.amunt != null) mou(+d.amunt, -1);
       else if (d.avall != null) mou(+d.avall, 1);
       else if (d.treu != null) treu(+d.treu);
