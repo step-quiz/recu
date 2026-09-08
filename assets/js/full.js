@@ -72,7 +72,7 @@
   /* ------------------------------------------------ eines sobre el full
      Els `data-*` són els mateixos que fa servir la llista del panell, de
      manera que el controlador té un sol gestor de clics per als dos llocs. */
-  function eines(i, q, total, saber, cfg) {
+  function eines(i, q, total, saber, cfg, it) {
     var b = function (attr, txt, titol, off) {
       return '<button data-' + attr + '="' + i + '" title="' + esc(titol) + '"' +
              (off ? ' disabled' : '') + '>' + txt + '</button>';
@@ -84,6 +84,12 @@
            'title="' + esc(saber ? saber.titol : 'Pregunta pròpia') + '">' +
       b('fixa', (cfg.fixades && cfg.fixades[q.itemId]) ? '\u2605' : '\u2606',
         'Conserva-la en tornar a generar') +
+      /* Dos botons diferents a propòsit. ↻ només surt quan la pregunta ve
+         d'un generador propi: llavors se'n poden demanar uns altres nombres
+         sense sortir del tipus, i el pou és infinit. Les 592 preguntes del
+         banc de `repas` són text fix i només es poden intercanviar (⟳). */
+      (it && it.gen
+        ? b('nombres', '\u21bb', 'Uns altres nombres, la mateixa pregunta') : '') +
       b('canvia', '\u27f3', 'Canvia-la per una altra del mateix contingut', !saber) +
       b('amunt', '\u2191', 'Amunt', i === 0) +
       b('avall', '\u2193', 'Avall', i === total - 1) +
@@ -119,14 +125,16 @@
              '<div class="pregunta-cap">' +
                '<span class="pregunta-num">' + (i + 1) + '.</span>' +
                '<div class="pregunta-cos">' +
-                 /* `capCal`: 213 ítems es queden en un nombre solt sense
-                    l'encapçalament ("$3850$"). Aquests el conserven encara
-                    que el professor apagui l'opció, o el full sortiria amb
-                    preguntes sense consigna. */
+                 /* `capCal` i `figuraCal` són els dos passamans que
+                    impedeixen que un interruptor buidi una pregunta:
+                    l'encapçalament es conserva quan l'enunciat és una dada
+                    solta ("$3850$"), i la figura quan la pregunta ÉS el
+                    dibuix. Els declara el generador; per als ítems de
+                    `repas` els dedueix el compilador. */
                  (it.cap && (cfg.encapcalaments || it.capCal)
                    ? '<span class="encap">' + it.cap + '</span>' : '') +
                  it.enunciat +
-                 (it.figura && cfg.figures
+                 (it.figura && (cfg.figures || it.figuraCal)
                    ? '<div class="figura-cont">' + it.figura + '</div>' : '') +
                '</div>' +
                (cfg.mostraPunts
@@ -138,7 +146,7 @@
                 amaga el CSS i els torna a treure el panell, on sí que es
                 poden tocar amb el dit. */
              (cfg.editable
-               ? eines(i, q, p.length, sabersPerId[q.saberId], cfg) : '') +
+               ? eines(i, q, p.length, sabersPerId[q.saberId], cfg, it) : '') +
              (cfg.espai > 0
                ? '<div class="espai ' + esc(cfg.paper) + '" style="--espai:' +
                  cfg.espai + 'mm"></div>' : '') +
@@ -264,5 +272,6 @@
     return h + peu(cfg, 'pla de repàs');
   }
 
-  glob.Full = { prova: prova, clau: clau, pla: pla, solucio: solucio, esc: esc };
+  glob.Full = { prova: prova, clau: clau, pla: pla, solucio: solucio,
+                esc: esc, num: num };
 })(window);

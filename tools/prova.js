@@ -1,6 +1,21 @@
 /* Prova de fum amb navegador real: obre l'eina, comprova que pinta i
    genera captures i el PDF de la prova, de la clau i del pla. */
-const { chromium } = require('/home/claude/.npm-global/lib/node_modules/playwright');
+/* Playwright pot estar instal·lat al projecte o globalment, i la ruta
+   global depèn de la màquina. Es busca als dos llocs en comptes de
+   codificar-ne una: amb una ruta absoluta, aquesta ordre —que el README
+   documenta— petava a la primera línia a qualsevol altre ordinador. */
+function carregaPlaywright() {
+  try { return require('playwright'); } catch (e) { /* no és al projecte */ }
+  try {
+    const arrelGlobal = require('child_process')
+      .execSync('npm root -g', { encoding: 'utf8' }).trim();
+    return require(require('path').join(arrelGlobal, 'playwright'));
+  } catch (e) {
+    console.error('Cal Playwright: npm install -D playwright && npx playwright install chromium');
+    process.exit(1);
+  }
+}
+const { chromium } = carregaPlaywright();
 const path = require('path');
 
 (async () => {
@@ -18,7 +33,6 @@ const path = require('path');
   const info = await pag.evaluate(() => ({
     preguntes: document.querySelectorAll('.pregunta').length,
     sabers: document.querySelectorAll('.saber').length,
-    buits: document.querySelectorAll('.saber.buit').length,
     katex: document.querySelectorAll('.katex').length,
     figures: document.querySelectorAll('.figura').length,
     titol: (document.querySelector('.doc-cap h1') || {}).textContent,
@@ -83,6 +97,34 @@ const path = require('path');
   }
   await pag.evaluate(() => { document.querySelector('#app').dataset.vista = 'full'; });
 
+  /* Cap interruptor pot buidar una pregunta: es prova el full amb les
+     quatre combinacions d'«enunciats generals» i «figures». Els bugs de
+     `capCal` i de les figures eren tots dos d'aquesta família. */
+  for (const cap of [true, false]) {
+    for (const fig of [true, false]) {
+      await pag.evaluate(([c, f]) => {
+        const e = document.querySelector('#encapcalaments');
+        const g = document.querySelector('#figures');
+        e.checked = c; e.dispatchEvent(new Event('change'));
+        g.checked = f; g.dispatchEvent(new Event('change'));
+      }, [cap, fig]);
+      await pag.waitForTimeout(250);
+      const buides = await pag.evaluate(() =>
+        [...document.querySelectorAll('.pregunta-cos')]
+          .filter(x => x.textContent.replace(/\s+/g, ' ').trim().length < 12 &&
+                       !x.querySelector('svg')).length);
+      console.log(`SENSE BUIDAR (encapçalaments=${cap}, figures=${fig}):`,
+        buides ? `*** ${buides} preguntes buides ***` : 'cap buida');
+    }
+  }
+
   console.log('ERRORS:', errors.length ? errors : 'cap');
   await nav.close();
+
+  /* Es neteja el que ha deixat: si no, els PDF i les captures es queden a
+     l'arbre i acaben dins del zip que es passa al departament. */
+  ['_prova.pdf', '_clau.pdf', '_pla.pdf',
+   '_prova-pantalla.png', '_prova-pantalla2.png'].forEach(function (f) {
+    try { require('fs').unlinkSync(path.join(arrel, f)); } catch (e) { /* ja no hi era */ }
+  });
 })();

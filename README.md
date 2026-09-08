@@ -90,10 +90,32 @@ document del departament: si Equacions són 9 h i Percentatges 4 h, la prova
 respecta aquesta proporció. `Banc` reparteix segons quantes preguntes hi ha
 disponibles. `Igual` dona el mateix nombre a cada contingut.
 
+**Dos passamans que no es poden apagar.** Un ítem pot declarar que necessita
+l'encapçalament (`capCal`: l'enunciat és una dada solta, com «$3850$») o que
+necessita la figura (`figuraCal`: la pregunta *és* el dibuix). Aquests dos
+elements es continuen imprimint encara que el professor apagui les opcions
+corresponents, perquè si no el full sortiria amb preguntes que no es poden
+respondre. Els declara el generador; per als 592 ítems de `repas` els dedueix
+el compilador. Una comprovació de `tests.js` recorre les quatre combinacions
+dels dos interruptors i verifica que cap ítem no es quedi buit amb cap.
+
 **Les icones de cada pregunta** viuen **al marge esquerre del full**, al costat
-de la pregunta a què afecten: `☆` la fixa perquè sobrevisqui a *Altres
-preguntes*, `⟳` la canvia per una altra del mateix contingut, `↑ ↓` la mou,
-`✕` la treu. Per decidir si una pregunta et va bé, l'has d'estar mirant.
+de la pregunta a què afecten: `↻` demana uns altres nombres, `☆` la fixa perquè
+sobrevisqui a *Altres preguntes*, `⟳` la canvia per una altra del mateix
+contingut, `↑ ↓` la mou, `✕` la treu.
+
+`↻` i `⟳` no fan el mateix, i només un dels dos surt sempre:
+
+| | Què fa | On surt |
+|---|---|---|
+| `↻` | uns altres nombres, **la mateixa pregunta** | preguntes del material propi |
+| `⟳` | una altra pregunta del mateix contingut | totes |
+
+`↻` només pot existir on la pregunta ve d'un generador. Les 592 preguntes que
+venen del banc de `repas` són text ja escrit i no es poden reparametritzar; les
+285 pròpies sí, i el pou és infinit. Vint-i-quatre dels cinquanta sabers en
+tenen prou material propi perquè, a la pràctica, no se'ls acabin mai les
+preguntes. Per decidir si una pregunta et va bé, l'has d'estar mirant.
 
 En pantalla estreta el full es dibuixa a escala reduïda i uns botons de 19 px en
 quedarien 10, o sigui que allà les icones passen al panell d'ajustos. És el
@@ -103,6 +125,13 @@ mateix joc de botons: canvia on són, no què fan.
 contingut sense refer la prova. És el que cal quan la recuperació s'ha de
 construir sobre els criteris concrets que l'alumne no va assolir, i no sobre un
 total global. Al costat hi surt quantes n'hi ha triades.
+
+**El nombre de pàgines** surt al costat del botó d'imprimir, amb un «≈»
+que no és decoratiu: es calcula simulant la paginació —cada pregunta és un
+bloc que no es parteix— i, contrastat contra 126 PDF reals, encerta el
+96-98 % de les vegades. Quan falla és sempre una pàgina de menys. Afinar-ho
+més voldria paginar de debò, i per a un número que serveix per decidir si val
+la pena imprimir no compensa.
 
 **Els punts es reparteixen.** `Igual` dona el mateix a totes; `Per nivell` fa
 que una de nivell 3 valgui el doble que una d'1; `Per hores` segueix les hores
@@ -123,12 +152,12 @@ tenies.
 ```
 El .docx del departament  →  l'estructura: 50 sabers, amb les seves hores
 repas (banc de 892 items) →  592 preguntes, amb les seves solucions
-tools/generador.py        →  244 preguntes pròpies, per als forats de repàs
+assets/js/generadors.js   →  285 preguntes pròpies, i infinites variants
 llibre (296 PDFs)         →  què repassar, al pla de repàs
 Mates amb Bogdan (12 PDF) →  material d'ampliació, al pla de repàs
 ```
 
-Són **836 preguntes** en total. Un cop compilades, l'eina no distingeix les
+Són **877 preguntes** al catàleg. Un cop compilades, l'eina no distingeix les
 d'un origen de les de l'altre.
 Els enunciats, les figures SVG i les resolucions són literalment els de `repas`;
 el que canvia és que aquí es fan servir com a **resposta oberta**, sense les
@@ -142,7 +171,7 @@ Poliedres (27).
 
 **Ara mateix no hi ha cap forat**: els 50 sabers del currículum tenen preguntes,
 i tots en tenen almenys una de nivell 1. Fins fa poc no era així; el que ho ha
-tancat és `tools/generador.py` (vegeu més avall). Si algun dia se'n torna a
+tancat és `assets/js/generadors.js` (vegeu més avall). Si algun dia se'n torna a
 obrir un, els sabers sense preguntes no es llisten i al peu del curs hi surt una
 línia que en diu el nombre.
 
@@ -162,9 +191,9 @@ I els que en tenien massa poc, o cap de prou curt: Angles (1 ítem), Perímetres
 (2), Polígons (3), Divisibilitat, Nombres decimals, Gràfics i taules,
 Circumferència i cercle, Semblança.
 
-### El material propi: `tools/generador.py`
+### El material propi: `assets/js/generadors.js`
 
-Quinze generadors deterministes que produeixen 244 preguntes amb solució i
+Quaranta-nou generadors deterministes que produeixen preguntes amb solució i
 passos, i figures SVG on calen. El criteri és el que va sortir de revisar
 proves impreses:
 
@@ -172,19 +201,43 @@ proves impreses:
 - **enunciats curts** — el que bloqueja aquest alumnat és llegir i decidir;
 - **resultats nets** — cap arrel no exacta donada com a dada.
 
+**Per què són en JavaScript i no en Python.** Perquè el navegador els ha de
+poder executar: és el que fa que `↻` pugui donar uns altres nombres sense
+sortir del tipus de pregunta. Si el compilador en tingués una còpia en Python,
+hi hauria dues versions de cada exercici i acabarien divergint. Per això
+`tools/compila.py` executa aquest mateix fitxer amb Node
+(`tools/genera.js --cataleg`) per omplir el catàleg de `banc.js`.
+
+**Això vol dir que compilar necessita Node.** Fer servir l'eina, no.
+
 Es comprova sol:
 
 ```sh
-python3 tools/generador.py --comprova
+node tools/genera.js --comprova
 ```
 
-Verifica que no hi hagi ids repetits, que cap ítem es quedi sense enunciat ni
-figura, que els dòlars de LaTeX estiguin aparellats, i recalcula els m.c.d.,
-els m.c.m. i les arrels per contrastar-los amb la resposta escrita.
+Verifica sobre 200 tirades de cada generador que cap peti, que sempre tornin
+enunciat (o figura), resposta i passos, que els dòlars de LaTeX estiguin
+aparellats, i recalcula els m.c.d., els m.c.m., les arrels i les diagonals per
+contrastar-los amb la resposta escrita.
 
-Per canviar el material, s'edita el generador corresponent i es recompila. La
-constant `LLAVOR` de dalt de tot fixa quins exemples surten: canviar-la genera
-un joc nou d'exercicis del mateix tipus.
+**El nivell no es mesura allà.** El mesurador viu a `tools/compila.py` i és
+l'únic que hi ha. Cada generador declara el nivell que tenen totes les seves
+variants, i en compilar es generen 200 variants de cadascun i es comprova que
+sigui cert. Si un generador no és estable, **la compilació s'atura amb error**
+i diu quin és i quins nivells li surten: no es genera cap `banc.js` que
+prometi un nivell que no és cert. Va atrapar tres casos reals mentre s'escrivia:
+
+- `arr-entre` («entre quins enters és $\sqrt{50}$») el penalitzava l'arrel no
+  exacta de l'enunciat, que aquí és l'exercici mateix i no un defecte: exempció
+  a `BLOCS_D_ARRELS`.
+- `mag-puja` sortia a nivell 1 o 2 segons si el factor de conversió era 10 o
+  1000. El factor apareix als passos («$1$ m $= 1000$ mm») i no és cap càrrega
+  de càlcul, així que el mesurador va passar a mirar la mida de la **resposta** i
+  no la de tot el desenvolupament.
+- `mag-superficie` barrejava passar de cm² a mm² amb passar de m² a cm². Són
+  exercicis de dificultat diferent —un resultat de cinc xifres no és el mateix—
+  i ara són dos generadors, `mag-superficie` i `mag-superficie-gran`.
 
 ### Ítems que s'exclouen a propòsit
 
@@ -221,12 +274,15 @@ petits cal escriure'l amb **+ Pregunta pròpia** o afegir un generador nou a
     assets/js/composa.js        repartiment i tria de preguntes (funció pura)
     assets/js/full.js           construcció dels tres documents imprimibles
     assets/js/app.js            controlador: arbre, estat i render
-    assets/js/banc.js           GENERAT — els 411 ítems amb solució
+    assets/js/banc.js           GENERAT — els 877 ítems amb solució
     assets/js/mapa.js           GENERAT — currículum, cobertura i índex del llibre
     assets/lib/katex/           KaTeX en local
 
+    assets/js/generadors.js     els 49 generadors del material propi
+
     tools/mapa_curricular.py    el mapa saber → fonts. AQUÍ es toca el currículum
-    tools/compila.py            genera banc.js i mapa.js
+    tools/compila.py            genera banc.js i mapa.js (necessita Node)
+    tools/genera.js             executa els generadors: catàleg i verificacions
     tools/tests.js              proves de la lògica (node, sense dependències)
     tools/prova.js              prova de fum amb navegador (necessita Playwright)
 
@@ -287,7 +343,8 @@ zero. La compilació és determinista: entrades iguals, sortida idèntica.
 ## Comprovar que tot funciona
 
 ```sh
-node tools/tests.js       # 64 comprovacions, cap dependència
+node tools/tests.js       # 144 comprovacions, cap dependència
+node tools/genera.js      # verifica els 49 generadors sobre 9 800 variants
 node tools/prova.js       # obre l'eina en un navegador i genera els tres PDF
 ```
 
@@ -299,11 +356,11 @@ les regles de pantalla escrites com `@media (max-width:900px)` en comptes de
 `@media screen and (max-width:900px)`, la regla que amaga el full a la pestanya
 «Continguts» s'aplicava també al paper i sortia un full en blanc.
 
-`tests.js` comprova les tres coses que fan mal en paper: que els punts sumin
-exactament el total, que no es repeteixi cap pregunta (ni cap exercici pare
+`tests.js` comprova les coses que fan mal en paper: que els punts sumin
+exactament el total demanat (o el mínim assolible, si el terra de 0,25 el puja), que no es repeteixi cap pregunta (ni cap exercici pare
 mentre en quedin d'altres), i que el mateix codi doni sempre el mateix examen.
-`prova.js` necessita Playwright i deixa `_prova.pdf`, `_clau.pdf` i `_pla.pdf`
-al costat de l'`index.html`.
+`prova.js` necessita Playwright, genera els tres PDF per comprovar-los i els
+esborra en acabar.
 
 ---
 

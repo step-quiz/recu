@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Mapa curricular 1r i 2n d'ESO -> fonts de material.
+Mapa curricular de 1r, 2n i 3r d'ESO -> fonts de material.
 
 Font de veritat de l'estructura: "Repartiment de continguts ESO 2025-26"
 (Departament de Matemàtiques). Els títols dels sentits i dels sabers, i les
@@ -359,6 +359,11 @@ CURSOS = [
 # treballats, no caldria.
 #
 #   (patró sobre l'enunciat, [sabers als quals s'aplica])
+#
+# LÍMIT CONEGUT: aquest patró casa amb qualsevol resta, no només amb un
+# nombre negatiu. Als 26 exercicis de divisibilitat s'hi va revisar a mà i
+# encerta, però si s'aplica a un altre bloc pot filtrar de més. El test de
+# `tests.js` fa servir el mateix patró i per tant no ho pot detectar.
 VETOS = [
     (r"[−-]\s*\d", ["1eso-num-divisibilitat", "2eso-num-divisibilitat"]),
 ]
@@ -370,6 +375,11 @@ VETOS = [
 # x/5 = 3 abans d'haver-se refet amb les equacions senzilles.
 BLOCS_DE_FRACCIONS = {"fraccions", "decimals", "percentatges",
                       "factor_multiplicador", "directa_inversa"}
+
+# Blocs on l'arrel no exacta ÉS el contingut que s'avalua. A la resta, una
+# arrel lletja a l'enunciat és artificial (ningú mesura un trapezi i li surt
+# \sqrt{164}) i treu l'exercici del nivell mínim; aquí és l'exercici mateix.
+BLOCS_D_ARRELS = {"arr-entre"}
 
 # Ítems fora del banc a tot arreu. El banc de repàs és de resposta múltiple i
 # aquests tres enunciats es refereixen a unes opcions que aquí no s'imprimeixen

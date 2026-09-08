@@ -9,6 +9,7 @@ const arrel = path.resolve(__dirname, '..');
 require(path.join(arrel, 'assets/js/mapa.js'));
 require(path.join(arrel, 'assets/js/banc.js'));
 require(path.join(arrel, 'assets/js/atzar.js'));
+require(path.join(arrel, 'assets/js/generadors.js'));
 require(path.join(arrel, 'assets/js/composa.js'));
 
 let ok = 0, ko = 0;
@@ -102,6 +103,131 @@ VEREDICTES.forEach(([id, veredicte, per]) => {
     `nivell ${it.nivell}`);
 });
 
+/* ------------------------------------------------------------- generadors */
+console.log('Generadors propis');
+{
+  const G = window.GENERADORS;
+  comprova('hi ha generadors carregats', G.llista.length > 40, String(G.llista.length));
+  comprova('cap id de generador repetit',
+    new Set(G.llista.map(g => g.id)).size === G.llista.length);
+  comprova('tots declaren sabers i nivell',
+    G.llista.every(g => g.sabers.length && [1, 2, 3].includes(g.nivell)));
+
+  /* La mateixa llavor ha de donar la mateixa pregunta: sense això,
+     l'enllaç desat d'una prova no la reconstruiria. */
+  const a = G.crea('div-mcd', 'x9'), b = G.crea('div-mcd', 'x9');
+  comprova('la mateixa llavor dona la mateixa variant',
+    JSON.stringify(a) === JSON.stringify(b));
+  comprova('llavors diferents donen variants diferents',
+    G.llista.some(g => {
+      const v = new Set();
+      for (let i = 0; i < 20; i++) v.add(G.crea(g.id, i).enunciat);
+      return v.size > 1;
+    }));
+
+  let mal = [];
+  G.llista.forEach(g => {
+    for (let i = 0; i < 40; i++) {
+      const it = G.crea(g.id, 'z' + i);
+      if (!it) { mal.push(g.id + ': no crea'); break; }
+      if (!it.enunciat && !it.figura) mal.push(g.id + ': sense enunciat ni figura');
+      if (!it.resposta || !it.passos.length) mal.push(g.id + ': sense solució');
+      const t = it.cap + it.enunciat + it.resposta + it.passos.join('');
+      if ((t.match(/\$/g) || []).length % 2) mal.push(g.id + ': LaTeX desaparellat');
+    }
+  });
+  /* Llengua i notació: tot això surt imprès i es va veure en un full. */
+  let llengua = [];
+  const revisa = (id, re, que) => {
+    for (let i = 0; i < 120; i++) {
+      const it = G.crea(id, 'L' + i);
+      const t = it.cap + ' ' + it.enunciat + ' ' + it.resposta + ' ' + it.passos.join(' ');
+      if (re.test(t)) { llengua.push(id + ': ' + que); break; }
+    }
+  };
+  revisa('tau-maxim', /recull la (gols|alumnes|llibres)/, 'concordança de l\'article');
+  revisa('tau-suma', /recull la (gols|alumnes|llibres)/, 'concordança de l\'article');
+  revisa('tau-maxim', /\bel [aeiouàèéíòóú]/i, 'apostrofació de l\'article');
+  revisa('mov-vector', /- \(\d/, 'parèntesis en un positiu');
+  revisa('mov-translacio', /\+ -/, 'signes «+ −» seguits');
+  revisa('per-regular', /(triangle|quadrilàter) regular/, 'nom del polígon regular');
+  revisa('pol-angles', /\b1 triangles\b/, 'plural amb un sol element');
+  comprova('cap generador escriu català incorrecte', !llengua.length,
+    [...new Set(llengua)].join(' | '));
+
+  /* Una pregunta amb dues respostes bones fa que el full de correcció en
+     doni una per dolenta. Passava en el 31 % de les taules. */
+  let empats = 0;
+  for (let i = 0; i < 300; i++) {
+    const v = (G.crea('tau-maxim', 'E' + i).enunciat.match(/<td>\d+<\/td>/g) || [])
+      .map(x => +x.replace(/\D/g, ''));
+    const mx = Math.max(...v);
+    if (v.filter(x => x === mx).length > 1) empats++;
+  }
+  comprova('tau-maxim no genera màxims empatats', empats === 0, String(empats));
+
+  /* KaTeX compon la «i» com una variable en cursiva si va dins dels dòlars.
+     Cal mirar cada camp per separat i només dins de cada tros $…$: enganxant
+     l'enunciat amb la solució, els dòlars s'aparellen mal i surten falsos
+     positius. */
+  const conjuncioSolta = txt => (String(txt || '').match(/\$[^$]*\$/g) || [])
+    .some(tros => /[\d}]\s+i\s+[\d\\]/.test(tros));
+  const ambConjuncio = window.BANC.items.filter(i => {
+    const sol = JSON.parse(Buffer.from(i.sol, 'base64').toString('utf8'));
+    return [i.cap, i.enunciat, sol.r].concat(sol.p || []).some(conjuncioSolta);
+  });
+  comprova('cap conjunció solta dins del mode matemàtic',
+    !ambConjuncio.length, ambConjuncio.slice(0, 3).map(i => i.id).join());
+
+  comprova('40 variants de cada generador surten senceres', !mal.length,
+    [...new Set(mal)].slice(0, 3).join(' | '));
+
+  /* Els ítems propis del banc han de dur d'on venen: és el que permet
+     demanar-ne uns altres nombres i reconstruir-los des de l'adreça. */
+  const props = window.BANC.items.filter(i => i.full === 0);
+  comprova('els ítems propis porten generador i llavor',
+    props.length > 200 && props.every(i => i.gen && i.llavor), String(props.length));
+  comprova('el generador de cada ítem propi existeix',
+    props.every(i => G.perId[i.gen]));
+  /* Cap interruptor pot buidar una pregunta. Els tres bugs de la família
+     —`capCal` deduït dues vegades, les figures apagades, i el llindar de 25
+     caràcters— es tanquen tots amb aquesta comprovació. */
+  const netej = t => String(t || '').replace(/<[^>]+>/g, ' ')
+    .replace(/\\[a-zA-Z]+/g, ' ').replace(/[${}\\]/g, '')
+    .replace(/\s+/g, ' ').trim();
+  let buides = [];
+  for (const ambCap of [true, false]) {
+    for (const ambFig of [true, false]) {
+      window.BANC.items.forEach(i => {
+        const cap = (ambCap || i.capCal) && i.cap ? netej(i.cap) + ' ' : '';
+        const teFig = i.figura && (ambFig || i.figuraCal);
+        if ((cap + netej(i.enunciat)).trim().length < 12 && !teFig) buides.push(i.id);
+      });
+    }
+  }
+  comprova('cap ítem queda buit amb cap combinació de figures i encapçalaments',
+    !buides.length, [...new Set(buides)].slice(0, 4).join());
+
+  /* `capCal` i `figuraCal` els declara el generador i el compilador els
+     copia: no s'han de tornar a deduir enlloc. */
+  comprova('els ítems propis hereten capCal i figuraCal del generador',
+    props.every(i => i.capCal === G.perId[i.gen].capCal &&
+                     i.figuraCal === G.perId[i.gen].figuraCal));
+
+  /* Totes les variants d'un generador són el mateix exercici pare: si no,
+     la regla de «un pare només un cop» no les separa i surten sis
+     preguntes que en mesuren dues. */
+  const exPerGen = {};
+  props.forEach(i => { (exPerGen[i.gen] = exPerGen[i.gen] || new Set()).add(i.ex); });
+  comprova('les variants d\'un generador comparteixen exercici pare',
+    Object.values(exPerGen).every(s => s.size === 1),
+    Object.entries(exPerGen).filter(([, s]) => s.size > 1).map(([g]) => g).join());
+
+  comprova('el nivell del catàleg coincideix amb el declarat pel generador',
+    props.every(i => i.nivell === G.perId[i.gen].nivell),
+    props.filter(i => i.nivell !== G.perId[i.gen].nivell).map(i => i.id).slice(0, 3).join());
+}
+
 /* ------------------------------------------------------------- repartiment */
 console.log('Repartiment');
 for (const n of [1, 5, 7, 13, 20, 31]) {
@@ -143,10 +269,30 @@ console.log('Composició');
 const tots = cursos.flatMap(c => c.sabers.filter(s => s.items.length).map(s => s.id));
 const base = { perfil: 'minims', pes: 'hores', ordre: 'curriculum', punts: 10 };
 
-/* Bug: amb 30 preguntes i 5 punts sortien deu preguntes a «0 p» impreses. */
-for (const [n, t] of [[30, 5], [15, 1], [15, 3], [40, 2]]) {
-  comprova(`punts de ${n} sobre ${t}: cap pregunta a zero`,
-    window.Composa.puntua(n, t).every(x => x >= 0.25));
+/* Dos bugs alhora. Amb 30 preguntes i 5 punts sortien deu preguntes a «0 p»
+   impreses; i el bucle de decrement escurçava el repartiment, de manera que
+   12 preguntes sobre 3 punts sumaven 3,25 tot i que 3 és assolible. La
+   segona comprovació és la que hauria fet saltar el segon bug: no n'hi ha
+   prou de mirar que cap sigui zero, la suma ha de ser la mínima possible. */
+/* Amb pesos DESIGUALS, que és el cas que va destapar el desquadrament: amb
+   pesos uniformes el bucle de decrement no s'arribava a exercitar. */
+for (const [pesos, t] of [[[2, 3, 4, 12, 5, 6], 3], [[1, 1, 2, 2], 10],
+                          [[9, 4, 4, 3, 6, 2], 2], [[1, 5], 0.5],
+                          [[3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 3]]) {
+  const p = window.Composa.puntua(pesos, t);
+  const esperat = Math.max(t, window.Composa.puntsMinims(pesos.length));
+  comprova(`pesos [${pesos}] sobre ${t}: suma ${esperat}`,
+    Math.abs(p.reduce((a, b) => a + b, 0) - esperat) < 1e-9,
+    String(p.reduce((a, b) => a + b, 0)));
+  comprova(`pesos [${pesos}] sobre ${t}: cap a zero`, p.every(x => x >= 0.25));
+}
+for (const [n, t] of [[30, 5], [15, 1], [15, 3], [40, 2], [12, 3], [3, 0.5]]) {
+  const p = window.Composa.puntua(n, t);
+  comprova(`punts de ${n} sobre ${t}: cap pregunta a zero`, p.every(x => x >= 0.25));
+  const esperat = Math.max(t, window.Composa.puntsMinims(n));
+  comprova(`punts de ${n} sobre ${t}: la suma és la mínima assolible (${esperat})`,
+    Math.abs(p.reduce((a, b) => a + b, 0) - esperat) < 1e-9,
+    String(p.reduce((a, b) => a + b, 0)));
 }
 
 for (const curs of cursos) {

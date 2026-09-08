@@ -115,12 +115,18 @@
       .map(function (v, i) { return { i: i, r: v - Math.floor(v) }; })
       .sort(function (a, b) { return b.r - a.r || a.i - b.i; });
 
-    // `falten` pot ser negatiu si el terra d'un quart s'ha menjat el total.
-    var pas = falten > 0 ? 1 : -1;
-    for (var t = 0; t < Math.abs(falten); t++) {
-      var idx = ordre[t % ordre.length].i;
-      if (pas < 0 && base[idx] <= 1) { falten++; continue; }
+    /* `falten` pot ser negatiu si el terra d'un quart s'ha menjat el total.
+       El bucle va per voltes i no per quarts: la versió anterior feia
+       `falten++` en saltar una pregunta que ja era a 0,25, i això escurçava
+       el bucle en comptes d'allargar-lo. Resultat mesurat: 12 preguntes
+       sobre 3 punts sumaven 3,25 quan 3 és perfectament assolible. */
+    var pas = falten > 0 ? 1 : -1, voltes = 0, sostre = ordre.length * 8;
+    while (falten !== 0 && voltes < sostre) {
+      var idx = ordre[voltes % ordre.length].i;
+      voltes++;
+      if (pas < 0 && base[idx] <= 1) continue;    // no es pot baixar de 0,25
       base[idx] += pas;
+      falten -= pas;
     }
     return base.map(function (q) { return q / 4; });
   }
@@ -130,6 +136,9 @@
    * el professor hagi fixat a mà. Una pregunta amb `fix` conserva el seu
    * valor i la resta es reparteixen el que sobra.
    */
+  /** El mínim que pot valer una prova: cada pregunta a 0,25. */
+  function puntsMinims(n) { return n * 0.25; }
+
   function reparteixPunts(preguntes, total, criteri, banc, sabersPerId) {
     var fixats = 0, lliures = [];
     preguntes.forEach(function (q, i) {
@@ -175,6 +184,10 @@
 
     if (!sabers.length) return { preguntes: [], avisos: [] };
 
+    /* Límit conegut: això compta ítems repetits. Divisibilitat de 1r i de 2n
+       comparteixen els mateixos exercicis i sumen el doble del que hi ha de
+       debò. Amb el màxim del control a 15 preguntes no és arribable; si
+       algun dia s'apuja, cal comptar ids únics. */
     var disponibles = sabers.reduce(function (a, s) { return a + s.items.length; }, 0);
     var nombre = Math.min(spec.nombre, disponibles);
     if (nombre < spec.nombre) {
@@ -238,6 +251,7 @@
     composa: composa,
     reparteix: reparteix,
     puntua: puntua,
+    puntsMinims: puntsMinims,
     reparteixPunts: reparteixPunts,
     PERFILS: PERFILS,
     PES_NIVELL: PES_NIVELL

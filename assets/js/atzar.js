@@ -47,6 +47,21 @@
     return c;
   };
 
+  /** Enter dins [a, b], tots dos inclosos. */
+  Atzar.prototype.entre = function (a, b) {
+    return a + this.enter(b - a + 1);
+  };
+
+  /** Un element qualsevol de la llista. */
+  Atzar.prototype.tria = function (llista) {
+    return llista[this.enter(llista.length)];
+  };
+
+  /** `n` elements diferents de la llista, en ordre aleatori. */
+  Atzar.prototype.mostra = function (llista, n) {
+    return this.barreja(llista).slice(0, n);
+  };
+
   /**
    * Tria un element segons un pes per element. Els pesos no cal que sumin 1.
    * Si tots els pesos són 0 es tria uniformement, perquè un perfil de

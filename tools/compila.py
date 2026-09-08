@@ -21,12 +21,12 @@ import base64
 import json
 import os
 import re
+import subprocess
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from mapa_curricular import (CURSOS, SENTITS, BOGDAN, VETOS, EXCLOSOS,  # noqa: E402
-                             BLOCS_DE_FRACCIONS)
-from generador import genera as genera_propis  # noqa: E402
+                             BLOCS_DE_FRACCIONS, BLOCS_D_ARRELS)
 
 
 def llegeix_full(carpeta, n):
@@ -34,6 +34,26 @@ def llegeix_full(carpeta, n):
     with open(os.path.join(carpeta, "data", f"full{n}.js"), encoding="utf-8") as f:
         s = f.read()
     return json.loads(s[s.index("{"): s.rindex("}") + 1])
+
+
+def node(args):
+    """Executa un script de Node del projecte i torna la seva sortida."""
+    arrel = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return subprocess.run(["node"] + [os.path.join(arrel, args[0])] + args[1:],
+                          check=True, capture_output=True, text=True).stdout
+
+
+def nivells_per_generador(n):
+    """
+    Els nivells que surten de `n` variants de cada generador, mesurats amb
+    el mateix `calcula_nivell` que la resta del banc.
+    """
+    out = {}
+    for it in json.loads(node(["tools/genera.js", "--mostra", str(n)])):
+        out.setdefault(it["gen"], set()).add(calcula_nivell(
+            {"enunciat": it["enunciat"], "dif": 1},
+            it["passos"], it["resposta"], it["cap"], it["gen"]))
+    return out
 
 
 def text_pla(html):
@@ -99,7 +119,7 @@ def calcula_nivell(item, resolucio, resposta, cap, bloc=""):
     punts = 0
     imprès = text_pla(cap) + " " + text_pla(item["enunciat"])
     passos = len(resolucio)
-    sol = resposta + " " + " ".join(resolucio)   # la resposta també compta
+    sol = resposta + " " + " ".join(resolucio)
 
     # --- llegir -------------------------------------------------------------
     # Llindars sobre encapçalament + enunciat, que és el que l'alumne llegeix
@@ -134,7 +154,11 @@ def calcula_nivell(item, resolucio, resposta, cap, bloc=""):
     elif gran_enunciat >= 200:
         punts += 1
 
-    gran_solucio = max(nombres(sol), default=0)
+    # Es mesura la RESPOSTA i no tot el desenvolupament: el que costa és el
+    # nombre que l'alumne ha de produir. Als passos hi surten factors de
+    # conversió ("1 m = 1000 mm") que no són cap càrrega de càlcul i que
+    # feien que un canvi d'unitats es comptés com un exercici gros.
+    gran_solucio = max(nombres(resposta), default=0)
     if gran_solucio >= 100000:
         punts += 3
     elif gran_solucio >= 10000:
@@ -152,7 +176,7 @@ def calcula_nivell(item, resolucio, resposta, cap, bloc=""):
     # mesura l'alçada d'un trapezi i li surt \sqrt{164}. Com a RESULTAT és
     # normal i esperable —la diagonal d'un rectangle de 5x8 és \sqrt{89}— i
     # per això només penalitza quan surt a l'enunciat.
-    if arrels_lletges(cap + " " + item["enunciat"]):
+    if bloc not in BLOCS_D_ARRELS and arrels_lletges(cap + " " + item["enunciat"]):
         punts += 3
 
     # Una fracció a l'enunciat, quan el tema NO són les fraccions, és
@@ -199,10 +223,15 @@ def main():
             per_ex.setdefault((n, it["bloc"], it["ex"]), []).append(it)
 
     # Ítems escrits per al departament, per als continguts que el banc de
-    # repàs no cobreix. Es barregen amb els de repàs i, a partir d'aquí,
-    # la resta de l'eina no els distingeix.
+    # repàs no cobreix. Els genera `assets/js/generadors.js`, que és el
+    # mateix fitxer que fa servir el navegador per donar «uns altres
+    # nombres»: si els tinguéssim aquí en Python, hi hauria dues versions
+    # de cada exercici i acabarien divergint.
+    propis = json.loads(node(["tools/genera.js", "--cataleg"]))
     propis_per_saber = {}
-    for it in genera_propis():
+    for it in propis:
+        it["origen"] = it["gen"]
+        it["dif"] = 1
         for sid in it["sabers"]:
             propis_per_saber.setdefault(sid, []).append(it)
 
@@ -211,6 +240,23 @@ def main():
     avisos = []
     vetats = {}
     n_propis = 0
+    ex_generador = {}
+
+    # El nivell d'una variant NOVA (la que surt del botó ↻) no es pot mesurar
+    # al navegador: el mesurador viu aquí. El que es fa és comprovar, per
+    # cada generador i sobre moltes tirades, que el nivell declarat sigui el
+    # que de debò tenen totes les seves variants. Si un generador no és
+    # estable, salta aquí i no al full de l'alumne.
+    inestables = {g: n for g, n in nivells_per_generador(200).items() if len(n) > 1}
+    if inestables:
+        # Atura la compilació. Un avís no servia: la compilació acabava bé i
+        # el banc sortia amb un nivell que no és el que diu el generador,
+        # que és justament el que el perfil «mínims» promet a l'alumne.
+        detall = "; ".join(f"{g} -> {sorted(n)}" for g, n in sorted(inestables.items()))
+        raise SystemExit(
+            "El nivell d'aquests generadors no és estable: " + detall +
+            "\nCal estrènyer-ne els paràmetres a assets/js/generadors.js.")
+
 
     for curs in CURSOS:
         sabers = []
@@ -257,11 +303,15 @@ def main():
                                 "nivell": calcula_nivell(it, resolucio, correcta, cap, bloc),
                                 "passos": len(resolucio),
                                 "cap": cap,
-                                # Sense l'encapçalament, 180 ítems del banc es
-                                # queden en un nombre solt ("$3850$"): tota la
-                                # consigna hi viu. Aquests no poden perdre'l
+                                # Sense l'encapçalament, uns quants ítems del
+                                # banc es queden en un nombre solt ("$3850$"):
+                                # tota la consigna hi viu i no el poden perdre
                                 # encara que el professor apagui l'opció.
                                 "capCal": len(text_pla(it["enunciat"])) < 25,
+                                # La pregunta ÉS el dibuix: apagar les
+                                # figures deixaria un full sense res.
+                                "figuraCal": bool(it.get("figura")) and
+                                             len(text_pla(cap + " " + it["enunciat"])) < 45,
                                 "enunciat": it["enunciat"],
                                 "figura": neteja_svg(it.get("figura")),
                                 "nota": it.get("nota", ""),
@@ -278,7 +328,9 @@ def main():
                         ids.append(gid)
 
             for it in propis_per_saber.get(s["id"], []):
-                gid = it["id"]
+                # `p-<generador>-<llavor>`: l'id du a dins com tornar a
+                # construir l'ítem, que és el que fa possible el botó ↻.
+                gid = f"p-{it['gen']}-{it['llavor']}"
                 if gid not in items_sortida:
                     n_propis += 1
                     items_sortida[gid] = {
@@ -286,16 +338,28 @@ def main():
                         "full": 0,
                         "bloc": it["origen"],
                         "blocTitol": "Material propi del departament",
-                        "ex": 900 + n_propis,
+                        # L'exercici pare és el GENERADOR, no la variant.
+                        # Amb un `ex` per variant, la regla de «un exercici
+                        # pare només un cop» no protegia mai el material
+                        # propi i sortien sis preguntes que en mesuraven dues.
+                        "ex": 900 + ex_generador.setdefault(
+                            it["gen"], len(ex_generador)),
                         "ap": "",
                         "dif": it["dif"],
                         "nivell": calcula_nivell(
                             {"enunciat": it["enunciat"], "dif": it["dif"]},
                             it["passos"], it["resposta"], it["cap"],
                             it["origen"]),
+                        # D'on ha sortit i amb quina llavor: és el que
+                        # permet al navegador demanar-ne una altra variant.
+                        "gen": it["gen"],
+                        "llavor": it["llavor"],
                         "passos": len(it["passos"]),
                         "cap": it["cap"],
-                        "capCal": len(text_pla(it["enunciat"])) < 25,
+                        # Els declara el generador: la regla per llargada
+                        # es deduïa dues vegades i discrepava en el 12 %.
+                        "capCal": it["capCal"],
+                        "figuraCal": it["figuraCal"],
                         "enunciat": it["enunciat"],
                         "figura": it["figura"],
                         "nota": "",

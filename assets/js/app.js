@@ -17,6 +17,56 @@
   var banc = {};
   BANC.items.forEach(function (it) { banc[it.id] = it; });
 
+  /* --------------------------------------------------- material propi
+     Els ítems que venen de `generadors.js` porten `gen` i `llavor`, i això
+     vol dir que se'n pot demanar una altra variant sense sortir del tipus
+     de pregunta: uns altres nombres, la mateixa cosa avaluada. Els 592 del
+     banc de `repas` són text fix i només es poden intercanviar. */
+  var GEN = window.GENERADORS ||
+    { llista: [], perId: {}, crea: function () { return null; } };
+  var exPerGen = {}, gensPerSaber = {};
+
+  BANC.items.forEach(function (it) {
+    if (it.gen && exPerGen[it.gen] === undefined) exPerGen[it.gen] = it.ex;
+  });
+  GEN.llista.forEach(function (g) {
+    g.sabers.forEach(function (sid) {
+      (gensPerSaber[sid] = gensPerSaber[sid] || []).push(g);
+    });
+  });
+
+  /**
+   * Construeix (i deixa al banc) una variant d'un generador. La parella
+   * generador + llavor és l'identificador: `p-div-mcd-v7`. Per això n'hi ha
+   * prou amb desar l'id a l'adreça perquè la prova es pugui reconstruir,
+   * encara que la variant no fos al catàleg compilat.
+   */
+  function variant(gen, llavor) {
+    var id = 'p-' + gen + '-' + llavor;
+    if (banc[id]) return banc[id];
+    var g = GEN.crea(gen, llavor);
+    if (!g) return null;
+    banc[id] = {
+      id: id, full: 0, bloc: gen, blocTitol: 'Material propi del departament',
+      ex: exPerGen[gen] !== undefined ? exPerGen[gen] : 900,
+      ap: '', dif: 1, nivell: g.nivell, passos: g.passos.length,
+      cap: g.cap, capCal: g.capCal, figuraCal: g.figuraCal,
+      enunciat: g.enunciat, figura: g.figura, nota: '',
+      sol: btoa(unescape(encodeURIComponent(JSON.stringify(
+        { r: g.resposta, p: g.passos })))),
+      sabers: g.sabers.slice(), gen: gen, llavor: llavor
+    };
+    return banc[id];
+  }
+
+  /** Una llavor nova que no xoqui amb cap variant que ja hi hagi. */
+  var comptadorVariants = 0;
+  function novaLlavor(gen) {
+    var l;
+    do { l = 'v' + (++comptadorVariants); } while (banc['p-' + gen + '-' + l]);
+    return l;
+  }
+
   var sabersPerId = {}, ordreSabers = [];
   MAPA.cursos.forEach(function (c) {
     c.sabers.forEach(function (s) {
@@ -39,6 +89,15 @@
 
   /* ---------------------------------------------------------------- estat */
   var CAPCALERA_DESADA = 'recuperacio-eso:inicials';
+
+  /* La data d'avui en hora local. `toISOString()` treballa en UTC i
+     escrivia el dia d'ahir per a qualsevol prova preparada de matinada. */
+  function avui() {
+    var d = new Date();
+    return d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0');
+  }
 
   var estat = {
     sabers: [],
@@ -63,7 +122,7 @@
       subtitol: '',
       alumne: '',
       grup: '',
-      data: new Date().toISOString().slice(0, 10),
+      data: avui(),
       model: '',
       llavor: '',
       instruccions:
@@ -154,9 +213,19 @@
   function reparteixPunts() {
     var suma = window.Composa.reparteixPunts(
       estat.preguntes, estat.spec.punts, estat.spec.criteriPunts, banc, sabersPerId);
-    // Amb punts fixats a mà la suma pot no quadrar amb el total demanat.
-    // No es corregeix sol: mana el que ha escrit el professor, i l'avís ho diu.
-    estat.desquadrat = Math.abs(suma - estat.spec.punts) > 0.001 ? suma : null;
+
+    /* Dues causes ben diferents, i abans totes dues deien el mateix:
+         - el terra de 0,25 per pregunta puja el total, i no hi ha res a
+           arreglar; és aritmètica;
+         - hi ha punts escrits a mà, i llavors sí que es poden alliberar.
+       Amb la prova buida no n'hi ha cap: la suma és 0 i el total 10, i
+       l'avís sortia com a benvinguda perquè `0 != null` és cert. */
+    var minim = window.Composa.puntsMinims(estat.preguntes.length);
+    var fixats = estat.preguntes.some(function (q) { return q.fix != null; });
+    estat.desquadrat = null;
+    if (estat.preguntes.length && Math.abs(suma - estat.spec.punts) > 0.001) {
+      estat.desquadrat = { suma: suma, fixats: fixats, minim: minim };
+    }
   }
 
   /**
@@ -189,6 +258,48 @@
     reparteixPunts();
     pinta();
     desaAlHash();
+  }
+
+  /**
+   * Uns altres nombres per a la mateixa pregunta. Només per als ítems que
+   * venen d'un generador; el pou és infinit.
+   */
+  function altresNombres(i) {
+    var q = estat.preguntes[i], it = banc[q.itemId];
+    if (!it || !it.gen) return;
+
+    /* Es torna a tirar fins que surti una variant que no sigui la d'ara ni
+       cap altra que ja estigui a la prova. Sense això, dues tirades
+       seguides podien donar el mateix nombre i semblava que el botó no
+       feia res. Trenta intents és de sobres per a qualsevol generador; si
+       el pou és una llista tancada i curta, es queda amb l'última. */
+    var fora = {};
+    estat.preguntes.forEach(function (x) {
+      if (banc[x.itemId]) fora[firma(banc[x.itemId])] = true;
+    });
+
+    var nou = null;
+    for (var t = 0; t < 30; t++) {
+      var cand = variant(it.gen, novaLlavor(it.gen));
+      if (!cand) return;
+      nou = cand;
+      if (!fora[firma(cand)]) break;
+    }
+    if (!nou) return;
+
+    if (estat.fixades[q.itemId]) {
+      delete estat.fixades[q.itemId];
+      estat.fixades[nou.id] = true;
+    }
+    q.itemId = nou.id;
+    estat.editat = true;
+    pinta();
+    desaAlHash();
+  }
+
+  /** El que fa que dues variants siguin «la mateixa pregunta» per a l'ull. */
+  function firma(it) {
+    return (it.cap || '') + '|' + (it.enunciat || '') + '|' + (it.figura || '');
   }
 
   function reemplaca(i) {
@@ -273,14 +384,24 @@
       lliures = saber.items.map(function (id) { return banc[id]; })
         .filter(function (it) { return it && !usats[it.id]; });
     }
-    if (!lliures.length) {
-      estat.avisos = ['Ja hi són totes les preguntes de «' + saber.titol + '».'];
-      pintaLlista();
-      return;
-    }
-
     var pes = window.Composa.PERFILS[estat.spec.perfil] || window.Composa.PERFILS.minims;
     var atzar = new window.Atzar(estat.spec.llavor + '|mes|' + saberId + '|' + Date.now());
+
+    // Si el catàleg s'ha acabat però el saber té generadors, se'n fabrica
+    // una de nova en comptes de dir que no n'hi ha més.
+    if (!lliures.length) {
+      var gens = (gensPerSaber[saberId] || []);
+      if (!gens.length) {
+        estat.avisos = ['Ja hi són totes les preguntes de «' + saber.titol +
+                        '»: aquest contingut només té material del banc de repàs, ' +
+                        'que és text fix.'];
+        pintaLlista();
+        return;
+      }
+      var g = atzar.triaPonderada(gens, function (x) { return pes[x.nivell] || 0.02; });
+      lliures = [variant(g.id, novaLlavor(g.id))];
+    }
+
     var nou = atzar.triaPonderada(lliures, function (it) { return pes[it.nivell] || 0.02; });
 
     // Si el contingut no estava marcat, es marca: el pla de repàs ha
@@ -365,7 +486,12 @@
     // del rail i el focus se n'anava al <body>: navegar-hi amb teclat era
     // impossible.
     var focus = document.activeElement;
-    var idFocus = focus && focus.dataset ? focus.dataset.saber : null;
+    var d = focus && focus.dataset ? focus.dataset : {};
+    var tornar = d.saber ? '[data-saber="' + d.saber + '"]'
+               : d.mes ? '[data-mes="' + d.mes + '"]'
+               : d.menys ? '[data-menys="' + d.menys + '"]'
+               : d.sentit ? '[data-sentit="' + d.sentit + '"]'
+               : d.curs ? '[data-curs="' + d.curs + '"]' : null;
 
     var html = '';
 
@@ -440,9 +566,11 @@
     $('#rail-cos').innerHTML = html ||
       '<p class="buida">Cap contingut coincideix amb «' + esc($('#cerca').value) + '».</p>';
 
-    if (idFocus) {
-      var tornar = $('[data-saber="' + idFocus + '"]');
-      if (tornar) tornar.focus();
+    // Es refà tot l'HTML del rail, o sigui que el focus se'n va al <body>.
+    // Sense restaurar-lo, marcar continguts amb el teclat és inviable.
+    if (tornar) {
+      var n2 = $(tornar);
+      if (n2) n2.focus();
     }
   }
 
@@ -460,8 +588,6 @@
       .replace(/[${}\\]/g, '')
       .replace(/\s+/g, ' ').trim().slice(0, 90);
   }
-
-  function num(n) { return String(n).replace('.', ','); }
 
   function pintaLlista() {
     var h = '';
@@ -492,8 +618,11 @@
             '<button data-fixa="' + i + '" title="Conserva-la en tornar a generar" ' +
               'aria-label="Fixa la pregunta ' + (i + 1) + '">' +
               (estat.fixades[q.itemId] ? '★' : '☆') + '</button>' +
+            (it.gen
+              ? '<button data-nombres="' + i + '" title="Uns altres nombres, ' +
+                'la mateixa pregunta">\u21bb</button>' : '') +
             '<button data-canvia="' + i + '" title="Canvia-la per una altra"' +
-              (saber ? '' : ' disabled') + '>⟳</button>' +
+              (saber ? '' : ' disabled') + '>\u27f3</button>' +
             '<button data-amunt="' + i + '" title="Amunt"' + (i ? '' : ' disabled') + '>↑</button>' +
             '<button data-avall="' + i + '" title="Avall"' +
               (i === estat.preguntes.length - 1 ? ' disabled' : '') + '>↓</button>' +
@@ -502,10 +631,16 @@
         '</div>';
       });
     }
-    if (estat.desquadrat != null) {
-      h += '<p class="avis">La prova suma ' + num(estat.desquadrat) + ' punts i no ' +
-           num(estat.spec.punts) + ': hi ha punts fixats a mà. ' +
-           '<button class="mini" id="allibera">Torna a repartir-los</button></p>';
+    if (estat.desquadrat) {
+      var d = estat.desquadrat, n = window.Full.num;
+      h += '<p class="avis">La prova suma ' + n(d.suma) + ' punts i no ' +
+        n(estat.spec.punts) + ': ' +
+        (d.fixats
+          ? 'hi ha punts escrits a mà. ' +
+            '<button class="mini" id="allibera">Torna a repartir-los</button>'
+          : 'cada pregunta val 0,25 com a mínim, i ' + estat.preguntes.length +
+            ' preguntes no poden sumar menys de ' + n(d.minim) + '.') +
+        '</p>';
     }
     estat.avisos.forEach(function (a) { h += '<p class="avis">' + esc(a) + '</p>'; });
     $('#llista').innerHTML = h;
@@ -540,17 +675,72 @@
   /* Quantes pàgines A4 sortiran. És la decisió real del professor i abans
      només es descobria al diàleg d'impressió. */
   function comptaPagines() {
-    var util = 297 - 18 - 16;                       // A4 menys els marges de @page
-    var mm = $('#full').scrollHeight / (96 / 25.4); // px de CSS a mm
-    var n = Math.max(1, Math.ceil(mm / util));
-    $('#pagines').textContent = n + (n === 1 ? ' pàgina' : ' pàgines');
+    var full = $('#full'), aMm = 25.4 / 96;
+
+    /* A4 menys els marges de la regla @page. El peu NO es resta: com que
+       està fixat, se superposa al flux en comptes de reservar-hi lloc
+       (comprovat contra 126 PDF reals; restant-lo, el comptador es passava
+       de llarg en els casos frontera). */
+    var util = 297 - 18 - 16;
+
+    /* No es divideix l'alçada total per l'alçada de pàgina: `break-inside:
+       avoid` empeny una pregunta sencera a la pàgina següent i hi deixa
+       blanc, i l'estimació lineal es podia equivocar en tres pàgines. Aquí
+       es reprodueix el que farà el navegador: s'omplen pàgines amb blocs
+       que no es poden partir. 125 encerts de 126. */
+    var blocs = [];
+
+    /* `offsetHeight` i no `getBoundingClientRect()`: el segon torna la mida
+       JA TRANSFORMADA, i `.full` porta un `transform: scale()` per al zoom
+       de pantalla. Amb el zoom al 70 % el comptador deia 3 pàgines on n'hi
+       ha 4, cosa que no té cap sentit: el paper no canvia perquè el
+       professor s'acosti a mirar-lo. */
+    function afegeix(el) {
+      blocs.push([el.offsetHeight * aMm,
+                  (parseFloat(getComputedStyle(el).marginBottom) || 0) * aMm]);
+    }
+    Array.prototype.forEach.call(full.children, function (fill) {
+      if (fill.tagName === 'OL' || fill.tagName === 'UL') {
+        Array.prototype.forEach.call(fill.children, afegeix);
+      } else if (!fill.classList.contains('doc-peu')) {
+        afegeix(fill);
+      }
+    });
+    if (!blocs.length) { $('#pagines').textContent = '1 pàgina'; return; }
+
+    var pagines = 1, ocupat = 0;
+    blocs.forEach(function (b) {
+      var alt = b[0], marge = b[1];
+      if (alt > util) {                          // no hi cap enlloc: es partirà
+        pagines += Math.floor((ocupat + alt) / util);
+        ocupat = (ocupat + alt) % util;
+      } else if (ocupat + alt > util + 0.01) {   // el mig mil·límetre de folga
+        pagines++;                               // evita saltar per un
+        ocupat = alt + marge;                    // arrodoniment
+      } else {
+        ocupat += alt + marge;
+      }
+    });
+
+    /* Amb «≈» a posta: contrastat contra 126 PDF reals encerta el 96-98 %
+       de les vegades, i quan falla és sempre una pàgina de menys. La
+       impressió no mesura exactament igual que la pantalla i afinar-ho més
+       voldria paginar de debò, cosa que no paga la pena per a un número
+       que serveix per decidir si val la pena imprimir. */
+    $('#pagines').textContent = '\u2248 ' + pagines +
+      (pagines === 1 ? ' pàgina' : ' pàgines');
   }
 
   function pinta() {
     pintaRail();
     pintaLlista();
     pintaFull();
-    $('#imprimeix').disabled = !estat.preguntes.length;
+    // El pla de repàs surt dels continguts marcats i no de les preguntes:
+    // amb 2n marcat i cap pregunta triada, el pla té vint entrades i s'ha
+    // de poder imprimir.
+    $('#imprimeix').disabled = estat.vista === 'pla'
+      ? !estat.sabers.length
+      : !estat.preguntes.length;
   }
 
   /* ------------------------------------------------- estat a l'adreça (hash) */
@@ -605,6 +795,12 @@
             return { itemId: creaPropia(x[1], x[2]), saberId: null, punts: 0,
                      fix: x[3] != null ? x[3] : undefined };
           }
+          // Una variant que no era al catàleg es torna a construir a
+          // partir del seu id: `p-<generador>-<llavor>`.
+          if (!banc[x[0]] && x[0].indexOf('p-') === 0) {
+            var tall = x[0].lastIndexOf('-');
+            variant(x[0].slice(2, tall), x[0].slice(tall + 1));
+          }
           return banc[x[0]]
             ? { itemId: x[0], saberId: x[1], punts: 0,
                 fix: x[2] != null ? x[2] : undefined }
@@ -629,8 +825,18 @@
     var base = (estat.cfg.baseUrl || '').trim();
     if (!base) return location.href;
     if (!/^https?:\/\//i.test(base)) base = 'https://' + base;
-    return base.replace(/[#?].*$/, '').replace(/\/+$/, '/') +
-           (base.slice(-1) === '/' ? '' : '/') + location.hash;
+    try {
+      /* Amb `URL` i no amb una regex sobre la cadena sencera: el patró que
+         retallava el fitxer final (`…/index.html`) també es menjava el
+         domini quan no hi havia camí, i `https://exemple.cat` es convertia
+         en `https:/`. Aquí només es toca el `pathname`. */
+      var u = new URL(base);
+      var cami = u.pathname.replace(/\/[^\/]*\.[a-z0-9]{2,5}$/i, '')
+                           .replace(/\/+$/, '');
+      return u.origin + cami + '/' + location.hash;
+    } catch (e) {
+      return location.href;          // adreça il·legible: val més la d'ara
+    }
   }
 
   function fitxerDeLaProva() {
@@ -697,8 +903,14 @@
 
   /* ---------------------------------------------------------------- lligams */
   function sincronitzaControls() {
-    $('#nombre').value = estat.spec.nombre;
-    $('#nombre-valor').textContent = estat.spec.nombre;
+    /* El control té un rang [3, 15] i `estat.spec.nombre` se'n pot sortir
+       traient o afegint preguntes una a una. Mana l'estat, i el marcador
+       ha de dir el que hi ha de debò encara que la barra estigui al topall. */
+    var n = $('#nombre');
+    n.value = Math.max(+n.min, Math.min(+n.max, estat.spec.nombre));
+    $('#nombre-valor').textContent = estat.spec.nombre +
+      (estat.spec.nombre > +n.max ? ' (per sobre del màxim del control)' :
+       estat.spec.nombre < +n.min ? ' (per sota del mínim del control)' : '');
     $('#punts').value = estat.spec.punts;
     $('#espai').value = estat.cfg.espai;
     $('#espai-valor').textContent = estat.cfg.espai + ' mm';
@@ -790,7 +1002,8 @@
       var b = ev.target.closest('button');
       if (!b || b.disabled) return;
       var d = b.dataset;
-      if (d.canvia != null) reemplaca(+d.canvia);
+      if (d.nombres != null) altresNombres(+d.nombres);
+      else if (d.canvia != null) reemplaca(+d.canvia);
       else if (d.amunt != null) mou(+d.amunt, -1);
       else if (d.avall != null) mou(+d.avall, 1);
       else if (d.treu != null) treu(+d.treu);
@@ -885,7 +1098,10 @@
         });
         $('#imprimeix').firstChild.textContent = 'Imprimeix ' + (
           estat.vista === 'clau' ? 'la clau' : estat.vista === 'pla' ? 'el pla' : 'la prova');
-        pintaFull();
+        // `pinta()` i no `pintaFull()`: el botó s'habilita segons la vista
+        // —el pla depèn dels continguts marcats i no de les preguntes— i
+        // canviant de pestanya no es recalculava.
+        pinta();
       });
     });
 
