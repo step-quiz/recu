@@ -233,6 +233,157 @@
    * conserven sempre: són l'única cosa de la prova que el professor ha
    * escrit o triat a mà i regenerar-les seria destruir feina.
    */
+  /**
+   * Tria un ítem d'un saber que no sigui a la prova, respectant el perfil i
+   * evitant repetir exercici pare. Si el catàleg s'ha acabat però el saber
+   * té generadors, en fabrica una variant nova.
+   */
+  function triaItem(saber, atzar) {
+    var usats = {}, pares = {};
+    estat.preguntes.forEach(function (x) {
+      usats[x.itemId] = true;
+      var it = banc[x.itemId];
+      if (it) pares[it.full + '-' + it.ex] = true;
+    });
+
+    var pes = window.Composa.PERFILS[estat.spec.perfil] || window.Composa.PERFILS.minims;
+    var lliures = saber.items.map(function (id) { return banc[id]; })
+      .filter(function (it) { return it && !usats[it.id] && !pares[it.full + '-' + it.ex]; });
+    if (!lliures.length) {
+      lliures = saber.items.map(function (id) { return banc[id]; })
+        .filter(function (it) { return it && !usats[it.id]; });
+    }
+    if (!lliures.length) {
+      var gens = gensPerSaber[saber.id] || [];
+      if (!gens.length) return null;
+      var g = atzar.triaPonderada(gens, function (x) { return pes[x.nivell] || 0.02; });
+      return variant(g.id, novaLlavor(g.id));
+    }
+    return atzar.triaPonderada(lliures, function (it) { return pes[it.nivell] || 0.02; });
+  }
+
+  /** Quin pes té un saber segons el criteri de repartiment triat. */
+  function pesDelSaber(s) {
+    if (estat.spec.pes === 'igual') return 1;
+    if (estat.spec.pes === 'items') return s.items.length;
+    return s.hores;
+  }
+
+  /** Els sabers marcats que tenen preguntes, en ordre de currículum. */
+  function sabersActius() {
+    return estat.sabers.map(function (id) { return sabersPerId[id]; })
+      .filter(function (s) { return s && s.items.length; });
+  }
+
+  /** Avisa de quins continguts marcats no tenen cap pregunta a la prova. */
+  function revisaCobertura() {
+    var cobert = {};
+    estat.preguntes.forEach(function (q) { cobert[q.saberId] = true; });
+    var sense = sabersActius().filter(function (s) { return !cobert[s.id]; })
+                              .map(function (s) { return s.titol; });
+    estat.avisos = sense.length
+      ? ['Sense cap pregunta a la prova: ' + sense.join(', ') +
+         '. Puja el nombre de preguntes o fes servir el «+» del contingut.']
+      : [];
+  }
+
+  /**
+   * Porta la prova a `n` preguntes SENSE refer-la: conserva tot el que ja hi
+   * ha i només afegeix o treu el que calgui per equilibrar-la.
+   *
+   * Aquesta és la diferència amb `recomposa()`, i és la que faltava. Marcar
+   * un contingut nou feia una composició de zero i el professor perdia les
+   * nou preguntes que ja havia triat i li agradaven. Ara la llista de
+   * continguts és el que hi ha DINS de la prova, no una especificació per
+   * tornar-la a muntar.
+   */
+  function ajusta(n) {
+    var propies = estat.preguntes.filter(function (q) { return estat.propies[q.itemId]; });
+    var sabers = sabersActius();
+
+    if (!sabers.length) {
+      estat.preguntes = propies;
+      acabaCanvi();
+      return;
+    }
+
+    var objectiu = Math.max(0, n - propies.length);
+    var quotes = window.Composa.reparteix(sabers.map(pesDelSaber), objectiu);
+
+    // Cap saber marcat s'ha de quedar a zero mentre n'hi hagi un altre amb
+    // més d'una: si el professor l'ha marcat, l'ha de veure a la prova.
+    if (objectiu >= sabers.length) {
+      for (var i = 0; i < quotes.length; i++) {
+        if (quotes[i]) continue;
+        var max = quotes.indexOf(Math.max.apply(null, quotes));
+        if (quotes[max] > 1) { quotes[max]--; quotes[i] = 1; }
+      }
+    }
+
+    var atzar = new window.Atzar(estat.spec.llavor + '|ajusta|' + Date.now());
+    var fora = {};
+
+    sabers.forEach(function (s, k) {
+      var seves = estat.preguntes.filter(function (q) { return q.saberId === s.id; });
+      var sobren = seves.length - quotes[k];
+      if (sobren > 0) {
+        // Es treuen les últimes i mai una de fixada amb ☆.
+        var candidates = seves.filter(function (q) { return !estat.fixades[q.itemId]; });
+        candidates.slice(-sobren).forEach(function (q) { fora[q.itemId] = true; });
+      }
+    });
+    estat.preguntes = estat.preguntes.filter(function (q) { return !fora[q.itemId]; });
+
+    sabers.forEach(function (s, k) {
+      var te = estat.preguntes.filter(function (q) { return q.saberId === s.id; }).length;
+      for (var j = te; j < quotes[k]; j++) {
+        var nou = triaItem(s, atzar);
+        if (!nou) break;
+        estat.preguntes.push({ itemId: nou.id, saberId: s.id, punts: 0 });
+      }
+    });
+
+    acabaCanvi();
+  }
+
+  /** El final de qualsevol canvi a la llista: punts, avisos, pintar i desar. */
+  function acabaCanvi() {
+    estat.spec.nombre = estat.preguntes.length;
+    estat.editat = true;
+    reparteixPunts();
+    revisaCobertura();
+    sincronitzaControls();
+    pinta();
+    desaAlHash();
+  }
+
+  /** Reordena sense canviar cap pregunta. */
+  function reordena() {
+    if (estat.spec.ordre === 'dificultat') {
+      estat.preguntes.sort(function (a, b) {
+        return (banc[a.itemId].nivell || 2) - (banc[b.itemId].nivell || 2);
+      });
+    } else if (estat.spec.ordre === 'barrejat') {
+      estat.preguntes = new window.Atzar(estat.spec.llavor + '|ordre|' + Date.now())
+        .barreja(estat.preguntes);
+    } else {
+      estat.preguntes.sort(function (a, b) {
+        var ia = ordreSabers.indexOf(a.saberId), ib = ordreSabers.indexOf(b.saberId);
+        return (ia < 0 ? 1e6 : ia) - (ib < 0 ? 1e6 : ib);   // les pròpies, al final
+      });
+    }
+    acabaCanvi();
+  }
+
+  /**
+   * Refà la prova de zero. És l'ÚNICA operació destructiva, i només la
+   * disparen coses que el professor demana explícitament: «Altres
+   * preguntes», canviar el nivell i canviar el criteri de repartiment.
+   * Marcar continguts, moure el nombre de preguntes o canviar l'ordre no
+   * passen per aquí: conserven el que ja hi ha.
+   *
+   * Les preguntes pròpies i les fixades amb ☆ se salven fins i tot aquí.
+   */
   function recomposa() {
     var conserva = estat.preguntes.filter(function (q) {
       return estat.fixades[q.itemId] || estat.propies[q.itemId];
@@ -352,14 +503,7 @@
     delete estat.fixades[q.itemId];
     delete estat.propies[q.itemId];
     estat.preguntes.splice(i, 1);
-    // El comptador ha de seguir la realitat: si no, el següent toc a
-    // qualsevol control feia tornar les preguntes tretes.
-    estat.spec.nombre = estat.preguntes.length;
-    estat.editat = true;
-    reparteixPunts();
-    sincronitzaControls();
-    pinta();
-    desaAlHash();
+    acabaCanvi();
   }
 
   /**
@@ -371,50 +515,27 @@
     var saber = sabersPerId[saberId];
     if (!saber || !saber.items.length) return;
 
-    var usats = {}, pares = {};
-    estat.preguntes.forEach(function (x) {
-      usats[x.itemId] = true;
-      var it = banc[x.itemId];
-      if (it) pares[it.full + '-' + it.ex] = true;
-    });
-
-    var lliures = saber.items.map(function (id) { return banc[id]; })
-      .filter(function (it) { return it && !usats[it.id] && !pares[it.full + '-' + it.ex]; });
-    if (!lliures.length) {
-      lliures = saber.items.map(function (id) { return banc[id]; })
-        .filter(function (it) { return it && !usats[it.id]; });
-    }
-    var pes = window.Composa.PERFILS[estat.spec.perfil] || window.Composa.PERFILS.minims;
     var atzar = new window.Atzar(estat.spec.llavor + '|mes|' + saberId + '|' + Date.now());
-
-    // Si el catàleg s'ha acabat però el saber té generadors, se'n fabrica
-    // una de nova en comptes de dir que no n'hi ha més.
-    if (!lliures.length) {
-      var gens = (gensPerSaber[saberId] || []);
-      if (!gens.length) {
-        estat.avisos = ['Ja hi són totes les preguntes de «' + saber.titol +
-                        '»: aquest contingut només té material del banc de repàs, ' +
-                        'que és text fix.'];
-        pintaLlista();
-        return;
-      }
-      var g = atzar.triaPonderada(gens, function (x) { return pes[x.nivell] || 0.02; });
-      lliures = [variant(g.id, novaLlavor(g.id))];
+    var nou = triaItem(saber, atzar);
+    if (!nou) {
+      estat.avisos = ['Ja hi són totes les preguntes de «' + saber.titol +
+                      '»: aquest contingut només té material del banc de repàs, ' +
+                      'que és text fix.'];
+      pintaLlista();
+      return;
     }
-
-    var nou = atzar.triaPonderada(lliures, function (it) { return pes[it.nivell] || 0.02; });
 
     // Si el contingut no estava marcat, es marca: el pla de repàs ha
     // d'incloure el que s'avalua.
     if (estat.sabers.indexOf(saberId) < 0) marca([saberId], true);
 
     estat.preguntes.push({ itemId: nou.id, saberId: saberId, punts: 0 });
-    estat.spec.nombre = estat.preguntes.length;
-    estat.editat = true;
-    reparteixPunts();
-    sincronitzaControls();
-    pinta();
-    desaAlHash();
+    acabaCanvi();
+  }
+
+  /** Totes les preguntes d'un contingut: s'executa en desmarcar-lo. */
+  function treuTotsDelSaber(saberId) {
+    estat.preguntes = estat.preguntes.filter(function (q) { return q.saberId !== saberId; });
   }
 
   /** Una pregunta menys d'un contingut concret: treu l'última que en ve. */
@@ -452,12 +573,7 @@
     if (!enunciat) return false;
     var id = creaPropia(enunciat, (solucio || '').trim());
     estat.preguntes.push({ itemId: id, saberId: null, punts: 0 });
-    estat.spec.nombre = estat.preguntes.length;
-    estat.editat = true;
-    reparteixPunts();
-    sincronitzaControls();
-    pinta();
-    desaAlHash();
+    acabaCanvi();
     return true;
   }
 
@@ -940,11 +1056,16 @@
   }
 
   function lliga() {
+    /* Marcar un contingut AFEGEIX una pregunta; desmarcar-lo treu les
+       seves. Res més de la prova no es toca. Abans això cridava
+       `recomposa()` i el professor perdia tot el que havia triat només per
+       voler-hi afegir un contingut més. */
     $('#rail-cos').addEventListener('change', function (ev) {
       var id = ev.target.dataset && ev.target.dataset.saber;
       if (!id) return;
       marca([id], ev.target.checked);
-      recomposa();
+      if (ev.target.checked) afegeixDelSaber(id);
+      else { treuTotsDelSaber(id); acabaCanvi(); }
     });
 
     $('#rail-cos').addEventListener('click', function (ev) {
@@ -955,22 +1076,37 @@
       if (b.dataset.mes) { afegeixDelSaber(b.dataset.mes); return; }
       if (b.dataset.menys) { treuDelSaber(b.dataset.menys); return; }
 
+      var llista = null;
       if (b.dataset.curs) {
         var curs = MAPA.cursos.filter(function (c) { return c.id === b.dataset.curs; })[0];
         // Només el que es veu: amb un filtre actiu, «Tot el curs» marcava
         // també els continguts que el filtre amagava.
-        var llista = visibles(curs, filtre).map(function (s) { return s.id; });
-        marca(llista, b.getAttribute('aria-pressed') !== 'true');
-        recomposa();
+        llista = visibles(curs, filtre).map(function (s) { return s.id; });
       } else if (b.dataset.sentit) {
         var parts = b.dataset.sentit.split('|');
         var c2 = MAPA.cursos.filter(function (c) { return c.id === parts[0]; })[0];
-        var ids = visibles(c2, filtre)
+        llista = visibles(c2, filtre)
           .filter(function (s) { return s.sentit === parts[1]; })
           .map(function (s) { return s.id; });
-        marca(ids, b.getAttribute('aria-pressed') !== 'true');
-        recomposa();
       }
+      if (!llista) return;
+
+      var activa = b.getAttribute('aria-pressed') !== 'true';
+      marca(llista, activa);
+      if (activa) {
+        // Una pregunta per contingut nou, com si es marquessin un a un.
+        var atzar = new window.Atzar(estat.spec.llavor + '|bloc|' + Date.now());
+        llista.forEach(function (id) {
+          var s2 = sabersPerId[id];
+          if (!s2 || !s2.items.length) return;
+          if (estat.preguntes.some(function (q) { return q.saberId === id; })) return;
+          var nou = triaItem(s2, atzar);
+          if (nou) estat.preguntes.push({ itemId: nou.id, saberId: id, punts: 0 });
+        });
+      } else {
+        llista.forEach(treuTotsDelSaber);
+      }
+      acabaCanvi();
     });
 
     $('#cerca').addEventListener('input', pintaRail);
@@ -1021,7 +1157,9 @@
       estat.spec.nombre = +this.value;
       $('#nombre-valor').textContent = this.value;
     });
-    $('#nombre').addEventListener('change', recomposa);
+    // Ajusta i no refà: pujar de 9 a 12 ha d'afegir tres preguntes, no
+    // canviar-ne dotze.
+    $('#nombre').addEventListener('change', function () { ajusta(+this.value); });
 
     $('#punts').addEventListener('change', function () {
       estat.spec.punts = Math.max(0.25, +this.value || 10);
@@ -1055,7 +1193,7 @@
     });
     $('#ordre').addEventListener('change', function () {
       estat.spec.ordre = this.value;
-      recomposa();
+      reordena();          // canviar l'ordre no ha de canviar les preguntes
     });
 
     $('#altra').addEventListener('click', function () {

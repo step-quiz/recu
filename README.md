@@ -16,6 +16,14 @@ Genera tres documents des d'una sola selecció de continguts:
 
 ## Com es fa servir
 
+> **La prova és un document, no una consulta.** Marcar un contingut hi
+> **afegeix** una pregunta; desmarcar-lo en treu les seves; moure el nombre de
+> preguntes n'afegeix o en treu; canviar l'ordre només reordena. Res d'això
+> toca les preguntes que ja has triat. L'única cosa que refà la prova de zero
+> és el que ho demana explícitament: **Altres preguntes**, canviar el **nivell**
+> i canviar el **criteri de repartiment**. I fins i tot allà se salven les
+> preguntes pròpies i les marcades amb ☆.
+
 1. **Marca els continguts** a la columna de l'esquerra. És el *Repartiment de
    continguts ESO 2025-26* del departament, tal com està escrit: curs → sentit →
    saber. Clicant el títol del curs es marquen o desmarquen tots de cop.
@@ -122,7 +130,7 @@ quedarien 10, o sigui que allà les icones passen al panell d'ajustos. És el
 mateix joc de botons: canvia on són, no què fan.
 
 **El «+» i el «−» de cada contingut** afegeixen o treuen una pregunta d'aquell
-contingut sense refer la prova. És el que cal quan la recuperació s'ha de
+contingut, igual que la casella però d'una en una. És el que cal quan la recuperació s'ha de
 construir sobre els criteris concrets que l'alumne no va assolir, i no sobre un
 total global. Al costat hi surt quantes n'hi ha triades.
 
