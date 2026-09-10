@@ -59,6 +59,19 @@ recuperar l'examen mesos després. Per fer models A i B del mateix examen: prem
 
 ### Els controls que no són obvis
 
+**El nivell d'una pregunta concreta.** Al panell de la dreta, on cada pregunta
+diu de quin contingut és, hi ha un selector de nivell. Per defecte diu «nivell
+1 (general)»: segueix la barreja del control de dalt. Si hi tries 1, 2 o 3, la
+clava a aquell nivell i s'hi queda —les fletxes `⟲ ⟳` només oferiran preguntes
+d'aquell nivell— fins que la tornis a posar a «general».
+
+Serveix per al cas que ho va motivar: una prova de mínims amb un parell de
+preguntes més exigents, sense haver de tocar el nivell general.
+
+Els nivells que un contingut no té surten **desactivats**: només 27 dels 50
+en tenen els tres. Angles de 1r d'ESO, per exemple, té 25 preguntes i totes de
+nivell 1.
+
 **Nivell de les preguntes.** No és el `dif` del banc de `repas`, que està
 calibrat per a repàs a l'entrada de batxillerat. Aquí es recalcula a
 `tools/compila.py` mesurant les dues coses que bloquegen un alumne amb
@@ -142,6 +155,14 @@ venen del banc de `repas` són text ja escrit i no es poden reparametritzar; les
 285 pròpies sí, i el pou és infinit. Vint-i-quatre dels cinquanta sabers en
 tenen prou material propi perquè, a la pràctica, no se'ls acabin mai les
 preguntes. Per decidir si una pregunta et va bé, l'has d'estar mirant.
+
+El carril dels botons queda dins de la caixa de la pregunta (un `padding-left`
+amb un `margin-left` negatiu igual), de manera que el contingut no es mou i
+l'alçada tampoc —que és el que mesura el comptador de pàgines— però passar-hi
+el ratolí ja compta com a estar sobre la pregunta. I la barra inactiva porta
+`pointer-events:none`: amb l'espai de resposta a 0 la barra fa 74 px i la
+pregunta 21, o sigui que sobresurt, i un element amb `opacity:0` segueix rebent
+clics. `tools/prova.js` comprova els 114 botons amb l'espai més atapeït.
 
 En pantalla estreta el full es dibuixa a escala reduïda i uns botons de 19 px en
 quedarien 10, o sigui que allà les icones passen al panell d'ajustos. És el

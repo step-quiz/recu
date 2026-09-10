@@ -229,6 +229,16 @@ button,input,select,textarea{font:inherit;color:inherit}
   display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   color:var(--apagat);font-size:.72rem;
 }
+/* El nivell de cada pregunta: on abans hi havia el text «nivell 1», ara hi
+   ha el selector. Sense caixa fins que s'hi passa per sobre, perquè el
+   panell no sembli un formulari. */
+.q-nivell{
+  border:1px solid transparent;background:transparent;color:var(--apagat);
+  font:inherit;font-size:.72rem;border-radius:4px;padding:0 .1rem;
+  max-width:9.5rem;cursor:pointer;
+}
+.q-nivell:hover,.q-nivell:focus{border-color:var(--vora-forta);background:#FAFBFD}
+.q-nivell.fixat{color:var(--blau);font-weight:600;border-color:var(--blau-suau);background:var(--blau-suau)}
 /* Sempre visibles. Amagades fins al `:hover` eren inabastables en tàctil i
    invisibles en escriptori, i són la funció més útil del panell. */
 /* Un sol joc de botons visible a cada mida: a l'ample, els del full (hi ha
@@ -324,9 +334,15 @@ button,input,select,textarea{font:inherit;color:inherit}
    Només existeixen a pantalla i a la vista «Prova». No s'imprimeixen mai
    (ho força `imprimir.css`) i no compten per al recompte de pàgines perquè
    se superposen al marge esquerre, fora del flux. */
-.pregunta{position:relative}
+/* El carril dels botons queda DINS de la caixa de la pregunta: `padding-left`
+   amb un `margin-left` negatiu igual. Així el contingut no es mou ni un
+   mil·límetre —cap fill canvia de lloc i l'alçada tampoc, que és el que
+   mesura el comptador de pàgines— però passar el ratolí pel carril ja compta
+   com a estar sobre la pregunta. Abans el carril era fora (`left:-14mm`) i
+   només s'hi arribava perquè els botons són descendents seus. */
+.pregunta{position:relative;padding-left:15mm;margin-left:-15mm}
 .pregunta-eines{
-  position:absolute;left:-14mm;top:0;
+  position:absolute;left:0;top:0;
   /* Dues columnes: en una sola fila vertical, set botons feien 38 mm i
      envaïen la pregunta de sota quan l'espai de resposta era petit. */
   display:grid;grid-template-columns:repeat(2,17px);gap:2px;
@@ -335,9 +351,16 @@ button,input,select,textarea{font:inherit;color:inherit}
      que feia que la funció més útil de l'eina fos la que no es trobava. Al
      marge esquerre no molesten la lectura del full. */
   opacity:.4;transition:opacity .12s;
+  /* Amb l'espai de resposta a 0 la barra fa 74 px i la pregunta 21: la
+     barra sobresurt per sota i se superposa a la de la pregunta següent.
+     Un element amb `opacity:0` SEGUEIX rebent clics, i com que la de sota
+     va després al document, es menjava els clics d'Amunt, Avall i Treu-la.
+     Amb `pointer-events` només a la barra activa, els clics travessen la
+     inactiva i arriben on toca. */
+  pointer-events:none;
 }
 .pregunta:hover .pregunta-eines,
-.pregunta-eines:focus-within{opacity:1}
+.pregunta-eines:focus-within{opacity:1;pointer-events:auto;z-index:2}
 .pregunta-eines button{
   width:17px;height:17px;padding:0;line-height:1;
   border:1px solid var(--vora-forta);background:#fff;color:var(--apagat);

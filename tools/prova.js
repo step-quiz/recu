@@ -134,6 +134,35 @@ const path = require('path');
     }
   }
 
+  /* Cap botó de la barra d'una pregunta pot quedar tapat. Amb l'espai de
+     resposta a 0, la barra fa 74 px i la pregunta 21: sobresurt per sota i
+     se superposa a la barra de la següent, que amb `opacity:0` SEGUEIX
+     rebent clics. Es prova amb l'espai més atapeït. */
+  await pag.evaluate(() => {
+    const s = document.querySelector('#espai');
+    s.value = 0; s.dispatchEvent(new Event('input'));
+  });
+  await pag.waitForTimeout(350);
+  let tapats = 0, botons = 0;
+  const quantes = await pag.evaluate(() => document.querySelectorAll('.pregunta').length);
+  for (let i = 1; i <= quantes; i++) {
+    await pag.evaluate(j => document.querySelectorAll('.pregunta')[j - 1]
+      .scrollIntoView({ block: 'center' }), i);
+    await pag.hover(`.pregunta:nth-child(${i}) .pregunta-cos`);
+    await pag.waitForTimeout(45);
+    const r = await pag.evaluate(j => {
+      const pr = document.querySelectorAll('.pregunta')[j - 1];
+      return [...pr.querySelectorAll('.pregunta-eines button')].map(b => {
+        const c = b.getBoundingClientRect();
+        const d = document.elementFromPoint(c.x + c.width / 2, c.y + c.height / 2);
+        return !!d && (d === b || b.contains(d));
+      });
+    }, i);
+    r.forEach(ok => { botons++; if (!ok) tapats++; });
+  }
+  console.log('BOTONS CLICABLES:', tapats ? `*** ${tapats} tapats de ${botons} ***`
+    : `tots ${botons} lliures`);
+
   console.log('ERRORS:', errors.length ? errors : 'cap');
   await nav.close();
 

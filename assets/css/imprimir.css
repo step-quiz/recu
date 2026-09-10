@@ -23,6 +23,9 @@
   .barra,.rail,.panell,.taula-eines,.mobil-pestanyes{display:none!important}
   /* Les eines de cada pregunta són interfície, no document. */
   .pregunta-eines{display:none!important}
+  /* I el carril que les allotja tampoc: a pantalla cau dins del marge de
+     `.full`, però en imprimir `.full` no en té i sobresortiria de la pàgina. */
+  .pregunta{padding-left:0;margin-left:0}
 
   .app{display:block;height:auto}
   /* Xarxa de seguretat: el full s'imprimeix passi el que passi a pantalla.

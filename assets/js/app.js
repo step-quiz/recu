@@ -238,7 +238,7 @@
    * evitant repetir exercici pare. Si el catàleg s'ha acabat però el saber
    * té generadors, en fabrica una variant nova.
    */
-  function triaItem(saber, atzar) {
+  function triaItem(saber, atzar, nivellFix) {
     var usats = {}, pares = {};
     estat.preguntes.forEach(function (x) {
       usats[x.itemId] = true;
@@ -246,20 +246,80 @@
       if (it) pares[it.full + '-' + it.ex] = true;
     });
 
-    var pes = window.Composa.PERFILS[estat.spec.perfil] || window.Composa.PERFILS.minims;
-    var lliures = saber.items.map(function (id) { return banc[id]; })
-      .filter(function (it) { return it && !usats[it.id] && !pares[it.full + '-' + it.ex]; });
+    // Amb un nivell fixat el perfil general no compta: el professor ha dit
+    // que aquella pregunta ha de ser d'aquell nivell i prou.
+    var pes = nivellFix
+      ? (function () { var p = { 1: 0, 2: 0, 3: 0 }; p[nivellFix] = 1; return p; })()
+      : (window.Composa.PERFILS[estat.spec.perfil] || window.Composa.PERFILS.minims);
+    var bo = function (it) { return !nivellFix || it.nivell === nivellFix; };
+
+    var tots = saber.items.map(function (id) { return banc[id]; })
+      .filter(function (it) { return it && bo(it); });
+    var lliures = tots.filter(function (it) {
+      return !usats[it.id] && !pares[it.full + '-' + it.ex];
+    });
     if (!lliures.length) {
-      lliures = saber.items.map(function (id) { return banc[id]; })
-        .filter(function (it) { return it && !usats[it.id]; });
+      lliures = tots.filter(function (it) { return !usats[it.id]; });
     }
     if (!lliures.length) {
-      var gens = gensPerSaber[saber.id] || [];
+      var gens = (gensPerSaber[saber.id] || []).filter(function (g) {
+        return !nivellFix || g.nivell === nivellFix;
+      });
       if (!gens.length) return null;
       var g = atzar.triaPonderada(gens, function (x) { return pes[x.nivell] || 0.02; });
       return variant(g.id, novaLlavor(g.id));
     }
     return atzar.triaPonderada(lliures, function (it) { return pes[it.nivell] || 0.02; });
+  }
+
+  /**
+   * Fixa (o deixa anar) el nivell d'una pregunta concreta. Serveix per fer
+   * una prova de mínims amb un parell de preguntes més exigents, sense
+   * haver de tocar el nivell general.
+   */
+  function fixaNivell(i, nivell) {
+    var q = estat.preguntes[i];
+    var saber = sabersPerId[q.saberId];
+    if (!saber) return;
+
+    q.nivell = nivell || undefined;
+    var it = banc[q.itemId];
+    if (!nivell || (it && it.nivell === nivell)) { pinta(); desaAlHash(); return; }
+
+    var nou = triaItem(saber, new window.Atzar('niv|' + q.itemId + '|' + Date.now()), nivell);
+    if (!nou) {
+      estat.avisos = ['«' + saber.titol + '» no té cap pregunta de nivell ' +
+                      nivell + '.'];
+      q.nivell = undefined;
+      pintaLlista();
+      return;
+    }
+    if (estat.fixades[q.itemId]) {
+      delete estat.fixades[q.itemId];
+      estat.fixades[nou.id] = true;
+    }
+    q.itemId = nou.id;
+    estat.editat = true;
+    pinta();
+    desaAlHash();
+  }
+
+  /**
+   * Quins dels tres nivells pot donar un contingut. Només 27 dels 50 en
+   * tenen els tres: sense això, el professor triaria un nivell i no
+   * passaria res, sense saber per què.
+   */
+  var nivellsCache = {};
+  function nivellsDisponibles(saberId) {
+    if (nivellsCache[saberId]) return nivellsCache[saberId];
+    var s = sabersPerId[saberId];
+    var gens = gensPerSaber[saberId] || [];
+    var d = [1, 2, 3].map(function (n) {
+      if (s && s.perNivell && s.perNivell[n - 1] > 0) return true;
+      return gens.some(function (g) { return g.nivell === n; });
+    });
+    nivellsCache[saberId] = d;
+    return d;
   }
 
   /** Quin pes té un saber segons el criteri de repartiment triat. */
@@ -486,6 +546,9 @@
         pos = v.length - 1;
       }
       var cand = v[pos];
+      // Amb un nivell fixat, la volta només ofereix preguntes d'aquell
+      // nivell: si no, el primer clic desfaria el que s'acaba de demanar.
+      if (cand && banc[cand] && q.nivell && banc[cand].nivell !== q.nivell) continue;
       if (cand && cand !== q.itemId && !ocupats[cand] && banc[cand]) {
         if (estat.fixades[q.itemId]) {
           delete estat.fixades[q.itemId];
@@ -498,6 +561,15 @@
         return;
       }
     }
+
+    /* No hi havia res per oferir. Passa sobretot amb un nivell fixat que el
+       contingut només té en un ítem: sense dir res, el botó semblava mort. */
+    var s = sabersPerId[q.saberId];
+    estat.avisos = [q.nivell
+      ? '«' + s.titol + '» no té cap altra pregunta de nivell ' + q.nivell +
+        '. Posa el nivell a «general» per veure la resta.'
+      : 'Ja hi són totes les preguntes de «' + s.titol + '».'];
+    pintaLlista();
   }
 
   /** El que fa que dues preguntes siguin «la mateixa» per a l'ull. */
@@ -541,11 +613,6 @@
     estat.editat = true;
     pinta();
     desaAlHash();
-  }
-
-  /** El que fa que dues variants siguin «la mateixa pregunta» per a l'ull. */
-  function firma(it) {
-    return (it.cap || '') + '|' + (it.enunciat || '') + '|' + (it.figura || '');
   }
 
   /** Porta la pregunta `i` a la posició `desti` (1..n) d'una sola passa. */
@@ -796,6 +863,28 @@
       .replace(/\s+/g, ' ').trim().slice(0, 90);
   }
 
+  /**
+   * Selector de nivell d'una pregunta. «General» vol dir que segueix la
+   * barreja del control de dalt; 1, 2 i 3 la claven a aquell nivell, que és
+   * el que permet fer una prova de mínims amb un parell de preguntes més
+   * exigents. Els nivells que aquell contingut no té surten desactivats:
+   * només 27 dels 50 continguts en tenen els tres, i sense això triaries un
+   * nivell i no passaria res.
+   */
+  function selectorNivell(i, q, it, saber) {
+    var disp = nivellsDisponibles(saber.id);
+    var opcions = '<option value="">nivell ' + it.nivell + ' (general)</option>';
+    for (var n = 1; n <= 3; n++) {
+      opcions += '<option value="' + n + '"' +
+        (q.nivell === n ? ' selected' : '') +
+        (disp[n - 1] ? '' : ' disabled') +
+        '>nivell ' + n + (disp[n - 1] ? '' : ' \u2014 no en té') + '</option>';
+    }
+    return ' \u00b7 <select class="q-nivell' + (q.nivell ? ' fixat' : '') +
+      '" data-nivell="' + i + '" aria-label="Nivell de la pregunta ' + (i + 1) +
+      '">' + opcions + '</select>';
+  }
+
   function pintaLlista() {
     var h = '';
     if (!estat.preguntes.length) {
@@ -817,7 +906,7 @@
           '<span class="q-cos">' +
             '<span class="q-tit">' + esc(resumeix(it.cap) || resumeix(it.enunciat) || it.id) + '</span>' +
             '<span class="q-saber">' + esc(saber ? saber.titol : it.blocTitol) +
-              (saber ? ' · nivell ' + it.nivell : '') + '</span>' +
+              (saber ? selectorNivell(i, q, it, saber) : '') + '</span>' +
           '</span>' +
           '<span class="q-punts">' +
             '<input type="number" min="0" max="20" step="0.25" ' +
@@ -977,7 +1066,10 @@
         var base = estat.propies[x.itemId]
           ? ['P', estat.propies[x.itemId].enunciat, estat.propies[x.itemId].solucio]
           : [x.itemId, x.saberId];
-        if (x.fix != null) base.push(x.fix);
+        // El nivell fixat també ha de viatjar a l'adreça, o l'enllaç
+        // desat tornaria una prova amb un altre repartiment de dificultat.
+        if (x.fix != null || x.nivell) base.push(x.fix != null ? x.fix : null);
+        if (x.nivell) base.push(x.nivell);
         return base;
       });
       d.fx = Object.keys(estat.fixades);
@@ -1017,7 +1109,8 @@
           }
           return banc[x[0]]
             ? { itemId: x[0], saberId: x[1], punts: 0,
-                fix: x[2] != null ? x[2] : undefined }
+                fix: x[2] != null ? x[2] : undefined,
+                nivell: x[3] || undefined }
             : null;
         }).filter(Boolean);
         (d.fx || []).forEach(function (id) { estat.fixades[id] = true; });
@@ -1210,6 +1303,8 @@
     $('#cerca').addEventListener('input', pintaRail);
 
     $('#llista').addEventListener('change', function (ev) {
+      var niv = ev.target.dataset && ev.target.dataset.nivell;
+      if (niv != null) { fixaNivell(+niv, +ev.target.value || 0); return; }
       var pos = ev.target.dataset && ev.target.dataset.posicio;
       if (pos != null) { mouA(+pos, +ev.target.value); return; }
       var i = ev.target.dataset && ev.target.dataset.punts;
