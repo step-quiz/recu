@@ -13,8 +13,13 @@
   var $ = function (s, on) { return (on || document).querySelector(s); };
   var esc = window.Full.esc;
 
+  /* Índexs sense prototip. Les claus arriben de l'adreça, que pot ser
+     qualsevol cosa: amb un `{}` normal, un id com «constructor» trobava la
+     funció d'Object i entrava a la prova com una pregunta buida. */
+  var buit = function () { return Object.create(null); };
+
   /* --------------------------------------------------------------- índexs */
-  var banc = {};
+  var banc = buit();
   BANC.items.forEach(function (it) { banc[it.id] = it; });
 
   /* --------------------------------------------------- material propi
@@ -67,7 +72,7 @@
     return l;
   }
 
-  var sabersPerId = {}, ordreSabers = [];
+  var sabersPerId = buit(), ordreSabers = [];
   MAPA.cursos.forEach(function (c) {
     c.sabers.forEach(function (s) {
       sabersPerId[s.id] = s;
@@ -101,9 +106,9 @@
 
   var estat = {
     sabers: [],
-    fixades: {},
+    fixades: buit(),
     preguntes: [],
-    propies: {},          // id -> {enunciat, solucio}, per poder desar-les
+    propies: buit(),      // id -> {enunciat, solucio}, per poder desar-les
     avisos: [],
     editat: false,        // s'ha tocat la llista a mà?
     vista: 'prova',
@@ -114,6 +119,7 @@
       ordre: 'curriculum',
       punts: 10,
       criteriPunts: 'nivell',
+      durada: 55,            // minuts que té l'alumne: una hora de classe
       llavor: window.Atzar.novaLlavor()
     },
     cfg: {
@@ -134,6 +140,11 @@
       figures: true,
       encapcalaments: true,
       mostraPunts: false,
+      // Preguntes consecutives del mateix exercici: 6a, 6b.
+      agrupa: true,
+      // Pla de repàs: exercicis de pràctica per contingut i les solucions.
+      practica: 2,
+      solucionsPla: true,
       // On és publicada l'eina. Si es deixa en blanc, el fitxer que baixa
       // «Desa la prova» apunta a l'adreça d'ara mateix, que amb doble clic
       // és un `file:///...` i deixa de funcionar si mous la carpeta.
@@ -149,8 +160,9 @@
      Els continguts marcats sí que s'hi desen: qui recupera 2n d'ESO ho fa
      moltes vegades seguides i tornar-los a marcar cada cop és feina inútil. */
   var CAMPS_INICIALS = ['centre', 'titol', 'instruccions', 'espai', 'paper',
-                        'figures', 'encapcalaments', 'mostraPunts', 'baseUrl'];
-  var SPEC_INICIALS = ['nombre', 'perfil', 'pes', 'ordre', 'punts', 'criteriPunts'];
+                        'figures', 'encapcalaments', 'mostraPunts', 'baseUrl',
+                        'practica', 'solucionsPla', 'agrupa'];
+  var SPEC_INICIALS = ['nombre', 'perfil', 'pes', 'ordre', 'punts', 'criteriPunts', 'durada'];
 
   function desaInicials() {
     try {
@@ -228,11 +240,6 @@
     }
   }
 
-  /**
-   * Genera una llista nova. Les preguntes pròpies i les fixades amb ☆ es
-   * conserven sempre: són l'única cosa de la prova que el professor ha
-   * escrit o triat a mà i regenerar-les seria destruir feina.
-   */
   /**
    * Tria un ítem d'un saber que no sigui a la prova, respectant el perfil i
    * evitant repetir exercici pare. Si el catàleg s'ha acabat però el saber
@@ -442,13 +449,15 @@
    * Marcar continguts, moure el nombre de preguntes o canviar l'ordre no
    * passen per aquí: conserven el que ja hi ha.
    *
-   * Les preguntes pròpies i les fixades amb ☆ se salven fins i tot aquí.
+   * Les preguntes pròpies i les fixades amb ☆ se salven fins i tot aquí:
+   * són l'única cosa de la prova que el professor ha escrit o triat a mà, i
+   * regenerar-les seria destruir feina.
    */
   function recomposa() {
     // L'ordre de les voltes es fixa amb el codi de la tria: si el codi
     // canvia, l'ordre també, o «Altres preguntes» oferiria sempre la
     // mateixa seqüència en clicar les fletxes.
-    voltes = {};
+    voltes = buit();
     var conserva = estat.preguntes.filter(function (q) {
       return estat.fixades[q.itemId] || estat.propies[q.itemId];
     });
@@ -475,17 +484,13 @@
     desaAlHash();
   }
 
-  /**
-   * Uns altres nombres per a la mateixa pregunta. Només per als ítems que
-   * venen d'un generador; el pou és infinit.
-   */
   /* ------------------------------------------------------ la volta d'un saber
      El ⟳ triava un ítem a l'atzar cada vegada. Amb quinze ítems disponibles
      això donava seqüències com A, B, B, A, C, B, C: repeticions immediates i
      només tres preguntes vistes de quinze. Ara l'atzar decideix UNA vegada en
      quin ordre sortiran, i els botons recorren aquesta llista endavant i
      endarrere. Abans de repetir-ne cap, les hauràs vistes totes. */
-  var voltes = {};
+  var voltes = buit();
 
   function volta(saberId) {
     if (!voltes[saberId]) {
@@ -577,6 +582,10 @@
     return (it.cap || '') + '|' + (it.enunciat || '') + '|' + (it.figura || '');
   }
 
+  /**
+   * Uns altres nombres per a la mateixa pregunta. Només per als ítems que
+   * venen d'un generador; el pou és infinit.
+   */
   function altresNombres(i) {
     var q = estat.preguntes[i], it = banc[q.itemId];
     if (!it || !it.gen) return;
@@ -645,11 +654,6 @@
   }
 
   /**
-   * Una pregunta més d'un contingut concret, sense refer la prova. És el
-   * control que faltava per construir la recuperació sobre els criteris que
-   * l'alumne no va assolir, en comptes de sobre un total global.
-   */
-  /**
    * On ha d'anar una pregunta nova. Amb l'ordre del currículum s'insereix al
    * seu lloc en comptes d'anar a parar a la posició catorze quan li tocava
    * la tercera: moure-la amunt onze vegades era una feina absurda.
@@ -669,6 +673,11 @@
     estat.preguntes.splice(on, 0, q);
   }
 
+  /**
+   * Una pregunta més d'un contingut concret, sense refer la prova. És el
+   * control que faltava per construir la recuperació sobre els criteris que
+   * l'alumne no va assolir, en comptes de sobre un total global.
+   */
   function afegeixDelSaber(saberId) {
     var saber = sabersPerId[saberId];
     if (!saber || !saber.items.length) return;
@@ -747,6 +756,26 @@
     });
   }
 
+  /* Cursos plegats a la columna de l'esquerra. Qui recupera 2n no ha de
+     passar per damunt dels divuit continguts de 1r cada vegada. És una
+     preferència de qui fa les proves, no part de la prova: va a la memòria
+     del navegador (si la hi deixa) i no a l'adreça. Mateixa idea que les
+     unitats plegables del banc de 2n de batxillerat. */
+  var PLEGATS = 'recuperacio-eso:plegats';
+  var plegats = buit();
+  try {
+    JSON.parse(localStorage.getItem(PLEGATS) || '[]').forEach(function (c) {
+      if (typeof c === 'string') plegats[c] = true;
+    });
+  } catch (e) { /* sense memòria del navegador: tot desplegat */ }
+
+  function commutaPlegat(cursId) {
+    if (plegats[cursId]) delete plegats[cursId]; else plegats[cursId] = true;
+    try { localStorage.setItem(PLEGATS, JSON.stringify(Object.keys(plegats))); }
+    catch (e) { /* res */ }
+    pintaRail();
+  }
+
   function visibles(curs, filtre) {
     return ambBanc(curs.sabers).filter(function (s) {
       if (!filtre) return true;
@@ -765,7 +794,8 @@
                : d.mes ? '[data-mes="' + d.mes + '"]'
                : d.menys ? '[data-menys="' + d.menys + '"]'
                : d.sentit ? '[data-sentit="' + d.sentit + '"]'
-               : d.curs ? '[data-curs="' + d.curs + '"]' : null;
+               : d.curs ? '[data-curs="' + d.curs + '"]'
+               : d.plega ? '[data-plega="' + d.plega + '"]' : null;
 
     var html = '';
 
@@ -805,7 +835,8 @@
                   Math.round(3 + (s.hores / maxHores) * 34) + 'px"></span>' +
                 '<span>' + s.hores + ' h</span><span>·</span>' +
                 '<span>' + s.items.length + ' al banc</span>' +
-                (quantes ? '<span class="a-prova">· ' + quantes + ' triades</span>' : '') +
+                (quantes ? '<span class="a-prova">· ' + quantes +
+                  (quantes === 1 ? ' triada' : ' triades') + '</span>' : '') +
               '</div>' +
             '</div>' +
           '</label>' +
@@ -822,18 +853,29 @@
       });
 
       var buits = curs.sabers.length - totalAmbBanc;
+      // Una cerca desplega el que troba: si no, no es veuria el resultat.
+      var plegat = plegats[curs.id] && !filtre;
       html += '<section class="curs">' +
         '<div class="curs-cap">' +
-          '<strong>' + esc(curs.titol) + '</strong>' +
-          '<span class="compte">' + triats + ' / ' + totalAmbBanc + '</span>' +
+          '<button type="button" class="plega" data-plega="' + esc(curs.id) + '" ' +
+            'aria-expanded="' + !plegat + '" title="' +
+            (plegat ? 'Desplega el curs' : 'Plega el curs') + '">' +
+            // Una fletxa que gira (CSS), prou gran per veure-la d'una ullada.
+            '<svg class="fletxa" viewBox="0 0 12 12" aria-hidden="true">' +
+              '<path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" ' +
+              'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+            '<strong>' + esc(curs.titol) + '</strong>' +
+            '<span class="compte">' + triats + ' / ' + totalAmbBanc + '</span>' +
+          '</button>' +
           '<button class="mini" data-curs="' + esc(curs.id) + '" aria-pressed="' + tots + '">' +
             (tots ? 'Treu-ho tot' : 'Tot el curs') + '</button>' +
         '</div>' +
-        '<div class="sentit">' + cos + '</div>' +
-        (buits && !filtre
-          ? '<p class="curs-peu">' + buits + ' continguts del currículum no tenen ' +
-            'preguntes al banc i no es llisten. Fes-los amb «+ Pregunta pròpia».</p>'
-          : '') +
+        (plegat ? '' :
+          '<div class="sentit">' + cos + '</div>' +
+          (buits && !filtre
+            ? '<p class="curs-peu">' + buits + ' continguts del currículum no tenen ' +
+              'preguntes al banc i no es llisten. Fes-los amb «+ Pregunta pròpia».</p>'
+            : '')) +
       '</section>';
     });
 
@@ -880,13 +922,15 @@
         (disp[n - 1] ? '' : ' disabled') +
         '>nivell ' + n + (disp[n - 1] ? '' : ' \u2014 no en té') + '</option>';
     }
-    return ' \u00b7 <select class="q-nivell' + (q.nivell ? ' fixat' : '') +
+    return '<select class="q-nivell' + (q.nivell ? ' fixat' : '') +
       '" data-nivell="' + i + '" aria-label="Nivell de la pregunta ' + (i + 1) +
       '">' + opcions + '</select>';
   }
 
   function pintaLlista() {
     var h = '';
+    var etiq = window.Composa.agrupa(estat.preguntes, banc, estat.cfg.agrupa).etiquetes;
+    pintaTemps();
     if (!estat.preguntes.length) {
       h = '<p class="buida">' + (estat.sabers.length
         ? 'Cap pregunta. Puja el nombre de preguntes o revisa els avisos.'
@@ -905,8 +949,17 @@
             '" aria-label="Posició de la pregunta ' + (i + 1) + '">' +
           '<span class="q-cos">' +
             '<span class="q-tit">' + esc(resumeix(it.cap) || resumeix(it.enunciat) || it.id) + '</span>' +
-            '<span class="q-saber">' + esc(saber ? saber.titol : it.blocTitol) +
-              (saber ? selectorNivell(i, q, it, saber) : '') + '</span>' +
+            '<span class="q-saber">' +
+              // Si és un apartat, com surt al full: «6b».
+              (etiq[i] !== String(i + 1)
+                ? '<span class="q-etiqueta" title="Al full surt com a ' + etiq[i] + '">' +
+                  etiq[i] + '</span> ' : '') +
+              esc(saber ? saber.titol : it.blocTitol) + '</span>' +
+            /* El selector va en una línia pròpia. Enganxat al nom del
+               contingut, dins d'una línia amb `nowrap` i punts suspensius,
+               a l'amplada d'un portàtil quedava retallat: es veia
+               «Divisibilitat · …» i el control no es trobava. */
+            (saber ? selectorNivell(i, q, it, saber) : '') +
           '</span>' +
           '<span class="q-punts">' +
             '<input type="number" min="0" max="20" step="0.25" ' +
@@ -949,6 +1002,65 @@
     $('#llista').innerHTML = h;
   }
 
+  /* ------------------------------------------------ exercicis de pràctica */
+  /**
+   * Els exercicis de pràctica del pla de repàs. La tria la fa
+   * `Composa.practica` amb el catàleg; quan un contingut no en té prou
+   * (Comprensió lectora de 1r, 2n i 3r comparteixen els mateixos sis
+   * ítems) i té generadors, se'n fabriquen variants noves, que no poden
+   * coincidir amb cap pregunta de la prova ni amb cap altre exercici.
+   *
+   * Les llavors són deterministes (surten del codi de la prova): la mateixa
+   * adreça dona sempre el mateix pla.
+   */
+  function practicaDelPla() {
+    var n = estat.cfg.practica;
+    var idsProva = estat.preguntes.map(function (q) { return q.itemId; });
+    var pr = window.Composa.practica({
+      sabers: estat.sabers, n: n, perfil: estat.spec.perfil,
+      llavor: estat.spec.llavor, prova: idsProva
+    }, banc, sabersPerId);
+
+    var vistes = {};
+    var marca = function (id) { if (banc[id]) vistes[firma(banc[id])] = true; };
+    idsProva.forEach(marca);
+    Object.keys(pr).forEach(function (sid) { pr[sid].forEach(marca); });
+    var pes = window.Composa.PERFILS[estat.spec.perfil] || window.Composa.PERFILS.minims;
+
+    estat.sabers.forEach(function (sid, k) {
+      if (!pr[sid] || pr[sid].length >= n) return;
+      // Els generadors del nivell que la prova demana; si no n'hi ha cap, tots.
+      var gens = (gensPerSaber[sid] || []).filter(function (g) { return pes[g.nivell] >= 1; });
+      if (!gens.length) gens = gensPerSaber[sid] || [];
+      for (var t = 0; pr[sid].length < n && gens.length && t < 40; t++) {
+        var it = variant(gens[t % gens.length].id, 'pr' + estat.spec.llavor + 's' + k + 't' + t);
+        if (it && !vistes[firma(it)]) {
+          vistes[firma(it)] = true;
+          pr[sid].push(it.id);
+        }
+      }
+    });
+    return pr;
+  }
+
+  /**
+   * Temps estimat de la prova contra els minuts que té l'alumne. Surt al
+   * panell, al costat del control de durada: és on es decideix quantes
+   * preguntes hi caben.
+   */
+  function pintaTemps() {
+    var t = window.Composa.minuts(estat.preguntes, banc), d = estat.spec.durada;
+    var el = $('#temps');
+    el.textContent = estat.preguntes.length ? '\u2248 ' + t + ' min' : '\u2014';
+    el.className = 'temps' + (!estat.preguntes.length ? '' : t > d ? ' fora' : ' dins');
+    el.title = estat.preguntes.length
+      ? (t > d ? 'Probablement massa llarga per a ' + d + ' minuts. ' : '') +
+        'Estimació: ' + window.Composa.MINUTS_NIVELL[1] + ' min per pregunta de nivell 1, ' +
+        window.Composa.MINUTS_NIVELL[2] + ' de nivell 2 i ' +
+        window.Composa.MINUTS_NIVELL[3] + ' de nivell 3.'
+      : '';
+  }
+
   /* --------------------------------------------------------------- el full */
   function pintaFull() {
     var cfg = Object.create(estat.cfg);
@@ -956,7 +1068,9 @@
     cfg.editable = estat.vista === 'prova';
     cfg.fixades = estat.fixades;
 
-    var dades = { cfg: cfg, preguntes: estat.preguntes, sabers: estat.sabers };
+    var dades = { cfg: cfg, preguntes: estat.preguntes, sabers: estat.sabers,
+                  agrupacio: window.Composa.agrupa(estat.preguntes, banc, estat.cfg.agrupa) };
+    if (estat.vista === 'pla') dades.practica = practicaDelPla();
     var html = estat.vista === 'clau' ? window.Full.clau(dades, banc, sabersPerId)
              : estat.vista === 'pla' ? window.Full.pla(dades, banc, sabersPerId, MAPA)
              : window.Full.prova(dades, banc, sabersPerId);
@@ -973,6 +1087,7 @@
       } catch (e) { /* si KaTeX falla es veu el LaTeX en cru: ja és prou avís */ }
     }
     comptaPagines();
+    aplicaZoom();
   }
 
   /* Quantes pàgines A4 sortiran. És la decisió real del professor i abans
@@ -1002,13 +1117,17 @@
       blocs.push([el.offsetHeight * aMm,
                   (parseFloat(getComputedStyle(el).marginBottom) || 0) * aMm]);
     }
-    Array.prototype.forEach.call(full.children, function (fill) {
-      if (fill.tagName === 'OL' || fill.tagName === 'UL') {
-        Array.prototype.forEach.call(fill.children, afegeix);
-      } else if (!fill.classList.contains('doc-peu')) {
-        afegeix(fill);
+    /* Les llistes i el que porta `.partible` (un contingut del pla amb els
+       seus exercicis) es poden partir entre pàgines: es baixa als fills. */
+    function recorre(el) {
+      if (el.classList.contains('doc-peu')) return;
+      if (el.tagName === 'OL' || el.tagName === 'UL' || el.classList.contains('partible')) {
+        Array.prototype.forEach.call(el.children, recorre);
+      } else {
+        afegeix(el);
       }
-    });
+    }
+    Array.prototype.forEach.call(full.children, recorre);
     if (!blocs.length) { $('#pagines').textContent = '1 pàgina'; return; }
 
     var pagines = 1, ocupat = 0;
@@ -1034,6 +1153,31 @@
       (pagines === 1 ? ' pàgina' : ' pàgines');
   }
 
+  /* ------------------------------------------------------------------ zoom
+     El full fa sempre 210 mm d'ample (vegeu `.full` a eina.css): és l'única
+     manera que la pantalla i el paper parteixin les línies igual. Perquè hi
+     càpiga en un portàtil, per defecte s'escala a l'ample que queda entre
+     les dues columnes ('auto'). Si el professor mou el control, mana ell
+     fins que torni a prémer «Ajusta». */
+  var zoom = 'auto';
+
+  function aplicaZoom() {
+    var full = $('#full'), escena = $('.escena');
+    var cs = getComputedStyle(escena);
+    var lloc = escena.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    if (lloc <= 0) return;                 // pestanya amagada en pantalla estreta
+    var s = zoom === 'auto'
+      ? Math.max(0.3, Math.min(1, Math.floor(lloc / full.offsetWidth * 100) / 100))
+      : zoom;
+    document.documentElement.style.setProperty('--zoom', s);
+    // L'escala no redueix la caixa del full: sense això, sota un full al
+    // 70 % hi quedaria un 30 % de la seva alçada en blanc.
+    full.style.setProperty('--baix', ((s - 1) * full.offsetHeight) + 'px');
+    $('#zoom').value = s;
+    $('#zoom-valor').textContent = Math.round(s * 100) + ' %';
+    $('#zoom-ajusta').setAttribute('aria-pressed', zoom === 'auto');
+  }
+
   function pinta() {
     pintaRail();
     pintaLlista();
@@ -1054,7 +1198,16 @@
         w: estat.spec.pes, o: estat.spec.ordre, t: estat.spec.punts,
         l: estat.spec.llavor, e: estat.cfg.espai, q: estat.cfg.paper,
         m: estat.cfg.model, pt: estat.cfg.mostraPunts ? 1 : 0,
-        cp: estat.spec.criteriPunts
+        cp: estat.spec.criteriPunts,
+        /* Tot el que canvia el paper. Sense les dues caselles, apagar les
+           figures no sobrevivia a «Desa la prova»; sense la capçalera, el
+           fitxer d'un alumne concret s'obria amb el nom en blanc i la data
+           d'avui. */
+        fg: estat.cfg.figures ? 1 : 0, ec: estat.cfg.encapcalaments ? 1 : 0,
+        ce: estat.cfg.centre, ti: estat.cfg.titol, in: estat.cfg.instruccions,
+        al: estat.cfg.alumne, gr: estat.cfg.grup, da: estat.cfg.data,
+        pr: estat.cfg.practica, ps: estat.cfg.solucionsPla ? 1 : 0,
+        ag: estat.cfg.agrupa ? 1 : 0, du: estat.spec.durada
       };
       /* La llista de preguntes es desa SEMPRE, no només quan s'ha editat.
          L'especificació sola no la reprodueix: les preguntes fixades i les
@@ -1078,48 +1231,95 @@
     } catch (e) { /* si el navegador no ho permet, l'eina segueix igual */ }
   }
 
+  /* Validadors per a l'adreça. Una adreça pot arribar retallada, editada a
+     mà o d'una versió anterior de l'eina: el que no s'entén s'ignora i es
+     queda el valor que ja hi havia, però mai no pot trencar la pàgina ni
+     deixar a l'estat un valor que després faci petar el full. */
+  var DE_LLISTA = {
+    p: Object.keys(window.Composa.PERFILS),
+    w: ['hores', 'items', 'igual'],
+    o: ['curriculum', 'dificultat', 'barrejat'],
+    q: ['quadricula', 'ratlles', 'blanc'],
+    cp: ['igual', 'nivell', 'hores']
+  };
+  function text(v, max) { return typeof v === 'string' && v.length <= max; }
+  function nombre(v, min, max) { return typeof v === 'number' && isFinite(v) && v >= min && v <= max; }
+
   function llegeixDelHash() {
     if (!location.hash || location.hash.length < 3) return false;
+    var d;
     try {
-      var d = JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(1)))));
-      estat.sabers = (d.s || []).filter(function (id) { return sabersPerId[id]; });
-      if (d.n) estat.spec.nombre = d.n;
-      if (d.p && window.Composa.PERFILS[d.p]) estat.spec.perfil = d.p;
-      if (d.w) estat.spec.pes = d.w;
-      if (d.o) estat.spec.ordre = d.o;
-      if (d.t) estat.spec.punts = d.t;
-      if (d.l) estat.spec.llavor = d.l;
-      if (d.e != null) estat.cfg.espai = d.e;
-      if (d.q) estat.cfg.paper = d.q;
-      if (d.m) estat.cfg.model = d.m;
-      if (d.pt != null) estat.cfg.mostraPunts = !!d.pt;
-      if (d.cp) estat.spec.criteriPunts = d.cp;
+      d = JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(1)))));
+    } catch (e) { return false; }
+    if (!d || typeof d !== 'object' || Array.isArray(d)) return false;
 
-      if (d.q7 && d.q7.length) {
-        estat.preguntes = d.q7.map(function (x) {
-          if (x[0] === 'P') {
-            return { itemId: creaPropia(x[1], x[2]), saberId: null, punts: 0,
-                     fix: x[3] != null ? x[3] : undefined };
-          }
-          // Una variant que no era al catàleg es torna a construir a
-          // partir del seu id: `p-<generador>-<llavor>`.
-          if (!banc[x[0]] && x[0].indexOf('p-') === 0) {
-            var tall = x[0].lastIndexOf('-');
-            variant(x[0].slice(2, tall), x[0].slice(tall + 1));
-          }
-          return banc[x[0]]
-            ? { itemId: x[0], saberId: x[1], punts: 0,
-                fix: x[2] != null ? x[2] : undefined,
-                nivell: x[3] || undefined }
-            : null;
-        }).filter(Boolean);
-        (d.fx || []).forEach(function (id) { estat.fixades[id] = true; });
+    var bo = function (k) {
+      return DE_LLISTA[k] ? DE_LLISTA[k].indexOf(d[k]) >= 0 : false;
+    };
+    try {
+      if (Array.isArray(d.s)) {
+        estat.sabers = d.s.filter(function (id) { return typeof id === 'string' && sabersPerId[id]; });
+      }
+      if (nombre(d.n, 0, 200)) estat.spec.nombre = Math.round(d.n);
+      if (bo('p')) estat.spec.perfil = d.p;
+      if (bo('w')) estat.spec.pes = d.w;
+      if (bo('o')) estat.spec.ordre = d.o;
+      if (nombre(d.t, 0.25, 100)) estat.spec.punts = d.t;
+      if (text(d.l, 24) && d.l) estat.spec.llavor = d.l;
+      if (nombre(d.e, 0, 90)) estat.cfg.espai = d.e;
+      if (bo('q')) estat.cfg.paper = d.q;
+      if (text(d.m, 40)) estat.cfg.model = d.m;
+      if (d.pt != null) estat.cfg.mostraPunts = !!d.pt;
+      if (bo('cp')) estat.spec.criteriPunts = d.cp;
+      // Les adreces d'abans no els porten: llavors manen els valors inicials.
+      if (d.fg != null) estat.cfg.figures = !!d.fg;
+      if (d.ec != null) estat.cfg.encapcalaments = !!d.ec;
+      if (text(d.ce, 200)) estat.cfg.centre = d.ce;
+      if (text(d.ti, 200)) estat.cfg.titol = d.ti;
+      if (text(d.in, 2000)) estat.cfg.instruccions = d.in;
+      if (text(d.al, 200)) estat.cfg.alumne = d.al;
+      if (text(d.gr, 60)) estat.cfg.grup = d.gr;
+      if (text(d.da, 10) && /^\d{4}-\d{2}-\d{2}$/.test(d.da)) estat.cfg.data = d.da;
+      if ([0, 1, 2, 3].indexOf(d.pr) >= 0) estat.cfg.practica = d.pr;
+      if (d.ps != null) estat.cfg.solucionsPla = !!d.ps;
+      if (d.ag != null) estat.cfg.agrupa = !!d.ag;
+      if (nombre(d.du, 5, 600)) estat.spec.durada = Math.round(d.du);
+
+      if (Array.isArray(d.q7) && d.q7.length) {
+        estat.preguntes = d.q7.map(llegeixPregunta).filter(Boolean);
+        // Mana la llista: si l'adreça no porta el nombre (o no quadra), el
+        // control deia «10» amb cinc preguntes al full.
+        estat.spec.nombre = estat.preguntes.length;
+        (Array.isArray(d.fx) ? d.fx : []).forEach(function (id) {
+          if (typeof id === 'string' && banc[id]) estat.fixades[id] = true;
+        });
         estat.editat = true;
         estat.cfg.llavor = estat.spec.llavor;
         reparteixPunts();
       }
       return true;
     } catch (e) { return false; }
+  }
+
+  /** Una pregunta de l'adreça, o `null` si no s'entén. */
+  function llegeixPregunta(x) {
+    if (!Array.isArray(x) || typeof x[0] !== 'string') return null;
+    var fix = nombre(x[x[0] === 'P' ? 3 : 2], 0, 100) ? x[x[0] === 'P' ? 3 : 2] : undefined;
+    if (x[0] === 'P') {
+      if (!text(x[1], 5000) || !x[1].trim()) return null;
+      return { itemId: creaPropia(x[1], text(x[2], 5000) ? x[2] : ''),
+               saberId: null, punts: 0, fix: fix };
+    }
+    // Una variant que no era al catàleg es torna a construir a partir del
+    // seu id: `p-<generador>-<llavor>`.
+    if (!banc[x[0]] && x[0].indexOf('p-') === 0) {
+      var tall = x[0].lastIndexOf('-');
+      variant(x[0].slice(2, tall), x[0].slice(tall + 1));
+    }
+    if (!banc[x[0]]) return null;
+    var saberId = typeof x[1] === 'string' && sabersPerId[x[1]] ? x[1] : null;
+    return { itemId: x[0], saberId: saberId, punts: 0, fix: fix,
+             nivell: [1, 2, 3].indexOf(x[3]) >= 0 ? x[3] : undefined };
   }
 
   /* ------------------------------------------- desar la prova en un fitxer
@@ -1208,9 +1408,30 @@
     }, 2000);
   }
 
+  /** Canvia el document que es veu al centre: prova, clau o pla. */
+  function mostraVista(vista) {
+    estat.vista = vista;
+    document.querySelectorAll('[data-doc]').forEach(function (x) {
+      x.setAttribute('aria-selected', x.dataset.doc === vista);
+    });
+    $('#imprimeix').firstChild.textContent = 'Imprimeix ' + (
+      vista === 'clau' ? 'la clau' : vista === 'pla' ? 'el pla' : 'la prova');
+    // `pinta()` i no `pintaFull()`: el botó s'habilita segons la vista
+    // —el pla depèn dels continguts marcats i no de les preguntes— i
+    // canviant de pestanya no es recalculava.
+    pinta();
+  }
+
+  /** «Altres preguntes» i Ctrl+G: un codi nou i una tria nova. */
+  function altraTria() {
+    estat.spec.llavor = window.Atzar.novaLlavor();
+    sincronitzaControls();
+    recomposa();
+  }
+
   /* ---------------------------------------------------------------- lligams */
   function sincronitzaControls() {
-    /* El control té un rang [3, 15] i `estat.spec.nombre` se'n pot sortir
+    /* El control té un rang [3, 30] i `estat.spec.nombre` se'n pot sortir
        traient o afegint preguntes una a una. Mana l'estat, i el marcador
        ha de dir el que hi ha de debò encara que la barra estigui al topall. */
     var n = $('#nombre');
@@ -1244,6 +1465,12 @@
     document.querySelectorAll('[data-criteri]').forEach(function (b) {
       b.setAttribute('aria-pressed', b.dataset.criteri === estat.spec.criteriPunts);
     });
+    document.querySelectorAll('[data-practica]').forEach(function (b) {
+      b.setAttribute('aria-pressed', +b.dataset.practica === estat.cfg.practica);
+    });
+    $('#solucionsPla').checked = estat.cfg.solucionsPla;
+    $('#agrupa').checked = estat.cfg.agrupa;
+    $('#durada').value = estat.spec.durada;
   }
 
   function lliga() {
@@ -1264,6 +1491,7 @@
       if (!b) return;
       var filtre = plana($('#cerca').value.trim());
 
+      if (b.dataset.plega) { commutaPlegat(b.dataset.plega); return; }
       if (b.dataset.mes) { afegeixDelSaber(b.dataset.mes); return; }
       if (b.dataset.menys) { treuDelSaber(b.dataset.menys); return; }
 
@@ -1357,6 +1585,20 @@
     // canviar-ne dotze.
     $('#nombre').addEventListener('change', function () { ajusta(+this.value); });
 
+    $('#durada').addEventListener('change', function () {
+      var v = Math.round(+this.value);
+      estat.spec.durada = v >= 5 && v <= 600 ? v : 55;
+      this.value = estat.spec.durada;
+      pintaTemps();
+      desaAlHash();
+    });
+    // Canvia la numeració del full i les etiquetes del panell: es pinta tot.
+    $('#agrupa').addEventListener('change', function () {
+      estat.cfg.agrupa = this.checked;
+      pinta();
+      desaAlHash();
+    });
+
     $('#punts').addEventListener('change', function () {
       estat.spec.punts = Math.max(0.25, +this.value || 10);
       reparteixPunts();
@@ -1387,16 +1629,28 @@
         desaAlHash();
       });
     });
+    /* Tocar el pla de repàs el mostra: si no, el canvi passaria a un
+       document que no es veu. */
+    document.querySelectorAll('[data-practica]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        estat.cfg.practica = +b.dataset.practica;
+        sincronitzaControls();
+        mostraVista('pla');
+        desaAlHash();
+      });
+    });
+    $('#solucionsPla').addEventListener('change', function () {
+      estat.cfg.solucionsPla = this.checked;
+      mostraVista('pla');
+      desaAlHash();
+    });
+
     $('#ordre').addEventListener('change', function () {
       estat.spec.ordre = this.value;
       reordena();          // canviar l'ordre no ha de canviar les preguntes
     });
 
-    $('#altra').addEventListener('click', function () {
-      estat.spec.llavor = window.Atzar.novaLlavor();
-      sincronitzaControls();
-      recomposa();
-    });
+    $('#altra').addEventListener('click', altraTria);
 
     $('#espai').addEventListener('input', function () {
       estat.cfg.espai = +this.value;
@@ -1412,36 +1666,27 @@
         estat.cfg[k] = this.checked; pintaFull(); desaAlHash();
       });
     });
-    ['centre', 'titol', 'alumne', 'grup', 'data', 'model', 'baseUrl'].forEach(function (k) {
-      $('#' + k).addEventListener('input', function () {
-        estat.cfg[k] = this.value;
-        if (k === 'model') desaAlHash();
-        pintaFull();
+    // Tot el que surt imprès va a l'adreça; `baseUrl` no, és de l'eina.
+    ['centre', 'titol', 'alumne', 'grup', 'data', 'model', 'instruccions', 'baseUrl']
+      .forEach(function (k) {
+        $('#' + k).addEventListener('input', function () {
+          estat.cfg[k] = this.value;
+          pintaFull();
+          if (k !== 'baseUrl') desaAlHash();
+        });
       });
-    });
-    $('#instruccions').addEventListener('input', function () {
-      estat.cfg.instruccions = this.value;
-      pintaFull();
-    });
 
     document.querySelectorAll('[data-doc]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        estat.vista = b.dataset.doc;
-        document.querySelectorAll('[data-doc]').forEach(function (x) {
-          x.setAttribute('aria-selected', x === b);
-        });
-        $('#imprimeix').firstChild.textContent = 'Imprimeix ' + (
-          estat.vista === 'clau' ? 'la clau' : estat.vista === 'pla' ? 'el pla' : 'la prova');
-        // `pinta()` i no `pintaFull()`: el botó s'habilita segons la vista
-        // —el pla depèn dels continguts marcats i no de les preguntes— i
-        // canviant de pestanya no es recalculava.
-        pinta();
-      });
+      b.addEventListener('click', function () { mostraVista(b.dataset.doc); });
     });
 
     $('#zoom').addEventListener('input', function () {
-      document.documentElement.style.setProperty('--zoom', this.value);
-      $('#zoom-valor').textContent = Math.round(this.value * 100) + ' %';
+      zoom = +this.value;
+      aplicaZoom();
+    });
+    $('#zoom-ajusta').addEventListener('click', function () {
+      zoom = 'auto';
+      aplicaZoom();
     });
 
     $('#imprimeix').addEventListener('click', function () { window.print(); });
@@ -1475,6 +1720,8 @@
         document.querySelectorAll('[data-mobil]').forEach(function (x) {
           x.setAttribute('aria-selected', x === b);
         });
+        // Amagat, el full no té amplada on ajustar-se: es fa en tornar-hi.
+        aplicaZoom();
       });
     });
 
@@ -1482,13 +1729,11 @@
     document.addEventListener('keydown', function (ev) {
       if ((ev.ctrlKey || ev.metaKey) && ev.key === 'g') {
         ev.preventDefault();
-        estat.spec.llavor = window.Atzar.novaLlavor();
-        sincronitzaControls();
-        recomposa();
+        altraTria();
       }
     });
 
-    window.addEventListener('resize', comptaPagines);
+    window.addEventListener('resize', function () { comptaPagines(); aplicaZoom(); });
   }
 
   function arrenca() {

@@ -161,7 +161,9 @@
     '<text x="96" y="34" class="fig-etq petita">c</text></svg>';
 
   /* ------------------------------------------------------------- registre */
-  var G = [], PER_ID = {};
+  // Sense prototip: l'id pot venir de l'adreça, i «constructor» no ha de
+  // trobar la funció d'Object.
+  var G = [], PER_ID = Object.create(null);
 
   /**
    * Dues declaracions que abans es deduïen amb una regex sobre la llargada
@@ -189,7 +191,10 @@
   var DIV = ['1eso-num-divisibilitat', '2eso-num-divisibilitat'];
   var ANG = ['1eso-esp-angles', '1eso-mes-angles'];
   var POL = ['1eso-esp-poligons', '2eso-esp-poligons'];
-  var ALG = ['1eso-alg-llenguatge', '2eso-alg-llenguatge'];
+  /* 3r també: el seu saber és «Traducció al llenguatge algebraic d'un
+     enunciat» i al banc de repàs només hi tenia un ítem de nivell 1. */
+  var ALG = ['1eso-alg-llenguatge', '2eso-alg-llenguatge', '3eso-alg-llenguatge'];
+  var EQU = ['2eso-alg-equacions', '3eso-alg-equacions'];
   var LEC = ['1eso-lec', '2eso-lec', '3eso-lec'];
   var SEM = ['3eso-esp-semblanca', '3eso-mes-semblanca'];
 
@@ -1056,6 +1061,269 @@
       var k = r.entre(2, 6);
       return { enunciat: '$k = ' + k + '$', resposta: '$' + (k * k) + '$',
                passos: ['La raó entre àrees és $k^2$: $' + k + '^2 = ' + (k * k) + '$.'] };
+    }
+  });
+
+  /* ========================================= equacions de primer grau ===
+     Els continguts que més pesen de l'àlgebra de 2n i 3r, i al banc de
+     repàs només 7 de cada 30 ítems eren de nivell 1: la resta porten
+     denominadors o són problemes llargs. Aquí, el que un alumne que ve de
+     suspendre ha de saber fer abans de res: aïllar la x amb nombres petits
+     i solucions enteres. Els passos són els que s'escriurien a la pissarra. */
+
+  /** `3x`, `x`, `-x`: el coeficient 1 no s'escriu. */
+  function termeX(a) {
+    return a === 1 ? 'x' : a === -1 ? '-x' : a + 'x';
+  }
+
+  /** `3x + 5`, `3x - 5`, `3x` (sense el terme si és 0). */
+  function binomi(a, b) {
+    return termeX(a) + (b ? ' ' + sumand(b) : '');
+  }
+
+  reg({
+    id: 'equ-un-pas', capCal: true, sabers: EQU, nivell: 1,
+    cap: 'Resol aquestes equacions.',
+    fn: function (r) {
+      var x = r.entre(2, 15), forma = r.enter(3), a, eq, pas;
+      if (forma === 0) {
+        a = r.entre(2, 12);
+        eq = 'x + ' + a + ' = ' + (x + a);
+        pas = 'Es resta $' + a + '$ als dos membres: $x = ' + (x + a) + ' - ' + a + '$.';
+      } else if (forma === 1) {
+        a = r.entre(2, 9);
+        eq = 'x - ' + a + ' = ' + (x - a);
+        pas = 'Se suma $' + a + '$ als dos membres: $x = ' + restand(x - a) + ' + ' + a + '$.';
+      } else {
+        a = r.entre(2, 9);
+        x = r.entre(2, 12);
+        eq = a + 'x = ' + (a * x);
+        pas = 'Es divideixen els dos membres entre $' + a + '$: $x = ' + (a * x) + ' : ' + a + '$.';
+      }
+      return { enunciat: '$' + eq + '$', resposta: '$x = ' + x + '$',
+               passos: [pas, '$x = ' + x + '$']};
+    }
+  });
+
+  reg({
+    id: 'equ-dos-passos', capCal: true, sabers: EQU, nivell: 1,
+    cap: 'Resol aquestes equacions.',
+    fn: function (r) {
+      var a = r.entre(2, 6), x = r.entre(1, 10), b;
+      do { b = r.entre(-9, 12); } while (!b || a * x + b < 1);
+      var c = a * x + b;
+      return {
+        enunciat: '$' + binomi(a, b) + ' = ' + c + '$',
+        resposta: '$x = ' + x + '$',
+        passos: ['El terme independent passa a l\'altre membre: $' + a + 'x = ' + c + ' ' +
+                 sumand(-b) + ' = ' + (a * x) + '$.',
+                 'Es divideix entre el coeficient de la $x$: $x = ' + (a * x) + ' : ' + a +
+                 ' = ' + x + '$.',
+                 'Comprovació: $' + a + ' \\cdot ' + x + ' ' + sumand(b) + ' = ' + c + '$.']
+      };
+    }
+  });
+
+  reg({
+    id: 'equ-dues-bandes', capCal: true, sabers: EQU, nivell: 1,
+    cap: 'Resol aquestes equacions.',
+    fn: function (r) {
+      var c = r.entre(1, 4), a = c + r.entre(1, 4), x = r.entre(1, 8), b, d;
+      do {
+        b = r.entre(-8, 10);
+        d = (a - c) * x + b;
+      } while (!b || !d || d > 40 || d < -20);
+      var passos = ['Els termes amb $x$ a l\'esquerra i els nombres a la dreta: $' +
+                    termeX(a) + ' - ' + termeX(c) + ' = ' + d + ' ' + sumand(-b) + '$.',
+                    'Es redueix cada membre: $' + termeX(a - c) + ' = ' + (d - b) + '$.'];
+      // Amb coeficient 1 la x ja queda aïllada: un tercer pas només repetiria.
+      if (a - c > 1) passos.push('Es divideix entre $' + (a - c) + '$: $x = ' + x + '$.');
+      return {
+        enunciat: '$' + binomi(a, b) + ' = ' + binomi(c, d) + '$',
+        resposta: '$x = ' + x + '$',
+        passos: passos
+      };
+    }
+  });
+
+  reg({
+    id: 'equ-parentesi', capCal: true, sabers: EQU, nivell: 1,
+    cap: 'Resol aquestes equacions. Comença traient el parèntesi.',
+    fn: function (r) {
+      var a = r.entre(2, 5), x = r.entre(1, 9), b;
+      do { b = r.entre(-5, 6); } while (!b || x + b < 1);
+      var c = a * (x + b);
+      return {
+        enunciat: '$' + a + '(x ' + sumand(b) + ') = ' + c + '$',
+        resposta: '$x = ' + x + '$',
+        passos: ['Propietat distributiva: $' + a + 'x ' + sumand(a * b) + ' = ' + c + '$.',
+                 '$' + a + 'x = ' + c + ' ' + sumand(-a * b) + ' = ' + (a * x) + '$.',
+                 '$x = ' + (a * x) + ' : ' + a + ' = ' + x + '$.']
+      };
+    }
+  });
+
+  /* ================================================ comprovar la solució === */
+  reg({
+    id: 'alg-comprova', capCal: true,
+    sabers: ['2eso-alg-llenguatge', '3eso-alg-llenguatge'], nivell: 1,
+    cap: 'Comprova si el valor de $x$ que es dona és solució de l\'equació.',
+    fn: function (r) {
+      var a = r.entre(2, 5), x = r.entre(1, 6), b;
+      do { b = r.entre(-6, 9); } while (!b || a * x + b < 1);
+      var c = a * x + b;
+      // La meitat de les vegades el valor proposat NO és la solució: si
+      // sempre ho fos, la resposta seria sempre «sí» sense calcular res.
+      var prova = r.enter(2) ? x : x + r.tria([-1, 1, 2]);
+      var val = a * prova + b, es = val === c;
+      return {
+        enunciat: '$' + binomi(a, b) + ' = ' + c + '$, amb $x = ' + prova + '$',
+        resposta: es ? 'Sí, és solució' : 'No, no és solució',
+        passos: ['Se substitueix la $x$: $' + a + ' \\cdot ' + restand(prova) + ' ' +
+                 sumand(b) + ' = ' + val + '$.',
+                 es ? 'Dona $' + c + '$, el mateix que l\'altre membre: és solució.'
+                    : 'Dona $' + val + '$ i no $' + c + '$: no és solució.']
+      };
+    }
+  });
+
+  /* ========================================= fraccions i nombres decimals = */
+  var FRACCIONS_DECIMALS = [[1, 2], [3, 2], [5, 2], [1, 4], [3, 4], [5, 4], [1, 5],
+                            [2, 5], [3, 5], [4, 5], [6, 5], [3, 10], [7, 10], [9, 10],
+                            [1, 20], [3, 20]];
+
+  reg({
+    id: 'fd-a-decimal', capCal: true, sabers: ['1eso-num-fracdec'], nivell: 1,
+    cap: 'Expressa aquestes fraccions com a nombre decimal.',
+    fn: function (r) {
+      var f = r.tria(FRACCIONS_DECIMALS), v = f[0] / f[1];
+      return {
+        enunciat: '$\\dfrac{' + f[0] + '}{' + f[1] + '}$',
+        resposta: '$' + coma(v) + '$',
+        passos: ['Es divideix el numerador entre el denominador: $' + f[0] + ' : ' +
+                 f[1] + ' = ' + coma(v) + '$.']
+      };
+    }
+  });
+
+  reg({
+    id: 'fd-a-fraccio', capCal: true, sabers: ['1eso-num-fracdec'], nivell: 1,
+    cap: 'Expressa aquests nombres decimals com a fracció irreductible.',
+    fn: function (r) {
+      // Només dècimes: amb centèsimes el pas intermedi porta /100, i un
+      // denominador de 100 el mesurador el compta, amb raó, com a càrrega.
+      var n = r.tria([1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 15, 25]);
+      var g = mcd(n, 10), num = n / g, den = 10 / g;
+      var passos = ['$' + coma(n / 10) + '$ són $' + n + '$ dècimes: $\\dfrac{' + n + '}{10}$.'];
+      passos.push(g > 1
+        ? 'Se simplifica dividint entre $' + g + '$: $\\dfrac{' + num + '}{' + den + '}$.'
+        : 'Ja és irreductible: $' + n + '$ i $10$ no tenen cap divisor comú.');
+      return {
+        enunciat: '$' + coma(n / 10) + '$',
+        resposta: '$\\dfrac{' + num + '}{' + den + '}$',
+        passos: passos
+      };
+    }
+  });
+
+  /* =========================================== proporcionalitat directa == */
+  /* a: enunciat; u: unitat del resultat; q: unitat de la quantitat;
+     una: què val una unitat, per al pas intermedi. */
+  var REGLES_DE_TRES = [
+    { a: 'Si $A$ kg de pomes costen $P$ €, quant costen $B$ kg?',
+      u: '€', q: 'kg', una: 'Preu d\'$1$ kg' },
+    { a: 'Si $A$ llibretes costen $P$ €, quant costen $B$ llibretes?',
+      u: '€', q: 'llibretes', una: 'Preu d\'una llibreta' },
+    { a: 'Una aixeta omple $A$ galledes en $P$ minuts. Quant tarda a omplir-ne $B$?',
+      u: 'minuts', q: 'galledes', una: 'Temps per omplir una galleda' },
+    { a: 'Amb $A$ litres de benzina un cotxe fa $P$ km. Quants km fa amb $B$ litres?',
+      u: 'km', q: 'litres', una: 'Km que fa amb $1$ litre' }
+  ];
+
+  reg({
+    id: 'pro-regla-tres', sabers: ['2eso-alg-proporcionalitat'], nivell: 1, cap: '',
+    fn: function (r) {
+      var c = r.tria(REGLES_DE_TRES), u = r.entre(2, 6), a = r.entre(2, 6), b;
+      if (c.u === 'km') u = r.tria([10, 12, 15]);
+      do { b = r.entre(2, 10); } while (b === a);
+      var p = a * u;
+      return {
+        enunciat: c.a.replace('$A$', '$' + a + '$').replace('$P$', '$' + p + '$')
+                     .replace('$B$', '$' + b + '$'),
+        resposta: '$' + (b * u) + '$ ' + c.u,
+        passos: ['És proporcionalitat directa: el doble de quantitat, el doble de resultat.',
+                 c.una + ': $' + p + ' : ' + a + ' = ' + u + '$ ' + c.u + '.',
+                 'Per a $' + b + '$ ' + c.q + ': $' + b + ' \\cdot ' + u + ' = ' + (b * u) +
+                 '$ ' + c.u + '.']
+      };
+    }
+  });
+
+  /* ======================================================= pla cartesià == */
+  var QUADRANTS = { '++': 'primer', '-+': 'segon', '--': 'tercer', '+-': 'quart' };
+
+  reg({
+    id: 'pc-quadrant', capCal: true, sabers: ['2eso-alg-placartesia'], nivell: 1,
+    cap: 'En quin quadrant és aquest punt?',
+    fn: function (r) {
+      var x = r.entre(1, 9) * (r.enter(2) ? 1 : -1), y = r.entre(1, 9) * (r.enter(2) ? 1 : -1);
+      var lletra = r.tria(['A', 'B', 'C', 'P', 'Q']);
+      var q = QUADRANTS[(x > 0 ? '+' : '-') + (y > 0 ? '+' : '-')];
+      return {
+        enunciat: '$' + lletra + '(' + x + ', ' + y + ')$',
+        resposta: 'Al ' + q + ' quadrant',
+        passos: ['La $x$ és ' + (x > 0 ? 'positiva' : 'negativa') + ' i la $y$ és ' +
+                 (y > 0 ? 'positiva' : 'negativa') + ': ' + q + ' quadrant.']
+      };
+    }
+  });
+
+  /* ============================================== àrees i volums bàsics == */
+  reg({
+    id: 'are-basica', capCal: true, sabers: ['1eso-mes-arees', '2eso-mes-arees'], nivell: 1,
+    cap: 'Calcula l\'àrea d\'aquestes figures.',
+    fn: function (r) {
+      var forma = r.enter(3), a, b;
+      if (forma === 0) {
+        a = r.entre(3, 12);
+        return { enunciat: 'Un quadrat de $' + a + '$ cm de costat.',
+                 resposta: '$' + (a * a) + '$ cm$^2$',
+                 passos: ['$A = c^2 = ' + a + '^2 = ' + (a * a) + '$ cm$^2$'] };
+      }
+      if (forma === 1) {
+        a = r.entre(4, 12);
+        do { b = r.entre(2, 9); } while (b === a);
+        return { enunciat: 'Un rectangle de $' + a + '$ cm de base i $' + b + '$ cm d\'alçada.',
+                 resposta: '$' + (a * b) + '$ cm$^2$',
+                 passos: ['$A = b \\cdot h = ' + a + ' \\cdot ' + b + ' = ' + (a * b) + '$ cm$^2$'] };
+      }
+      // Triangle: base parell, perquè l'àrea surti entera.
+      a = 2 * r.entre(2, 7);
+      b = r.entre(3, 9);
+      return { enunciat: 'Un triangle de $' + a + '$ cm de base i $' + b + '$ cm d\'alçada.',
+               resposta: '$' + (a * b / 2) + '$ cm$^2$',
+               passos: ['$A = \\dfrac{b \\cdot h}{2} = \\dfrac{' + a + ' \\cdot ' + b + '}{2} = ' +
+                        (a * b / 2) + '$ cm$^2$'] };
+    }
+  });
+
+  reg({
+    id: 'vol-cossos', capCal: true, sabers: ['2eso-mes-volums'], nivell: 1,
+    cap: 'Calcula el volum d\'aquests cossos.',
+    fn: function (r) {
+      var a = r.entre(2, 9), b, c;
+      if (r.enter(3) === 0) {
+        return { enunciat: 'Un cub de $' + a + '$ cm d\'aresta.',
+                 resposta: '$' + (a * a * a) + '$ cm$^3$',
+                 passos: ['$V = a^3 = ' + a + '^3 = ' + (a * a * a) + '$ cm$^3$'] };
+      }
+      b = r.entre(2, 8);
+      c = r.entre(2, 6);
+      return { enunciat: 'Un ortoedre de dimensions $' + a + '$ cm, $' + b + '$ cm i $' + c + '$ cm.',
+               resposta: '$' + (a * b * c) + '$ cm$^3$',
+               passos: ['El volum és el producte de les tres dimensions.',
+                        '$V = ' + a + ' \\cdot ' + b + ' \\cdot ' + c + ' = ' + (a * b * c) +
+                        '$ cm$^3$'] };
     }
   });
 

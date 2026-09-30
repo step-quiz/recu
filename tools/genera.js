@@ -73,9 +73,70 @@ function net(s) {
 
 function mcd(a, b) { while (b) { const t = b; b = a % b; a = t; } return a; }
 
+/**
+ * Valor d'una expressió en x tal com l'escriuen els generadors: `3x - 5`,
+ * `2(x + 4)`, `3 \\cdot (-2)`. Només per a text propi i controlat; no és
+ * un analitzador general.
+ */
+function avalua(expr, x) {
+  const js = expr.replace(/\\cdot/g, '*').replace(/\s+/g, '')
+    .replace(/(\d)x/g, '$1*x').replace(/(\d)\(/g, '$1*(')
+    .replace(/x/g, '(' + x + ')');
+  if (!/^[-+*/().\d]+$/.test(js)) throw new Error('expressió inesperada: ' + expr);
+  return Function('return (' + js + ');')();
+}
+
+/** El primer tros de mode matemàtic d'un text: `$3x + 5 = 20$` -> `3x + 5 = 20`. */
+const mat = t => (String(t).match(/\$([^$]*)\$/) || [])[1] || '';
+/** `\\dfrac{3}{4}` -> [3, 4]; `0{,}75` -> 0.75. */
+const fraccio = t => (t.match(/frac\{(\d+)\}\{(\d+)\}/) || []).slice(1).map(Number);
+const decimal = t => parseFloat(t.replace('{,}', '.'));
+
 /** Comprovacions aritmètiques concretes, per generador. */
 function aritmetica(it, errors, aplicades) {
   const e = net(it.enunciat), r = net(it.resposta);
+  const compta = () => { aplicades[it.gen] = (aplicades[it.gen] || 0) + 1; };
+  const malament = que => errors.push(`${it.gen}/${it.llavor}: ${que}`);
+
+  // Equacions: la solució escrita ha de fer iguals els dos membres.
+  if (/^equ-/.test(it.gen)) {
+    compta();
+    const [esq, dre] = mat(it.enunciat).split('=');
+    const x = +mat(it.resposta).replace('x =', '');
+    if (avalua(esq, x) !== avalua(dre, x)) malament(`x = ${x} no és solució`);
+  }
+  if (it.gen === 'alg-comprova') {
+    compta();
+    const [esq, dre] = mat(it.enunciat).split('=');
+    const x = +(it.enunciat.match(/x = (-?\d+)\$$/) || [])[1];
+    const es = avalua(esq, x) === avalua(dre, x);
+    if (es !== /^Sí/.test(it.resposta)) malament('el sí o el no és al revés');
+  }
+  if (it.gen === 'fd-a-decimal') {
+    compta();
+    const [a, b] = fraccio(it.enunciat);
+    if (Math.abs(a / b - decimal(mat(it.resposta))) > 1e-9) malament('decimal incorrecte');
+  }
+  if (it.gen === 'fd-a-fraccio') {
+    compta();
+    const [a, b] = fraccio(it.resposta);
+    if (Math.abs(a / b - decimal(mat(it.enunciat))) > 1e-9) malament('fracció incorrecta');
+    if (mcd(a, b) !== 1) malament('la fracció no és irreductible');
+  }
+  if (it.gen === 'pro-regla-tres') {
+    compta();
+    const [a, p, b] = (it.enunciat.match(/\$(\d+)\$/g) || []).map(x => +x.slice(1, -1));
+    if (b * p / a !== +mat(it.resposta)) malament('regla de tres incorrecta');
+  }
+  if (it.gen === 'are-basica' || it.gen === 'vol-cossos') {
+    compta();
+    const v = (it.enunciat.match(/\$(\d+)\$/g) || []).map(x => +x.slice(1, -1));
+    const esperat = /quadrat/.test(e) ? v[0] * v[0]
+      : /triangle/.test(e) ? v[0] * v[1] / 2
+      : /cub/.test(e) ? v[0] ** 3
+      : v.reduce((a, b) => a * b, 1);
+    if (esperat !== +mat(it.resposta)) malament('àrea o volum incorrecte');
+  }
   const dos = e.match(/^(-?\d+) i (-?\d+)$/);
   if (it.gen === 'div-mcd' && dos) {
     aplicades['div-mcd'] = (aplicades['div-mcd'] || 0) + 1;
@@ -136,7 +197,9 @@ function comprova() {
     }
   }
 
-  ['div-mcd', 'div-mcm', 'arr-exacta', 'pol-diagonals', 'pol-angles']
+  ['div-mcd', 'div-mcm', 'arr-exacta', 'pol-diagonals', 'pol-angles',
+   'equ-un-pas', 'equ-dos-passos', 'equ-dues-bandes', 'equ-parentesi', 'alg-comprova',
+   'fd-a-decimal', 'fd-a-fraccio', 'pro-regla-tres', 'are-basica', 'vol-cossos']
     .forEach(g => {
       if (!aplicades[g]) {
         errors.push(`${g}: la comprovació aritmètica no s'ha pogut aplicar ` +

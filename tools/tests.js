@@ -40,11 +40,21 @@ comprova('els ítems sense enunciat conserven la consigna encara que s\'apaguin'
 comprova('cap saber del currículum es queda sense preguntes',
   cursos.every(c => c.sabers.every(s => s.items.length)));
 /* Cap equació amb denominadors al nivell mínim: resoldre x/5 = 3 no és de
-   mínims per a qui ve de suspendre tot el curs, encara que sigui d'un pas. */
+   mínims per a qui ve de suspendre tot el curs, encara que sigui d'un pas.
+   La llista de blocs on la fracció SÍ que és el tema es llegeix de
+   `mapa_curricular.py`: amb una còpia aquí, afegir-hi un bloc allà feia
+   petar aquesta prova sense motiu. */
+const BLOCS_DE_FRACCIONS = (() => {
+  const py = require('fs').readFileSync(path.join(arrel, 'tools/mapa_curricular.py'), 'utf8');
+  const cos = py.slice(py.indexOf('BLOCS_DE_FRACCIONS = {'));
+  return (cos.slice(0, cos.indexOf('}')).match(/"([^"]+)"/g) || []).map(x => x.slice(1, -1));
+})();
+comprova('la llista de blocs de fraccions es llegeix de mapa_curricular.py',
+  BLOCS_DE_FRACCIONS.includes('fraccions') && BLOCS_DE_FRACCIONS.length >= 5,
+  BLOCS_DE_FRACCIONS.join());
 comprova('cap ítem de nivell 1 porta fraccions fora del seu tema',
   window.BANC.items.filter(i => i.nivell === 1 && /\\d?frac/.test(i.enunciat))
-    .every(i => ['fraccions', 'decimals', 'percentatges',
-                 'factor_multiplicador', 'directa_inversa'].includes(i.bloc)),
+    .every(i => BLOCS_DE_FRACCIONS.includes(i.bloc)),
   window.BANC.items.filter(i => i.nivell === 1 && /\\d?frac/.test(i.enunciat))
     .map(i => i.id + '/' + i.bloc).slice(0, 5).join());
 comprova('el bloc de fraccions conserva els seus ítems de nivell 1',
@@ -363,6 +373,120 @@ const pocs = window.Composa.composa(
   { ...base, sabers: tots, nombre: 4, llavor: 'AV' }, banc, sp);
 comprova('l\'avís nomena els continguts sense pregunta',
   pocs.avisos.some(a => a.startsWith('Sense cap pregunta')), JSON.stringify(pocs.avisos));
+
+/* Un contingut que s'esgota ha de cedir la seva quota als altres. Fraccions
+   i decimals (pocs ítems) i Llenguatge algebraic, amb 30 demanades, en
+   donaven 18 quan n'hi havia 20 i l'avís en prometia 20. */
+{
+  const sel = ['1eso-num-fracdec', '1eso-alg-llenguatge'];
+  const unics = new Set(sel.flatMap(id => sp[id].items)).size;
+  const r = window.Composa.composa({ ...base, sabers: sel, nombre: 60, llavor: 'SOBRA' }, banc, sp);
+  comprova('un contingut esgotat cedeix la quota: surten totes les disponibles',
+    r.preguntes.length === Math.min(60, unics), `${r.preguntes.length} de ${unics}`);
+  comprova('l\'avís diu les preguntes que surten de debò',
+    r.avisos.some(a => a.includes(String(r.preguntes.length) + ' preguntes')),
+    JSON.stringify(r.avisos));
+}
+/* Divisibilitat de 1r i de 2n comparteixen els ítems: comptats dues
+   vegades, el banc semblava el doble de gros i en demanar-ne moltes
+   sortien preguntes repetides o forats. */
+{
+  const sel = ['1eso-num-divisibilitat', '2eso-num-divisibilitat'];
+  const r = window.Composa.composa({ ...base, sabers: sel, nombre: 30, llavor: 'DIV' }, banc, sp);
+  const ids = r.preguntes.map(q => q.itemId);
+  comprova('amb continguts que comparteixen ítems, cap pregunta repetida',
+    new Set(ids).size === ids.length && ids.length === 30, ids.length);
+}
+/* «De fàcil a difícil» ordena pel nivell que es veu al panell, no pel
+   `dif` de repàs. */
+{
+  const r = window.Composa.composa(
+    { ...base, perfil: 'exigent', ordre: 'dificultat', sabers: tots, nombre: 20, llavor: 'ORD' },
+    banc, sp);
+  const niv = r.preguntes.map(q => banc[q.itemId].nivell);
+  comprova('«De fàcil a difícil» ordena pel nivell',
+    niv.every((n, i) => !i || niv[i - 1] <= n), niv.join(''));
+}
+
+/* ------------------------------------------------------ pla de repàs */
+console.log('Exercicis de pràctica');
+{
+  const prova = window.Composa.composa({ ...base, sabers: tots, nombre: 24, llavor: 'PL' }, banc, sp);
+  const idsProva = prova.preguntes.map(q => q.itemId);
+  const spec = { sabers: tots, n: 3, perfil: 'minims', llavor: 'PL', prova: idsProva };
+  const pr = window.Composa.practica(spec, banc, sp);
+  const tots3 = Object.values(pr).flat();
+  comprova('cap exercici de pràctica és una pregunta de la prova',
+    tots3.every(id => !idsProva.includes(id)));
+  comprova('cap exercici de pràctica es repeteix', new Set(tots3).size === tots3.length);
+  comprova('cada exercici és del seu contingut',
+    Object.entries(pr).every(([sid, l]) => l.every(id => sp[sid].items.includes(id))));
+  /* Només els continguts que no comparteixen ítems amb cap altre: els que
+     sí (Comprensió lectora de 1r, 2n i 3r) es reparteixen els mateixos, i
+     el que falta ho completa app.js amb variants noves dels generadors. */
+  const propis = Object.keys(pr).filter(sid => sp[sid].items.every(id => banc[id].sabers.length === 1));
+  comprova('3 exercicis per contingut quan n\'hi ha prou',
+    propis.length >= 10 && propis.every(sid =>
+      pr[sid].length === Math.min(3, sp[sid].items.filter(id => !idsProva.includes(id)).length)),
+    propis.filter(sid => pr[sid].length < 3).join());
+  /* Mentre n'hi hagi d'altres, cap apartat del mateix exercici que una
+     pregunta de la prova: 21a a la prova i 21b a la pràctica és donar-li
+     l'examen. */
+  const pare = id => banc[id].full + '-' + banc[id].ex;
+  const paresProva = new Set(idsProva.map(pare));
+  let germans = 0;
+  Object.entries(pr).forEach(([sid, l]) => {
+    const alternatives = sp[sid].items.filter(id => !idsProva.includes(id) &&
+      !paresProva.has(pare(id))).length;
+    l.forEach((id, k) => { if (paresProva.has(pare(id)) && alternatives > k) germans++; });
+  });
+  comprova('cap germà d\'una pregunta de la prova mentre n\'hi hagi d\'altres', !germans, germans);
+  comprova('la pràctica és determinista',
+    JSON.stringify(window.Composa.practica(spec, banc, sp)) === JSON.stringify(pr));
+  comprova('amb 0 exercicis no n\'hi ha cap',
+    Object.values(window.Composa.practica({ ...spec, n: 0 }, banc, sp)).flat().length === 0);
+}
+
+/* --------------------------------------------------------------- apartats */
+console.log('Apartats i temps');
+{
+  const q = ids => ids.map(id => ({ itemId: id }));
+  const ag = window.Composa.agrupa(q(['p-div-mcd-0', 'p-equ-dos-passos-0', 'p-equ-dos-passos-1',
+                                      'p-equ-dos-passos-2', 'f5-75a']), banc, true);
+  comprova('tres variants seguides del mateix exercici són 2a, 2b, 2c',
+    ag.etiquetes.join() === '1,2a,2b,2c,3', ag.etiquetes.join());
+  comprova('sense agrupar, cada pregunta és un grup d\'un',
+    window.Composa.agrupa(q(['p-equ-dos-passos-0', 'p-equ-dos-passos-1']), banc, false)
+      .etiquetes.join() === '1,2');
+  comprova('només s\'agrupen les SEGUIDES',
+    window.Composa.agrupa(q(['p-equ-dos-passos-0', 'p-div-mcd-0', 'p-equ-dos-passos-1']), banc, true)
+      .etiquetes.join() === '1,2,3');
+  /* Sense consigna no hi ha res que les uneixi a paper: dos problemes de
+     Comprensió lectora surten del mateix generador però no són apartats. */
+  comprova('sense consigna comuna no s\'agrupen',
+    window.Composa.agrupa(q(['p-lec-problema-0', 'p-lec-problema-1']), banc, true)
+      .etiquetes.join() === '1,2');
+  /* Els apartats de repàs (f5-75a, f5-75b…) comparteixen consigna i exercici. */
+  const f575 = window.BANC.items.filter(i => i.full === 5 && i.ex === 75).map(i => i.id);
+  comprova('els apartats d\'un exercici de repàs s\'agrupen',
+    window.Composa.agrupa(q(f575.slice(0, 2)), banc, true).etiquetes.join() === '1a,1b', f575.join());
+  comprova('una llista buida no peta', window.Composa.agrupa([], banc, true).grups.length === 0);
+
+  const M = window.Composa.MINUTS_NIVELL;
+  const tres = ['p-div-mcd-0', 'p-div-mcd-1', 'p-div-mcd-2'];
+  comprova('el temps suma els minuts de cada nivell',
+    window.Composa.minuts(q(tres), banc) === tres.reduce((a, id) => a + M[banc[id].nivell], 0));
+  comprova('una pregunta pròpia compta com a nivell 2',
+    window.Composa.minuts([{ itemId: 'no-existeix' }], banc) === M[2]);
+  comprova('més nivell, més minuts', M[1] < M[2] && M[2] < M[3]);
+  /* Una prova de mínims de 10 preguntes ha de cabre en una hora de classe. */
+  const minims10 = window.Composa.composa(
+    { ...base, perfil: 'minims', sabers: cursos[1].sabers.map(s => s.id), nombre: 10, llavor: 'T' },
+    banc, sp);
+  comprova('10 preguntes de mínims caben en 55 minuts',
+    window.Composa.minuts(minims10.preguntes, banc) <= 55,
+    window.Composa.minuts(minims10.preguntes, banc));
+}
 
 /* ------------------------------------------------------------------ atzar */
 console.log('Atzar');

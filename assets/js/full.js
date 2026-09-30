@@ -52,11 +52,11 @@
       '<div class="doc-dades">' +
         '<div><span class="etq">Nom i cognoms</span><div class="linia">' +
           esc(cfg.alumne || '') + '</div></div>' +
-        '<div style="min-width:38mm"><span class="etq">Grup</span>' +
+        '<div class="estret"><span class="etq">Grup</span>' +
           '<div class="linia">' + esc(cfg.grup || '') + '</div></div>' +
         '<div><span class="etq">Data</span><div class="linia">' +
           esc(dataLlarga(cfg.data)) + '</div></div>' +
-        '<div style="min-width:38mm"><span class="etq">Qualificació</span>' +
+        '<div class="estret"><span class="etq">Qualificació</span>' +
           '<div class="linia"></div></div>' +
       '</div>';
   }
@@ -98,6 +98,35 @@
     '</div>';
   }
 
+  /**
+   * Encapçalament, enunciat i figura d'un ítem, tal com surten al paper.
+   * `capCal` i `figuraCal` són els dos passamans que impedeixen que un
+   * interruptor buidi una pregunta: l'encapçalament es conserva quan
+   * l'enunciat és una dada solta ("$3850$"), i la figura quan la pregunta
+   * ÉS el dibuix. Els declara el generador; per als ítems de `repas` els
+   * dedueix el compilador. La prova i els exercicis de pràctica del pla
+   * passen tots dos per aquí.
+   */
+  function cosItem(it, cfg) {
+    return (it.cap && (cfg.encapcalaments || it.capCal)
+              ? '<span class="encap">' + it.cap + '</span>' : '') +
+           it.enunciat +
+           (it.figura && (cfg.figures || it.figuraCal)
+              ? '<div class="figura-cont">' + it.figura + '</div>' : '');
+  }
+
+  /**
+   * Els grups d'apartats (vegeu `Composa.agrupa`) i l'etiqueta de cada
+   * pregunta: «6», o «6a» i «6b». Si no n'hi ha, cada pregunta va sola.
+   */
+  function grupsDe(estat) {
+    return estat.agrupacio ? estat.agrupacio.grups
+      : estat.preguntes.map(function (_, i) { return [i]; });
+  }
+  function etiquetaDe(estat, i) {
+    return estat.agrupacio ? estat.agrupacio.etiquetes[i] : String(i + 1);
+  }
+
   /* ---------------------------------------------------------------- prova */
   function prova(estat, banc, sabersPerId) {
     var cfg = estat.cfg, p = estat.preguntes;
@@ -113,51 +142,78 @@
     }
 
     if (!p.length) {
-      h += '<p style="color:#666;font-style:italic">Encara no hi ha cap ' +
+      h += '<p class="doc-buit">Encara no hi ha cap ' +
            'pregunta. Marca continguts a l\'esquerra.</p>';
       return h + peu(cfg, 'prova');
     }
 
-    h += '<ol class="preguntes" style="list-style:none;margin:0;padding:0">';
-    p.forEach(function (q, i) {
-      var it = banc[q.itemId];
-      if (!it) return;
-      h += '<li class="pregunta">' +
-             '<div class="pregunta-cap">' +
-               '<span class="pregunta-num">' + (i + 1) + '.</span>' +
-               '<div class="pregunta-cos">' +
-                 /* `capCal` i `figuraCal` són els dos passamans que
-                    impedeixen que un interruptor buidi una pregunta:
-                    l'encapçalament es conserva quan l'enunciat és una dada
-                    solta ("$3850$"), i la figura quan la pregunta ÉS el
-                    dibuix. Els declara el generador; per als ítems de
-                    `repas` els dedueix el compilador. */
-                 (it.cap && (cfg.encapcalaments || it.capCal)
-                   ? '<span class="encap">' + it.cap + '</span>' : '') +
-                 it.enunciat +
-                 (it.figura && (cfg.figures || it.figuraCal)
-                   ? '<div class="figura-cont">' + it.figura + '</div>' : '') +
+    var espai = cfg.espai > 0
+      ? '<div class="espai ' + esc(cfg.paper) + '" style="--espai:' + cfg.espai + 'mm"></div>'
+      : '';
+    var punts = function (v) {
+      return cfg.mostraPunts ? '<span class="pregunta-punts">' + num(v) + ' p</span>' : '';
+    };
+    /* Els controls van damunt del full i no en un panell a part: per
+       decidir si una pregunta et va bé, l'has d'estar mirant.
+       `imprimir.css` els amaga sempre, i en pantalla estreta els amaga el
+       CSS i els torna a treure el panell, on sí que es poden tocar amb el
+       dit. */
+    var einesDe = function (i) {
+      var q = p[i];
+      return cfg.editable
+        ? eines(i, q, p.length, sabersPerId[q.saberId], cfg, banc[q.itemId]) : '';
+    };
+
+    h += '<ol class="preguntes">';
+    grupsDe(estat).forEach(function (g, n) {
+      g = g.filter(function (i) { return banc[p[i].itemId]; });
+      if (!g.length) return;
+      if (g.length === 1) {
+        var q = p[g[0]], it = banc[q.itemId];
+        h += '<li class="pregunta">' +
+               '<div class="pregunta-cap">' +
+                 '<span class="pregunta-num">' + (n + 1) + '.</span>' +
+                 '<div class="pregunta-cos">' + cosItem(it, cfg) + '</div>' +
+                 punts(q.punts) +
                '</div>' +
-               (cfg.mostraPunts
-                 ? '<span class="pregunta-punts">' + num(q.punts) + ' p</span>' : '') +
-             '</div>' +
-             /* Els controls van damunt del full i no en un panell a part:
-                per decidir si una pregunta et va bé, l'has d'estar mirant.
-                `imprimir.css` els amaga sempre, i en pantalla estreta els
-                amaga el CSS i els torna a treure el panell, on sí que es
-                poden tocar amb el dit. */
-             (cfg.editable
-               ? eines(i, q, p.length, sabersPerId[q.saberId], cfg, it) : '') +
-             (cfg.espai > 0
-               ? '<div class="espai ' + esc(cfg.paper) + '" style="--espai:' +
-                 cfg.espai + 'mm"></div>' : '') +
-           '</li>';
+               einesDe(g[0]) + espai +
+             '</li>';
+        return;
+      }
+      /* Apartats d'un mateix exercici: la consigna un sol cop i, a sota,
+         a), b)… cadascun amb el seu espai i les seves eines. La consigna
+         surt si l'opció d'enunciats generals és activa o si algun apartat
+         la necessita (`capCal`). */
+      var primer = banc[p[g[0]].itemId];
+      var ambCap = cfg.encapcalaments ||
+        g.some(function (i) { return banc[p[i].itemId].capCal; });
+      h += '<li class="pregunta pregunta-grup partible">' +
+             '<div class="pregunta-cap grup-cap">' +
+               '<span class="pregunta-num">' + (n + 1) + '.</span>' +
+               '<div class="pregunta-cos">' +
+                 (ambCap ? '<span class="encap">' + primer.cap + '</span>' : '') +
+               '</div>' +
+             '</div>';
+      g.forEach(function (i, k) {
+        var q = p[i], it = banc[q.itemId];
+        h += '<div class="apartat">' +
+               '<div class="pregunta-cap">' +
+                 '<span class="apartat-lletra">' + 'abcdefghijklmnopqrstuvwxyz'.charAt(k) + ')</span>' +
+                 '<div class="pregunta-cos">' + it.enunciat +
+                   (it.figura && (cfg.figures || it.figuraCal)
+                     ? '<div class="figura-cont">' + it.figura + '</div>' : '') +
+                 '</div>' +
+                 punts(q.punts) +
+               '</div>' +
+               einesDe(i) + espai +
+             '</div>';
+      });
+      h += '</li>';
     });
     h += '</ol>';
 
     if (cfg.mostraPunts) {
-      h += '<p style="font-family:system-ui;font-size:9pt;color:#444;' +
-           'text-align:right;margin-top:4mm">Total: ' + num(total) + ' punts</p>';
+      h += '<p class="doc-total">Total: ' + num(total) + ' punts</p>';
     }
     return h + peu(cfg, 'prova');
   }
@@ -172,7 +228,7 @@
 
     h += '<table class="clau-taula"><thead><tr>' +
            '<th class="n">#</th><th>Solució i passos</th>' +
-           '<th style="width:38mm">Contingut avaluat</th><th class="p">Punts</th>' +
+           '<th class="contingut">Contingut avaluat</th><th class="p">Punts</th>' +
          '</tr></thead><tbody>';
 
     p.forEach(function (q, i) {
@@ -181,7 +237,7 @@
       var s = solucio(it);
       var saber = sabersPerId[q.saberId];
       h += '<tr>' +
-             '<td class="n">' + (i + 1) + '</td>' +
+             '<td class="n">' + etiquetaDe(estat, i) + '</td>' +
              '<td>' +
                '<div class="clau-resposta">' + s.r + '</div>' +
                (s.p && s.p.length
@@ -191,7 +247,7 @@
              '</td>' +
              '<td>' + esc(saber ? saber.titol : '') +
                '<div class="clau-origen">' + esc(it.blocTitol) +
-               ' · ' + esc(it.id) + ' · nivell ' + it.dif + '</div></td>' +
+               ' · ' + esc(it.id) + ' · nivell ' + it.nivell + '</div></td>' +
              '<td class="p">' + num(q.punts) + '</td>' +
            '</tr>';
     });
@@ -199,9 +255,9 @@
 
     /* Graella de correcció: una fila per posar la puntuació de cada
        pregunta mentre es corregeix, sense haver de buscar-la a la taula. */
-    h += '<h2 style="font-size:10.5pt;margin:6mm 0 0">Graella de correcció</h2>' +
+    h += '<h2 class="graella-tit">Graella de correcció</h2>' +
          '<table class="graella"><thead><tr><th>Pregunta</th>';
-    p.forEach(function (_, i) { h += '<th>' + (i + 1) + '</th>'; });
+    p.forEach(function (_, i) { h += '<th>' + etiquetaDe(estat, i) + '</th>'; });
     h += '<th>Total</th></tr></thead><tbody><tr><th>Sobre</th>';
     p.forEach(function (q) { h += '<td>' + num(q.punts) + '</td>'; });
     h += '<td>' + num(p.reduce(function (a, q) { return a + q.punts; }, 0)) +
@@ -212,6 +268,19 @@
     return h + peu(cfg, 'correcció');
   }
 
+  /**
+   * «Llibre de 2n d'ESO, UD5 «Geometria»: activitats 2, 6». Si el llibre
+   * d'aquell curs no és al mapa (el de 3r, ara mateix) o no en té la
+   * unitat, se'n diu el número igualment: una referència sense títol val
+   * més que cap, que és el que sortia abans. Una unitat sencera diu «totes
+   * les activitats» en comptes d'enumerar-ne catorze.
+   */
+  function referenciaLlibre(r, llibre, nomCurs) {
+    var u = llibre && llibre.units.filter(function (x) { return x.num === r.ud; })[0];
+    return 'Llibre de ' + nomCurs + ', UD' + r.ud + (u ? ' «' + u.title + '»' : '') +
+      ': ' + (r.act && r.act.length ? 'activitats ' + r.act.join(', ') : 'totes les activitats');
+  }
+
   /* ------------------------------------------------------------- pla de repàs
      El mateix conjunt de sabers que ha generat la prova genera el que
      l'alumne ha d'estudiar. És l'única manera que el full de repàs i
@@ -219,17 +288,30 @@
   function pla(estat, banc, sabersPerId, mapa) {
     var cfg = estat.cfg;
     var ids = estat.sabers.filter(function (id) { return sabersPerId[id]; });
+    var practica = estat.practica || {};
 
     var h = capcalera(cfg, 'Què has de repassar per a la prova') +
             '<div class="doc-dades"><div><span class="etq">Nom i cognoms</span>' +
             '<div class="linia">' + esc(cfg.alumne || '') + '</div></div>' +
-            '<div style="min-width:45mm"><span class="etq">Dia de la prova</span>' +
+            '<div class="ample"><span class="etq">Dia de la prova</span>' +
             '<div class="linia">' + esc(dataLlarga(cfg.data)) + '</div></div></div>';
 
     if (!ids.length) {
-      return h + '<p style="color:#666;font-style:italic">Marca continguts a ' +
+      return h + '<p class="doc-buit">Marca continguts a ' +
              'l\'esquerra per generar el pla.</p>' + peu(cfg, 'pla de repàs');
     }
+
+    var ambPractica = ids.some(function (id) { return (practica[id] || []).length; });
+    h += '<div class="doc-instruccions pla-intro"><p>' +
+         (ambPractica
+           ? 'Per a cada contingut: repassa\'l al llibre i fes els exercicis de ' +
+             'pràctica a la llibreta, amb tot el procés. ' +
+             (cfg.solucionsPla
+               ? 'Les solucions són al final: mira-les quan hagis acabat ' +
+                 'l\'exercici, no abans.'
+               : 'Porta\'ls fets el dia de la prova.')
+           : 'Repassa cada contingut al llibre i fes-ne les activitats indicades.') +
+         '</p><p>Marca la casella de cada contingut quan el tinguis repassat.</p></div>';
 
     var perCurs = {};
     ids.forEach(function (id) {
@@ -238,37 +320,61 @@
       (perCurs[curs] = perCurs[curs] || []).push(s);
     });
 
+    /* El nom del curs surt del currículum i no del llibre: el llibre de 3r
+       no és al mapa compilat, i el títol sortia com a «Matemàtiques de
+       3eso». */
+    var titolCurs = {};
+    mapa.cursos.forEach(function (c) { titolCurs[c.id] = c.titol; });
+
+    /* Els exercicis es numeren seguits de dalt a baix del document: les
+       solucions del final hi fan referència pel número. */
+    var numero = 0, solucions = [];
+
     Object.keys(perCurs).sort().forEach(function (curs) {
-      var etiqueta = (mapa.llibre[curs] && mapa.llibre[curs].label) || curs;
-      h += '<section class="pla-sec"><h2>Matemàtiques de ' + esc(etiqueta) + '</h2><ul>';
+      h += '<section class="pla-sec partible"><h2>Matemàtiques de ' +
+           esc(titolCurs[curs] || curs) + '</h2><ul class="partible">';
 
       perCurs[curs].forEach(function (s) {
-        h += '<li><strong>' + esc(s.titol) + '.</strong> ' + esc(s.detall);
-
         var refs = [];
         s.llibre.forEach(function (r) {
-          var llibre = mapa.llibre[r.curs];
-          if (!llibre) return;
-          var u = llibre.units.filter(function (x) { return x.num === r.ud; })[0];
-          if (!u) return;
-          var acts = r.act
-            ? u.activities.filter(function (a) { return r.act.indexOf(a.num) >= 0; })
-            : u.activities;
-          if (!acts.length) return;
-          refs.push('Llibre de ' + llibre.label + ', UD' + u.num + ' «' + u.title +
-                    '»: activitats ' + acts.map(function (a) { return a.num; }).join(', '));
+          refs.push(referenciaLlibre(r, mapa.llibre[r.curs], titolCurs[r.curs] || r.curs));
         });
         s.bogdan.forEach(function (b) {
           refs.push('Apunts «' + b.titol + '» (Mates amb Bogdan) — ampliació');
         });
 
-        if (refs.length) {
-          h += '<div class="font">' + refs.map(esc).join(' · ') + '</div>';
+        var exercicis = (practica[s.id] || []).filter(function (id) { return banc[id]; });
+        h += '<li class="pla-saber' + (exercicis.length ? ' partible' : '') + '">' +
+             '<div class="pla-cap">' +
+               '<span class="casella" aria-hidden="true"></span>' +
+               '<strong>' + esc(s.titol) + '.</strong> ' + esc(s.detall) +
+               (refs.length ? '<div class="font">' + refs.map(esc).join(' · ') + '</div>' : '') +
+             '</div>';
+
+        if (exercicis.length) {
+          h += '<div class="practica partible">';
+          exercicis.forEach(function (id) {
+            var it = banc[id];
+            numero++;
+            solucions.push({ n: numero, r: solucio(it).r });
+            h += '<div class="exercici"><span class="exercici-num">' + numero + '.</span>' +
+                 '<div class="exercici-cos">' + cosItem(it, cfg) + '</div></div>';
+          });
+          h += '</div>';
         }
         h += '</li>';
       });
       h += '</ul></section>';
     });
+
+    if (cfg.solucionsPla && solucions.length) {
+      h += '<section class="pla-sec solucions partible"><h2>Solucions dels exercicis</h2>' +
+           '<ol class="solucions-llista">' +
+           solucions.map(function (x) {
+             return '<li value="' + x.n + '">' + x.r + '</li>';
+           }).join('') +
+           '</ol></section>';
+    }
 
     return h + peu(cfg, 'pla de repàs');
   }

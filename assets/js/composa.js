@@ -131,14 +131,14 @@
     return base.map(function (q) { return q / 4; });
   }
 
+  /** El mínim que pot valer una prova: cada pregunta a 0,25. */
+  function puntsMinims(n) { return n * 0.25; }
+
   /**
    * Pesos de cada pregunta segons el criteri triat, respectant els punts que
    * el professor hagi fixat a mà. Una pregunta amb `fix` conserva el seu
    * valor i la resta es reparteixen el que sobra.
    */
-  /** El mínim que pot valer una prova: cada pregunta a 0,25. */
-  function puntsMinims(n) { return n * 0.25; }
-
   function reparteixPunts(preguntes, total, criteri, banc, sabersPerId) {
     var fixats = 0, lliures = [];
     preguntes.forEach(function (q, i) {
@@ -184,16 +184,13 @@
 
     if (!sabers.length) return { preguntes: [], avisos: [] };
 
-    /* Límit conegut: això compta ítems repetits. Divisibilitat de 1r i de 2n
-       comparteixen els mateixos exercicis i sumen el doble del que hi ha de
-       debò. Amb el màxim del control a 15 preguntes no és arribable; si
-       algun dia s'apuja, cal comptar ids únics. */
-    var disponibles = sabers.reduce(function (a, s) { return a + s.items.length; }, 0);
+    /* Ids únics: Divisibilitat de 1r i de 2n comparteixen els mateixos
+       exercicis, i sumant-los el banc semblava el doble de gros del que
+       és. Amb el màxim del control a 15 no s'hi arribava mai; a 30, sí. */
+    var unics = {};
+    sabers.forEach(function (s) { s.items.forEach(function (id) { unics[id] = true; }); });
+    var disponibles = Object.keys(unics).length;
     var nombre = Math.min(spec.nombre, disponibles);
-    if (nombre < spec.nombre) {
-      avisos.push('Els sabers triats només tenen ' + disponibles +
-                  ' preguntes al banc: la prova en tindrà ' + nombre + '.');
-    }
 
     var pesos = sabers.map(function (s) {
       if (spec.pes === 'igual') return 1;
@@ -213,11 +210,34 @@
       }
     }
 
-    var usats = {}, paresUsats = {}, preguntes = [];
-    sabers.forEach(function (s, k) {
-      preguntes = preguntes.concat(
-        triaDelSaber(s, banc, quotes[k], spec.perfil, atzar, usats, paresUsats));
+    var usats = {}, paresUsats = {};
+    var perSaber = sabers.map(function (s, k) {
+      return triaDelSaber(s, banc, quotes[k], spec.perfil, atzar, usats, paresUsats);
     });
+
+    /* Un contingut amb menys preguntes que la seva quota deixava un forat:
+       Fraccions i decimals (8 ítems) i Llenguatge algebraic (12) amb 30
+       preguntes demanades en donaven 18, i l'avís en prometia 20. El que
+       sobra es reparteix, d'una en una i per ordre de pes, entre els que
+       encara en tenen. */
+    var falten = nombre - perSaber.reduce(function (a, l) { return a + l.length; }, 0);
+    var perPes = pesos.map(function (p, k) { return k; })
+                      .sort(function (a, b) { return pesos[b] - pesos[a] || a - b; });
+    while (falten > 0) {
+      var abans = falten;
+      for (var j = 0; j < perPes.length && falten > 0; j++) {
+        var k = perPes[j];
+        var mes = triaDelSaber(sabers[k], banc, 1, spec.perfil, atzar, usats, paresUsats);
+        if (mes.length) { perSaber[k] = perSaber[k].concat(mes); falten--; }
+      }
+      if (falten === abans) break;
+    }
+    var preguntes = [].concat.apply([], perSaber);
+
+    if (preguntes.length < spec.nombre) {
+      avisos.push('Els continguts triats només donen ' + preguntes.length +
+                  ' preguntes diferents: la prova en tindrà ' + preguntes.length + '.');
+    }
 
     /* Quins continguts marcats s'han quedat sense cap pregunta. És el que
        el professor necessita saber de debò: 94 ítems del banc pertanyen a
@@ -237,7 +257,14 @@
     }
 
     if (spec.ordre === 'dificultat') {
-      preguntes.sort(function (a, b) { return banc[a.itemId].dif - banc[b.itemId].dif; });
+      /* Pel NIVELL recalculat, no pel `dif` de repàs: és el que es mostra
+         al panell i el que fa servir app.js en reordenar. Amb `dif`, la
+         mateixa prova sortia en un ordre o en un altre segons si s'havia
+         generat o reordenat. L'ordenació és estable: dins d'un nivell es
+         conserva l'ordre del currículum. */
+      preguntes.sort(function (a, b) {
+        return (banc[a.itemId].nivell || 2) - (banc[b.itemId].nivell || 2);
+      });
     } else if (spec.ordre === 'barrejat') {
       preguntes = atzar.barreja(preguntes);
     }
@@ -247,8 +274,115 @@
     return { preguntes: preguntes, avisos: avisos };
   }
 
+  /**
+   * Exercicis de pràctica per al pla de repàs: `n` per contingut, triats
+   * amb el mateix perfil de nivell que la prova.
+   *
+   * La regla que importa: cap pregunta de la prova hi pot sortir. I, mentre
+   * n'hi hagi d'altres, tampoc cap apartat del mateix exercici pare que una
+   * pregunta de la prova (21a a la prova i 21b a la pràctica és, a efectes
+   * pràctics, donar-li l'examen). Si el contingut no té res més, s'admet un
+   * altre apartat o una altra variant del mateix generador: practicar el
+   * mateix tipus d'exercici amb uns altres nombres és legítim; repetir la
+   * pregunta, no.
+   *
+   * Funció pura i determinista: surt de la llavor de la prova, o sigui que
+   * la mateixa adreça torna el mateix pla.
+   *
+   * spec = { sabers:[id], n:int, perfil, llavor, prova:[itemId] }
+   * Retorna { idSaber: [itemId] }.
+   */
+  function practica(spec, banc, sabersPerId) {
+    var pare = function (it) { return it.full + '-' + it.ex; };
+    var pes = PERFILS[spec.perfil] || PERFILS.minims;
+    var usats = {}, paresProva = {}, out = {};
+    spec.prova.forEach(function (id) {
+      usats[id] = true;
+      if (banc[id]) paresProva[pare(banc[id])] = true;
+    });
+
+    spec.sabers.forEach(function (sid) {
+      var s = sabersPerId[sid];
+      if (!s || !spec.n) return;
+      var atzar = new glob.Atzar('practica|' + spec.llavor + '|' + sid);
+      var candidats = s.items.map(function (id) { return banc[id]; })
+                             .filter(function (it) { return it && !usats[it.id]; });
+      var tria = [], pares = {};
+      var lliure = function (it) { return !usats[it.id]; };
+      while (tria.length < spec.n) {
+        // De més a menys exigent: pare nou; pare que no sigui de la prova;
+        // qualsevol ítem que no s'hagi fet servir.
+        var lliures = candidats.filter(function (it) {
+          return lliure(it) && !pares[pare(it)] && !paresProva[pare(it)];
+        });
+        if (!lliures.length) {
+          lliures = candidats.filter(function (it) { return lliure(it) && !paresProva[pare(it)]; });
+        }
+        if (!lliures.length) lliures = candidats.filter(lliure);
+        if (!lliures.length) break;
+        var t = atzar.triaPonderada(lliures, function (it) { return pes[it.nivell] || 0.02; });
+        usats[t.id] = true;
+        pares[pare(t)] = true;
+        tria.push(t.id);
+      }
+      out[sid] = tria;
+    });
+    return out;
+  }
+
+  /**
+   * Apartats d'un mateix exercici: preguntes CONSECUTIVES amb el mateix
+   * exercici pare i la mateixa consigna surten com una sola pregunta amb
+   * apartats (6a, 6b), que és com s'escriu un examen a mà. La consigna
+   * s'imprimeix un sol cop.
+   *
+   * Cal que la consigna no sigui buida: sense, no hi ha res que les uneixi
+   * a paper (dos problemes de «Comprensió lectora» surten del mateix
+   * generador però són dos problemes diferents).
+   *
+   * Retorna { grups: [[índex, ...], ...], etiquetes: ['1', '2a', '2b', ...] }.
+   * Amb `actiu` fals, cada pregunta és un grup d'un.
+   */
+  function agrupa(preguntes, banc, actiu) {
+    var grups = [];
+    preguntes.forEach(function (q, i) {
+      var it = banc[q.itemId], ant = i ? banc[preguntes[i - 1].itemId] : null;
+      var continua = actiu && it && ant && it.cap && it.cap === ant.cap &&
+                     it.full === ant.full && it.ex === ant.ex;
+      if (continua) grups[grups.length - 1].push(i);
+      else grups.push([i]);
+    });
+    var lletres = 'abcdefghijklmnopqrstuvwxyz', etiquetes = [];
+    grups.forEach(function (g, n) {
+      g.forEach(function (i, k) {
+        etiquetes[i] = String(n + 1) + (g.length > 1 ? (lletres[k] || '.' + (k + 1)) : '');
+      });
+    });
+    return { grups: grups, etiquetes: etiquetes };
+  }
+
+  /* Minuts que necessita un alumne de recuperació per a una pregunta,
+     segons el nivell. No surten dels passos de la resolució: mesurats, els
+     tres nivells en tenen de mitjana gairebé els mateixos (1,8, 2,0 i 2,1).
+     El que els separa és la lectura i la mena de nombres, que és justament
+     el que mesura el nivell. Són una estimació: si amb els teus grups les
+     proves et surten sistemàticament curtes o llargues, es toca aquí. */
+  var MINUTS_NIVELL = { 1: 4, 2: 6, 3: 9 };
+
+  /** Temps estimat de la prova, en minuts. Les preguntes pròpies compten com a nivell 2. */
+  function minuts(preguntes, banc) {
+    return preguntes.reduce(function (a, q) {
+      var it = banc[q.itemId];
+      return a + (MINUTS_NIVELL[it && it.nivell] || MINUTS_NIVELL[2]);
+    }, 0);
+  }
+
   glob.Composa = {
     composa: composa,
+    practica: practica,
+    agrupa: agrupa,
+    minuts: minuts,
+    MINUTS_NIVELL: MINUTS_NIVELL,
     reparteix: reparteix,
     puntua: puntua,
     puntsMinims: puntsMinims,

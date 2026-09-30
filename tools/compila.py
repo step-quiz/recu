@@ -5,7 +5,7 @@ Compila el banc de preguntes i el mapa curricular de l'eina.
   python3 tools/compila.py --repas <ruta-a-repas-main> --llibre <ruta-a-llibre-main>
 
 Llegeix els dotze `data/fullN.js` de repàs, es queda només amb els ítems que
-el mapa curricular assigna a algun saber de 1r o 2n d'ESO, i escriu:
+el mapa curricular assigna a algun saber de 1r, 2n o 3r d'ESO, i escriu:
 
   assets/js/banc.js   window.BANC = {items:[...]}   enunciats + solucions
   assets/js/mapa.js   window.MAPA = {cursos:[...]}  currículum + cobertura
@@ -203,15 +203,56 @@ def neteja_svg(svg):
     return svg
 
 
-def main():
-    p = argparse.ArgumentParser()
-    p.add_argument("--repas", required=True)
-    p.add_argument("--llibre", required=True)
-    p.add_argument("--sortida", default=os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "..", "assets", "js"))
-    args = p.parse_args()
+def item_de_repas(full, it, titol_bloc, bloc):
+    """Un ítem del banc de repàs, tal com va a `banc.js`."""
+    clau = json.loads(base64.b64decode(it["clau"]).decode("utf-8"))
+    correcta = it["opcions"][clau["ok"]]
+    resolucio = clau.get("res", [])
+    # 23 ítems porten l'encapçalament repetit dins de l'enunciat i
+    # s'imprimien dos cops seguits.
+    cap = it.get("encapcalament", "")
+    if cap and text_pla(it["enunciat"]).startswith(text_pla(cap).rstrip(":. ")):
+        cap = ""
+    return {
+        "id": f"f{full}-{it['id']}",
+        "full": full,
+        "bloc": bloc,
+        "blocTitol": titol_bloc[(full, bloc)],
+        "ex": it["ex"],
+        "ap": it["ap"],
+        "dif": it["dif"],
+        "nivell": calcula_nivell(it, resolucio, correcta, cap, bloc),
+        "passos": len(resolucio),
+        "cap": cap,
+        # Sense l'encapçalament, uns quants ítems del banc es queden en un
+        # nombre solt ("$3850$"): tota la consigna hi viu i no el poden
+        # perdre encara que el professor apagui l'opció.
+        "capCal": len(text_pla(it["enunciat"])) < 25,
+        # La pregunta ÉS el dibuix: apagar les figures deixaria un full sense res.
+        "figuraCal": bool(it.get("figura")) and
+                     len(text_pla(cap + " " + it["enunciat"])) < 45,
+        "enunciat": it["enunciat"],
+        "figura": neteja_svg(it.get("figura")),
+        "nota": it.get("nota", ""),
+        # Solució xifrada en base64, com fa repàs amb `clau`: evita que surti
+        # en clar si el fitxer va a parar a mans d'un alumne. No és
+        # seguretat, és higiene.
+        "sol": base64.b64encode(json.dumps(
+            {"r": correcta, "p": resolucio},
+            ensure_ascii=False).encode("utf-8")).decode("ascii"),
+        "sabers": [],
+    }
 
-    fulls = {n: llegeix_full(args.repas, n) for n in range(1, 13)}
+
+def repas_de_les_fonts(ruta_repas, ruta_llibre):
+    """
+    La part del banc que ve de `repas` i el llibre, llegida de les fonts.
+
+    Torna {items, per_saber, llibre, vetats, avisos}: els ítems de repàs
+    (amb els sabers a què pertanyen), els ids de repàs de cada saber, els
+    títols del llibre i l'informe de filtres.
+    """
+    fulls = {n: llegeix_full(ruta_repas, n) for n in range(1, 13)}
 
     # index (full, bloc, ex) -> ítems, i (full, bloc) -> títol del bloc
     per_ex = {}
@@ -222,46 +263,10 @@ def main():
         for it in d["items"]:
             per_ex.setdefault((n, it["bloc"], it["ex"]), []).append(it)
 
-    # Ítems escrits per al departament, per als continguts que el banc de
-    # repàs no cobreix. Els genera `assets/js/generadors.js`, que és el
-    # mateix fitxer que fa servir el navegador per donar «uns altres
-    # nombres»: si els tinguéssim aquí en Python, hi hauria dues versions
-    # de cada exercici i acabarien divergint.
-    propis = json.loads(node(["tools/genera.js", "--cataleg"]))
-    propis_per_saber = {}
-    for it in propis:
-        it["origen"] = it["gen"]
-        it["dif"] = 1
-        for sid in it["sabers"]:
-            propis_per_saber.setdefault(sid, []).append(it)
-
-    items_sortida = {}   # id global -> ítem
-    cursos_sortida = []
-    avisos = []
-    vetats = {}
-    n_propis = 0
-    ex_generador = {}
-
-    # El nivell d'una variant NOVA (la que surt del botó ↻) no es pot mesurar
-    # al navegador: el mesurador viu aquí. El que es fa és comprovar, per
-    # cada generador i sobre moltes tirades, que el nivell declarat sigui el
-    # que de debò tenen totes les seves variants. Si un generador no és
-    # estable, salta aquí i no al full de l'alumne.
-    inestables = {g: n for g, n in nivells_per_generador(200).items() if len(n) > 1}
-    if inestables:
-        # Atura la compilació. Un avís no servia: la compilació acabava bé i
-        # el banc sortia amb un nivell que no és el que diu el generador,
-        # que és justament el que el perfil «mínims» promet a l'alumne.
-        detall = "; ".join(f"{g} -> {sorted(n)}" for g, n in sorted(inestables.items()))
-        raise SystemExit(
-            "El nivell d'aquests generadors no és estable: " + detall +
-            "\nCal estrènyer-ne els paràmetres a assets/js/generadors.js.")
-
-
+    items, per_saber, vetats, avisos = {}, {}, {}, []
     for curs in CURSOS:
-        sabers = []
         for s in curs["sabers"]:
-            ids = []
+            ids = per_saber.setdefault(s["id"], [])
             for (full, bloc, exs) in s["repas"]:
                 if (full, bloc) not in titol_bloc:
                     avisos.append(f"{s['id']}: no existeix el bloc {bloc} al full {full}")
@@ -282,50 +287,136 @@ def main():
                             vetats[s["id"]] = vetats.get(s["id"], 0) + 1
                             continue
                         gid = f"f{full}-{it['id']}"
-                        if gid not in items_sortida:
-                            clau = json.loads(base64.b64decode(it["clau"]).decode("utf-8"))
-                            correcta = it["opcions"][clau["ok"]]
-                            resolucio = clau.get("res", [])
-                            # 23 ítems porten l'encapçalament repetit dins de
-                            # l'enunciat i s'imprimien dos cops seguits.
-                            cap = it.get("encapcalament", "")
-                            if cap and text_pla(it["enunciat"]).startswith(
-                                    text_pla(cap).rstrip(":. ")):
-                                cap = ""
-                            items_sortida[gid] = {
-                                "id": gid,
-                                "full": full,
-                                "bloc": bloc,
-                                "blocTitol": titol_bloc[(full, bloc)],
-                                "ex": it["ex"],
-                                "ap": it["ap"],
-                                "dif": it["dif"],
-                                "nivell": calcula_nivell(it, resolucio, correcta, cap, bloc),
-                                "passos": len(resolucio),
-                                "cap": cap,
-                                # Sense l'encapçalament, uns quants ítems del
-                                # banc es queden en un nombre solt ("$3850$"):
-                                # tota la consigna hi viu i no el poden perdre
-                                # encara que el professor apagui l'opció.
-                                "capCal": len(text_pla(it["enunciat"])) < 25,
-                                # La pregunta ÉS el dibuix: apagar les
-                                # figures deixaria un full sense res.
-                                "figuraCal": bool(it.get("figura")) and
-                                             len(text_pla(cap + " " + it["enunciat"])) < 45,
-                                "enunciat": it["enunciat"],
-                                "figura": neteja_svg(it.get("figura")),
-                                "nota": it.get("nota", ""),
-                                # Solució xifrada en base64, com fa repàs amb `clau`:
-                                # evita que surti en clar si el fitxer va a parar
-                                # a mans d'un alumne. No és seguretat, és higiene.
-                                "sol": base64.b64encode(json.dumps(
-                                    {"r": correcta, "p": resolucio},
-                                    ensure_ascii=False).encode("utf-8")).decode("ascii"),
-                                "sabers": [],
-                            }
-                        if s["id"] not in items_sortida[gid]["sabers"]:
-                            items_sortida[gid]["sabers"].append(s["id"])
+                        if gid not in items:
+                            items[gid] = item_de_repas(full, it, titol_bloc, bloc)
+                        if s["id"] not in items[gid]["sabers"]:
+                            items[gid]["sabers"].append(s["id"])
                         ids.append(gid)
+
+    # Títols de les unitats i activitats del llibre, per al pla de repàs.
+    # Tots els cursos del mapa: amb la llista escrita a mà ("1eso", "2eso"),
+    # en afegir 3r el seu llibre no s'hi va llegir mai i el pla de repàs de
+    # 3r sortia sense cap referència.
+    llibre = {}
+    for c in [curs["id"] for curs in CURSOS]:
+        ruta = os.path.join(ruta_llibre, "contingut", c, "course.json")
+        if not os.path.exists(ruta):
+            avisos.append(f"llibre: falta {ruta}")
+            continue
+        with open(ruta, encoding="utf-8") as f:
+            d = json.load(f)
+        llibre[c] = {
+            "label": d.get("label", c),
+            "prefix": d.get("pdfPrefix", c),
+            "units": [{"num": u["num"], "title": u["title"],
+                       "activities": [{"num": a["num"], "title": a["title"]}
+                                      for a in u["activities"]]}
+                      for u in d["units"]],
+        }
+    return {"items": items, "per_saber": per_saber, "llibre": llibre,
+            "vetats": vetats, "avisos": avisos}
+
+
+def llegeix_generat(ruta):
+    """L'objecte de dins de `window.X = {...};` d'un fitxer generat."""
+    with open(ruta, encoding="utf-8") as f:
+        s = f.read()
+    return json.loads(s[s.index("{"): s.rindex("}") + 1])
+
+
+def repas_compilat(sortida):
+    """
+    La mateixa part del banc, però treta del `banc.js` i el `mapa.js` que ja
+    hi ha. És el que fa `--nomes-propis`: per tocar `generadors.js` no cal
+    tenir a mà `repas` ni el llibre, i sense fonts no hi ha res a filtrar
+    (els VETOS i els EXCLOSOS ja hi són aplicats).
+
+    Del mapa compilat només se n'agafen els ids de repàs de cada saber i el
+    llibre; la resta del saber (títol, hores, detall, referències) torna a
+    sortir de `mapa_curricular.py`.
+    """
+    banc = llegeix_generat(os.path.join(sortida, "banc.js"))
+    mapa = llegeix_generat(os.path.join(sortida, "mapa.js"))
+    items = {it["id"]: it for it in banc["items"] if it["full"] != 0}
+    per_saber, avisos = {}, []
+    for c in mapa["cursos"]:
+        for s in c["sabers"]:
+            per_saber[s["id"]] = [g for g in s["items"] if g in items]
+    for curs in CURSOS:
+        for s in curs["sabers"]:
+            if s["id"] not in per_saber and s["repas"]:
+                avisos.append(f"{s['id']}: saber nou, sense ítems de repàs; "
+                              "cal la compilació completa (--repas i --llibre)")
+    return {"items": items, "per_saber": per_saber, "llibre": mapa["llibre"],
+            "vetats": {}, "avisos": avisos}
+
+
+def ordre_item(it):
+    """
+    Ordre dels ítems a `banc.js` i a cada saber de `mapa.js`: full, exercici,
+    apartat i, per desempatar, l'id en ordre natural (`p-x-2` abans que
+    `p-x-10`).
+
+    Sense el desempat, les variants d'un mateix generador (mateix full,
+    exercici i apartat) sortien en l'ordre d'un `set` de Python, que canvia
+    a cada execució (PYTHONHASHSEED). La compilació no era determinista, i
+    com que l'atzar de la composició recorre aquestes llistes, un mateix
+    codi de prova donava una altra prova després de cada recompilació.
+    """
+    return (it["full"], it["ex"], it["ap"], len(it["id"]), it["id"])
+
+
+def compila(repas, sortida):
+    """Afegeix el material propi a la part de repàs i escriu banc.js i mapa.js."""
+    # Ítems escrits per al departament, per als continguts que el banc de
+    # repàs no cobreix. Els genera `assets/js/generadors.js`, que és el
+    # mateix fitxer que fa servir el navegador per donar «uns altres
+    # nombres»: si els tinguéssim aquí en Python, hi hauria dues versions
+    # de cada exercici i acabarien divergint.
+    propis = json.loads(node(["tools/genera.js", "--cataleg"]))
+    propis_per_saber = {}
+    for it in propis:
+        it["origen"] = it["gen"]
+        it["dif"] = 1
+        for sid in it["sabers"]:
+            propis_per_saber.setdefault(sid, []).append(it)
+
+    items_sortida = dict(repas["items"])   # id global -> ítem
+    cursos_sortida = []
+    avisos = list(repas["avisos"])
+    n_propis = 0
+    ex_generador = {}
+
+    # El nivell d'una variant NOVA (la que surt del botó ↻) no es pot mesurar
+    # al navegador: el mesurador viu aquí. El que es fa és comprovar, per
+    # cada generador i sobre moltes tirades, que el nivell declarat sigui el
+    # que de debò tenen totes les seves variants. Si un generador no és
+    # estable, salta aquí i no al full de l'alumne.
+    mesurats = nivells_per_generador(200)
+    inestables = {g: n for g, n in mesurats.items() if len(n) > 1}
+    if inestables:
+        # Atura la compilació. Un avís no servia: la compilació acabava bé i
+        # el banc sortia amb un nivell que no és el que diu el generador,
+        # que és justament el que el perfil «mínims» promet a l'alumne.
+        detall = "; ".join(f"{g} -> {sorted(n)}" for g, n in sorted(inestables.items()))
+        raise SystemExit(
+            "El nivell d'aquests generadors no és estable: " + detall +
+            "\nCal estrènyer-ne els paràmetres a assets/js/generadors.js.")
+    # I el nivell mesurat ha de ser el que el generador declara: és el que
+    # el navegador fa servir per a les variants noves (↻ i el selector de
+    # nivell de cada pregunta), sense poder-lo mesurar.
+    declarats = {g["gen"]: g["nivell"] for g in propis}
+    mentiders = {g: (declarats[g], sorted(n)[0]) for g, n in mesurats.items()
+                 if g in declarats and declarats[g] != sorted(n)[0]}
+    if mentiders:
+        detall = "; ".join(f"{g} declara {d} i fa {m}" for g, (d, m) in sorted(mentiders.items()))
+        raise SystemExit("El nivell declarat d'aquests generadors no és el mesurat: " +
+                         detall + "\nCal corregir `nivell` a assets/js/generadors.js.")
+
+    for curs in CURSOS:
+        sabers = []
+        for s in curs["sabers"]:
+            ids = list(repas["per_saber"].get(s["id"], []))
 
             for it in propis_per_saber.get(s["id"], []):
                 # `p-<generador>-<llavor>`: l'id du a dins com tornar a
@@ -372,9 +463,7 @@ def main():
                     items_sortida[gid]["sabers"].append(s["id"])
                 ids.append(gid)
 
-            ids = sorted(set(ids), key=lambda g: (items_sortida[g]["full"],
-                                                  items_sortida[g]["ex"],
-                                                  items_sortida[g]["ap"]))
+            ids = sorted(set(ids), key=lambda g: ordre_item(items_sortida[g]))
             per_niv = {1: 0, 2: 0, 3: 0}
             for g in ids:
                 per_niv[items_sortida[g]["nivell"]] += 1
@@ -397,38 +486,19 @@ def main():
             "hores": curs["hores"], "sabers": sabers,
         })
 
-    # Títols de les unitats i activitats del llibre, per al pla de repàs.
-    llibre = {}
-    for c in ("1eso", "2eso"):
-        ruta = os.path.join(args.llibre, "contingut", c, "course.json")
-        if not os.path.exists(ruta):
-            avisos.append(f"llibre: falta {ruta}")
-            continue
-        with open(ruta, encoding="utf-8") as f:
-            d = json.load(f)
-        llibre[c] = {
-            "label": d.get("label", c),
-            "prefix": d.get("pdfPrefix", c),
-            "units": [{"num": u["num"], "title": u["title"],
-                       "activities": [{"num": a["num"], "title": a["title"]}
-                                      for a in u["activities"]]}
-                      for u in d["units"]],
-        }
-
-    os.makedirs(args.sortida, exist_ok=True)
+    os.makedirs(sortida, exist_ok=True)
     capcalera = "/* Generat per tools/compila.py — no editeu aquest fitxer a mà. */\n"
 
     items = [items_sortida[k] for k in sorted(items_sortida,
-             key=lambda g: (items_sortida[g]["full"], items_sortida[g]["ex"],
-                            items_sortida[g]["ap"]))]
-    with open(os.path.join(args.sortida, "banc.js"), "w", encoding="utf-8") as f:
+             key=lambda g: ordre_item(items_sortida[g]))]
+    with open(os.path.join(sortida, "banc.js"), "w", encoding="utf-8") as f:
         f.write(capcalera + "window.BANC = ")
         json.dump({"items": items}, f, ensure_ascii=False, separators=(",", ":"))
         f.write(";\n")
 
-    with open(os.path.join(args.sortida, "mapa.js"), "w", encoding="utf-8") as f:
+    with open(os.path.join(sortida, "mapa.js"), "w", encoding="utf-8") as f:
         f.write(capcalera + "window.MAPA = ")
-        json.dump({"cursos": cursos_sortida, "llibre": llibre},
+        json.dump({"cursos": cursos_sortida, "llibre": repas["llibre"]},
                   f, ensure_ascii=False, separators=(",", ":"))
         f.write(";\n")
 
@@ -449,14 +519,35 @@ def main():
         if prims:
             print("     -> sense cap ítem de nivell 1 (el perfil «mínims» no els "
                   "podrà fer servir): " + ", ".join(s["id"] for s in prims))
-    if vetats:
+    if repas["vetats"]:
         print("\nÍtems vetats per curs (nombres negatius on no toquen):")
-        for k, v in sorted(vetats.items()):
+        for k, v in sorted(repas["vetats"].items()):
             print(f"  {k}: {v}")
     if avisos:
         print("\nAvisos:")
         for a in avisos:
             print("  -", a)
+
+
+def main():
+    p = argparse.ArgumentParser(
+        description="Genera assets/js/banc.js i assets/js/mapa.js.")
+    p.add_argument("--repas", help="carpeta de repas-main (compilació completa)")
+    p.add_argument("--llibre", help="carpeta de llibre-main (compilació completa)")
+    p.add_argument("--nomes-propis", action="store_true",
+                   help="refà només el material propi (generadors.js) i el mapa, "
+                        "reaprofitant la part de repàs del banc.js que ja hi ha")
+    p.add_argument("--sortida", default=os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "..", "assets", "js"))
+    args = p.parse_args()
+
+    if args.nomes_propis:
+        repas = repas_compilat(args.sortida)
+    elif args.repas and args.llibre:
+        repas = repas_de_les_fonts(args.repas, args.llibre)
+    else:
+        p.error("cal --repas i --llibre, o bé --nomes-propis")
+    compila(repas, args.sortida)
 
 
 if __name__ == "__main__":

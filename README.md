@@ -10,7 +10,7 @@ Genera tres documents des d'una sola selecció de continguts:
 |---|---|---|
 | **Prova** | l'alumne | enunciats numerats, punts, i espai quadriculat per respondre |
 | **Full de correcció** | el professor | solució, resolució pas a pas, contingut avaluat i graella de puntuació |
-| **Pla de repàs** | l'alumne, abans | què ha d'estudiar i a quines activitats del llibre |
+| **Pla de repàs** | l'alumne, abans | què ha d'estudiar, a quines activitats del llibre, i exercicis de pràctica amb les solucions |
 
 ---
 
@@ -37,8 +37,11 @@ Genera tres documents des d'una sola selecció de continguts:
 
 **Desa la prova** baixa un fitxer HTML petit que només conté l'adreça d'aquesta
 prova exacta, amb el codi i el model ben visibles. Obre'l amb doble clic i tens
-la prova tal com la vas deixar. Va bé per guardar-la a la carpeta del curs o per
-passar-la a un company.
+la prova tal com la vas deixar: les preguntes, els punts, el format del full
+(espai, fons, figures, enunciats generals) i la capçalera sencera, **nom de
+l'alumne inclòs**. Va bé per guardar-la a la carpeta del curs o per passar-la a
+un company. (Si hi ha escrit el nom de l'alumne, el fitxer també el porta: tingues-ho
+present abans de passar-lo a ningú.)
 
 Si l'eina està publicada en un web, escriu-ne l'adreça al camp **Adreça pública
 de l'eina** (a *Capçalera*): el fitxer desat hi apuntarà i funcionarà des de
@@ -58,6 +61,58 @@ recuperar l'examen mesos després. Per fer models A i B del mateix examen: prem
 **Altres preguntes** (o `Ctrl+G`), canvia el camp *Model* i torna a imprimir.
 
 ### Els controls que no són obvis
+
+**El zoom del full.** El full fa sempre 210 mm d'ample, també en un portàtil on
+no hi cap: és l'única manera que la pantalla parteixi les línies igual que el
+paper i que el comptador de pàgines encerti. Per defecte s'escala perquè hi
+càpiga sencer d'ample (a 1366 px, un 93 %). Si mous el control, mana el teu
+valor fins que premis **Ajusta**.
+
+Fins ara no era així: a les pantalles de 1280–1440 px el full s'encongia
+(fins a 592 px en lloc de 794), el text es partia en més línies que en paper i
+el que es veia deixava de ser el que s'imprimia.
+
+**Els cursos es pleguen.** Clicant el nom del curs a la columna de l'esquerra
+(«▾ 1r d'ESO») se n'amaguen els continguts; el comptador «3 / 18» continua dient
+quants n'hi ha de marcats. Una cerca desplega el que troba. El navegador recorda
+quins cursos tens plegats.
+
+**Aparença.** Els botons ☀ ☾ ◐ de dalt trien el mode clar, el fosc o el del
+sistema operatiu. El full no canvia mai de color: és paper. La preferència es
+desa al navegador, no a la prova.
+
+**Apartats (6a, 6b).** Si dues o més preguntes SEGUIDES són del mateix
+exercici i tenen la mateixa consigna, surten com una sola pregunta amb apartats:
+«6. Resol aquestes equacions.» i a sota a), b), c), cadascun amb el seu espai de
+resposta, els seus punts i les seves icones al marge. La consigna s'imprimeix
+un sol cop. La clau i la graella de correcció les numeren 6a, 6b, 6c, i al
+panell de la dreta cada pregunta porta l'etiqueta que té al full quan no
+coincideix amb la posició. Passa amb els apartats del banc de repàs (f5-75a,
+f5-75b…) i amb les variants d'un mateix generador; dos problemes de
+*Comprensió lectora*, que no tenen consigna comuna, no s'agrupen. Per tenir-les
+separades, desmarca *Agrupa els apartats d'un mateix exercici* al grup *Full*.
+
+**Temps estimat.** Al costat de *Durada (minuts)* (per defecte 55, una hora de
+classe) surt quant tardarà l'alumne a fer la prova: en verd si hi cap, en ambre
+si probablement no. Compta 4 minuts per pregunta de nivell 1, 6 de nivell 2 i 9
+de nivell 3 (les pròpies, com a nivell 2). No surt dels passos de la resolució:
+mesurats, els tres nivells en tenen de mitjana gairebé els mateixos (1,8, 2,0 i
+2,1); el que els separa és la lectura i la mena de nombres, que és justament el
+que mesura el nivell. És una estimació: si amb els teus grups les proves surten
+sistemàticament curtes o llargues, els tres valors són a `MINUTS_NIVELL`, a
+`assets/js/composa.js`. Una prova de mínims de 10 preguntes surt a uns 40
+minuts. La durada es desa amb *Els meus valors inicials* i a l'adreça.
+
+**Exercicis de pràctica.** Al grup *Pla de repàs* del panell tries quants
+exercicis per contingut (cap, 1, 2 o 3) porta el pla, i si hi van les solucions
+al final. Són del mateix contingut i del mateix nivell que la prova, i la regla
+que importa és que **cap no és una pregunta de la prova**; mentre n'hi hagi
+d'altres, tampoc un apartat del mateix exercici (21a a la prova i 21b a la
+pràctica seria donar-li l'examen). Si el contingut no té res més, s'admet una
+altra variant del mateix generador: el mateix tipus d'exercici amb uns altres
+nombres. Surten del codi de la prova, o sigui que el mateix enllaç dona sempre
+el mateix pla. Cada contingut porta una casella perquè l'alumne el marqui quan
+l'ha repassat.
 
 **El nivell d'una pregunta concreta.** Al panell de la dreta, on cada pregunta
 diu de quin contingut és, hi ha un selector de nivell. Per defecte diu «nivell
@@ -99,9 +154,11 @@ descomposició factorial de 3850 al nivell mínim, salta una prova.
 
 | Perfil | Per a què serveix | Nivell mitjà mesurat (2n d'ESO) |
 |---|---|---|
-| `Mínims` | comprovar si ha assolit els mínims | 1,05 |
-| `Equilibrat` | una recuperació normal | 1,30 |
-| `Exigent` | pujar nota | 1,85 |
+| `Mínims` | comprovar si ha assolit els mínims | 1,01 |
+| `Equilibrat` | una recuperació normal | 1,25 |
+| `Exigent` | pujar nota | 1,84 |
+
+(Mitjana de 300 proves de 20 preguntes amb tot 2n d'ESO marcat.)
 
 `Mínims` i `Equilibrat` viuen tots dos al nivell 1 a propòsit: aquests alumnes
 no van aprovar les matemàtiques en cap moment del curs anterior.
@@ -152,9 +209,8 @@ perquè allà la posició curricular no vol dir res.
 
 `↻` només pot existir on la pregunta ve d'un generador. Les 592 preguntes que
 venen del banc de `repas` són text ja escrit i no es poden reparametritzar; les
-285 pròpies sí, i el pou és infinit. Vint-i-quatre dels cinquanta sabers en
-tenen prou material propi perquè, a la pràctica, no se'ls acabin mai les
-preguntes. Per decidir si una pregunta et va bé, l'has d'estar mirant.
+351 pròpies sí, i el pou és infinit. Trenta-tres dels cinquanta sabers tenen
+material propi, i a aquests, a la pràctica, no se'ls acaben mai les preguntes. Per decidir si una pregunta et va bé, l'has d'estar mirant.
 
 El carril dels botons queda dins de la caixa de la pregunta (un `padding-left`
 amb un `margin-left` negatiu igual), de manera que el contingut no es mou i
@@ -199,12 +255,12 @@ tenies.
 ```
 El .docx del departament  →  l'estructura: 50 sabers, amb les seves hores
 repas (banc de 892 items) →  592 preguntes, amb les seves solucions
-assets/js/generadors.js   →  285 preguntes pròpies, i infinites variants
+assets/js/generadors.js   →  351 preguntes pròpies, i infinites variants
 llibre (296 PDFs)         →  què repassar, al pla de repàs
 Mates amb Bogdan (12 PDF) →  material d'ampliació, al pla de repàs
 ```
 
-Són **877 preguntes** al catàleg. Un cop compilades, l'eina no distingeix les
+Són **943 preguntes** al catàleg. Un cop compilades, l'eina no distingeix les
 d'un origen de les de l'altre.
 Els enunciats, les figures SVG i les resolucions són literalment els de `repas`;
 el que canvia és que aquí es fan servir com a **resposta oberta**, sense les
@@ -212,9 +268,9 @@ quatre opcions: l'alumne escriu el procés.
 
 ### Cobertura per curs
 
-**2n d'ESO** queda ben cobert. Els blocs amb més fons són Estadística (52),
-Fraccions (41), Potències (35), Pitàgores (31), Equacions de 1r grau (31) i
-Poliedres (27).
+**2n d'ESO** queda ben cobert. Els blocs amb més fons són Variables
+estadístiques (64), Equacions de 1r grau (55), Divisibilitat (50), Fraccions
+(41), Potències (35) i Pitàgores (31).
 
 **Ara mateix no hi ha cap forat**: els 50 sabers del currículum tenen preguntes,
 i tots en tenen almenys una de nivell 1. Fins fa poc no era així; el que ho ha
@@ -240,7 +296,7 @@ Circumferència i cercle, Semblança.
 
 ### El material propi: `assets/js/generadors.js`
 
-Quaranta-nou generadors deterministes que produeixen preguntes amb solució i
+Seixanta generadors deterministes que produeixen preguntes amb solució i
 passos, i figures SVG on calen. El criteri és el que va sortir de revisar
 proves impreses:
 
@@ -299,16 +355,29 @@ al fitxer:
   s'imprimeixen («quin d'aquests valors pot tenir *x*?») i sense la llista no es
   poden respondre.
 
-### Sabers que el perfil «Mínims» no pot servir
+### El material de nivell 1 de cada saber
 
-L'informe de `compila.py` els llista. Ara mateix són sis, i el cas de
-divisibilitat val la pena entendre'l: després de treure els 16 exercicis amb
-nombres negatius, els que queden són gairebé tots problemes d'aplicació del
-m.c.m. («fanals cada 12 m i cada 18 m…»), que són de nivell 2 per llargada. Si
-marques Divisibilitat amb el perfil `Mínims`, sortirà igualment el millor que hi
-hagi, però no serà curt. Per a un exercici mecànic de descomposició amb nombres
-petits cal escriure'l amb **+ Pregunta pròpia** o afegir un generador nou a
-`repas`.
+Tots els sabers en tenen almenys sis de nivell 1 menys un (*Cossos de
+revolució*, amb cinc), i l'informe de `compila.py` marca els que es quedin
+sense cap («el perfil mínims no els podrà fer servir»). Onze generadors
+s'han escrit expressament per als continguts que en tenien menys:
+
+| Generador | Saber | Nivell 1 abans → ara |
+|---|---|---|
+| `equ-un-pas`, `equ-dos-passos`, `equ-dues-bandes`, `equ-parentesi` | Equació de 1r grau (2n i 3r) | 7 → 31 |
+| `alg-comprova`, i `alg-frase` / `alg-context` també per a 3r | Llenguatge algebraic (2n i 3r) | 3r: 1 → 19 · 2n: 13 → 19 |
+| `fd-a-decimal`, `fd-a-fraccio` | Fraccions i decimals (1r) | 2 → 14 |
+| `pro-regla-tres` | Proporcionalitat (2n) | 5 → 11 |
+| `pc-quadrant` | El pla cartesià (2n) | 5 → 11 |
+| `are-basica` | Càlcul d'àrees (1r) i Perímetres i àrees (2n) | 5 → 11 · 8 → 14 |
+| `vol-cossos` | Àrees i volums a l'espai (2n) | 4 → 10 |
+
+Les equacions són les que un alumne que ve de suspendre ha de saber fer abans
+de res: aïllar la *x* amb nombres petits i solucions enteres, amb els passos que
+s'escriurien a la pissarra. Les de repàs, en canvi, porten gairebé totes
+denominadors o són problemes llargs. `genera.js --comprova` verifica
+l'aritmètica de tots: substitueix la solució a l'equació, recalcula el decimal,
+la regla de tres, l'àrea i el volum.
 
 ---
 
@@ -317,21 +386,26 @@ petits cal escriure'l amb **+ Pregunta pròpia** o afegir un generador nou a
     index.html                  l'eina sencera (una sola pàgina)
     assets/css/eina.css         pantalla
     assets/css/imprimir.css     @page, marges A4 i salts de pàgina
+    assets/js/aparenca.js       clar / fosc / sistema (es carrega al <head>)
     assets/js/atzar.js          atzar amb llavor: exàmens reproduïbles
     assets/js/composa.js        repartiment i tria de preguntes (funció pura)
     assets/js/full.js           construcció dels tres documents imprimibles
     assets/js/app.js            controlador: arbre, estat i render
-    assets/js/banc.js           GENERAT — els 877 ítems amb solució
+    assets/js/banc.js           GENERAT — els 943 ítems amb solució
     assets/js/mapa.js           GENERAT — currículum, cobertura i índex del llibre
     assets/lib/katex/           KaTeX en local
 
-    assets/js/generadors.js     els 49 generadors del material propi
+    assets/js/generadors.js     els 60 generadors del material propi
 
     tools/mapa_curricular.py    el mapa saber → fonts. AQUÍ es toca el currículum
     tools/compila.py            genera banc.js i mapa.js (necessita Node)
     tools/genera.js             executa els generadors: catàleg i verificacions
     tools/tests.js              proves de la lògica (node, sense dependències)
-    tools/prova.js              prova de fum amb navegador (necessita Playwright)
+    tools/prova.js              prova amb navegador (necessita Playwright)
+    tools/prova_compilacio.py   banc.js i mapa.js al dia, compilació determinista
+
+    .github/workflows/proves.yml        les proves, a cada push
+    .github/workflows/unzip-upload.yml  descomprimeix els ZIP de _uploads/
 
 ### Per què fitxers `.js` i no `.json`
 
@@ -373,6 +447,28 @@ L'informe que surt per pantalla diu, saber per saber, quants ítems hi han queda
 i com estan repartits per dificultat, i marca amb `!!` els que s'han quedat a
 zero. La compilació és determinista: entrades iguals, sortida idèntica.
 
+Fins ara no ho era, tot i que aquí ja ho deia: les variants d'un mateix
+generador s'ordenaven tal com sortien d'un `set` de Python, i aquest ordre
+canvia a cada execució. Com que l'atzar de la composició recorre aquestes
+llistes, un mateix codi de prova donava una altra prova després de cada
+recompilació. `tools/prova_compilacio.py` ho vigila.
+
+**Si només has tocat `generadors.js`** (o els títols, les hores o les
+referències de `mapa_curricular.py`), no cal tenir a mà `repas` ni el llibre:
+
+```sh
+python3 tools/compila.py --nomes-propis
+```
+
+Refà el material propi i el mapa i reaprofita la part de repàs del `banc.js` que
+ja hi ha. Sense cap canvi, dona un `banc.js` idèntic byte a byte. El que no pot
+fer és canviar quins ítems de repàs van a cada saber (la llista `repas`, els
+`VETOS`, els `EXCLOSOS`): per a això cal la compilació completa.
+
+La compilació s'atura si el nivell que declara un generador no és el que mesura
+`calcula_nivell`: el navegador fa servir el declarat per a les variants noves
+(↻ i el selector de nivell de cada pregunta) i no el pot mesurar.
+
 **Decisions del mapa que potser vols canviar**, i que són meves, no del document:
 
 - La fracció generatriu de decimals periòdics està a *Fraccions i decimals* de
@@ -390,10 +486,16 @@ zero. La compilació és determinista: entrades iguals, sortida idèntica.
 ## Comprovar que tot funciona
 
 ```sh
-node tools/tests.js       # 144 comprovacions, cap dependència
-node tools/genera.js      # verifica els 49 generadors sobre 9 800 variants
-node tools/prova.js       # obre l'eina en un navegador i genera els tres PDF
+node tools/tests.js               # 166 comprovacions de la lògica, cap dependència
+node tools/genera.js --comprova   # els 60 generadors sobre 12 000 variants
+python3 tools/prova_compilacio.py # banc.js i mapa.js al dia, compilació determinista
+node tools/prova.js               # 45 comprovacions en un navegador de debò
 ```
+
+Totes quatre acaben amb codi 1 si alguna cosa falla. `prova.js` abans només
+escrivia per pantalla i acabava sempre bé: un «*** BUIDA ***» passava si ningú
+llegia la sortida. Necessita Playwright (`npm install --no-save playwright` i
+`npx playwright install chromium`) i no deixa cap fitxer a l'arbre.
 
 `prova.js` comprova, entre altres coses, que el full surti imprès des de
 qualsevol de les tres pestanyes. No és paranoia: en imprimir, el navegador
@@ -401,13 +503,29 @@ mesura les media queries contra l'amplada del **paper** (uns 794 px a A4) i no
 contra la de la finestra, o sigui que la maquetació estreta s'activa sempre. Amb
 les regles de pantalla escrites com `@media (max-width:900px)` en comptes de
 `@media screen and (max-width:900px)`, la regla que amaga el full a la pestanya
-«Continguts» s'aplicava també al paper i sortia un full en blanc.
+«Continguts» s'aplicava també al paper i sortia un full en blanc. També
+comprova que el comptador de pàgines digui el mateix que el PDF real, que cap
+exercici de pràctica sigui una pregunta de la prova, que l'adreça torni el
+mateix full i que una adreça mal formada no trenqui res.
 
 `tests.js` comprova les coses que fan mal en paper: que els punts sumin
 exactament el total demanat (o el mínim assolible, si el terra de 0,25 el puja), que no es repeteixi cap pregunta (ni cap exercici pare
 mentre en quedin d'altres), i que el mateix codi doni sempre el mateix examen.
-`prova.js` necessita Playwright, genera els tres PDF per comprovar-los i els
-esborra en acabar.
+
+---
+
+## GitHub: proves automàtiques i pujades per ZIP
+
+- **`.github/workflows/proves.yml`** executa les quatre proves a cada push i a
+  cada pull request. No escriu res al repositori (no fa cap commit), o sigui
+  que no afecta Cloudflare Pages. Es veu a la pestanya **Actions**: verd, tot
+  bé; vermell, clica-hi i surt quina comprovació ha fallat.
+- **`.github/workflows/unzip-upload.yml`** és el mateix que el del banc de 2n
+  de batxillerat: un ZIP pujat a `_uploads/` es descomprimeix a l'arrel, s'hi
+  esborra i se'n fa un commit. En acabar, es llancen les proves soles.
+  El commit **no** porta «[skip ci]», perquè Cloudflare no el publicaria.
+- Els fitxers de `.github/workflows/` no poden arribar dins d'un ZIP: el bot no
+  hi té permís. Es creen i s'editen des de la web de GitHub.
 
 ---
 
@@ -419,9 +537,6 @@ esborra en acabar.
   surti del navegador. Si vols saber què ha practicat un alumne abans de decidir
   què li preguntes, això ho fa l'analitzador de `repas` amb el codi de
   verificació; són dues eines separades a propòsit.
-- **No agrupa apartats.** Si dos ítems del mateix exercici entren a la mateixa
-  prova, surten com dues preguntes numerades i no com «6a» i «6b». És la millora
-  més evident que hi queda per fer.
 
 ---
 
@@ -432,3 +547,7 @@ solucions. Les solucions van codificades en base64 dins de `banc.js` — que és
 higiene, no seguretat: qualsevol que sàpiga què és el base64 les llegeix. Si
 publiques aquest lloc en un servidor, publica'l en un lloc que l'alumnat no
 pugui obrir, igual que ja fas amb els `REVISIO-fullN.html` de `repas`.
+
+El mateix val per al repositori de GitHub: si és **públic**, `banc.js` hi és a
+la vista de tothom. Les preguntes del pla de repàs, en canvi, no són cap
+secret: estan fetes per donar-les a l'alumne.

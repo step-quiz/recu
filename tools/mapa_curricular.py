@@ -374,7 +374,9 @@ VETOS = [
 # no és de mínims demanar a qui ve de suspendre tot el curs que resolgui
 # x/5 = 3 abans d'haver-se refet amb les equacions senzilles.
 BLOCS_DE_FRACCIONS = {"fraccions", "decimals", "percentatges",
-                      "factor_multiplicador", "directa_inversa"}
+                      "factor_multiplicador", "directa_inversa",
+                      # generadors propis de «Fraccions i decimals» de 1r
+                      "fd-a-decimal", "fd-a-fraccio"}
 
 # Blocs on l'arrel no exacta ÉS el contingut que s'avalua. A la resta, una
 # arrel lletja a l'enunciat és artificial (ningú mesura un trapezi i li surt
