@@ -252,7 +252,15 @@ button,input,select,textarea{font:inherit;color:inherit}
 .temps-caixa{font-size:.78rem;color:var(--apagat);font-variant-numeric:tabular-nums}
 .grup > h3 small{font-weight:400}
 /* «Altres preguntes» i el codi de la tria, a la mateixa línia. */
-.tria{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+/* Si no hi cap tot en una línia, codi i model baixen a la de sota. */
+.tria{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem}
+.tria-dades{display:flex;align-items:center;gap:.7rem;margin-left:auto;white-space:nowrap}
+.tria .codi{margin:0}
+.model{display:flex;align-items:center;gap:.3rem;font-size:.75rem;color:var(--apagat)}
+.model input{
+  width:2.6rem;padding:.2rem .3rem;border:1px solid var(--vora-forta);border-radius:6px;
+  background:var(--camp);font-size:.8rem;text-align:center;
+}
 
 /* Seccions plegades: el que es toca de tant en tant. El títol porta un
    resum del que hi ha triat. */
@@ -362,6 +370,12 @@ button,input,select,textarea{font:inherit;color:inherit}
   font-variant-numeric:tabular-nums;
 }
 .q-p.fixat{color:var(--blau);font-weight:600}
+/* A la fila oberta, al lloc dels punts: el botó per plegar-la. */
+.q-tanca{
+  border:1px solid var(--vora-forta);background:var(--card);color:var(--apagat);cursor:pointer;
+  width:1.6rem;height:1.5rem;border-radius:6px;font-size:.8rem;line-height:1;padding:0;
+}
+.q-tanca:hover{border-color:var(--blau);color:var(--blau)}
 
 /* El que s'hi pot fer, només a la fila oberta. */
 .q-detall{grid-column:2/-1;padding:.35rem 0 .2rem}
@@ -468,8 +482,22 @@ button,input,select,textarea{font:inherit;color:inherit}
   border:.8px solid #999;padding:2.5mm 3mm;margin-bottom:6mm;
   font-family:var(--ui);font-size:9pt;line-height:1.45;color:#222;
 }
-.doc-instruccions p{margin:0 0 1mm}
-.doc-instruccions p:last-child{margin:0}
+.doc-instruccions{white-space:pre-line}
+
+/* ------------------------------------- capçalera editable damunt del full
+   Res no ocupa lloc de més: el contorn és un `outline` i la pista dels
+   camps buits és un `::before` que imprimir.css apaga. */
+.ed{border-radius:1mm;cursor:text;outline:1px dashed transparent;outline-offset:.6mm}
+.ed:hover{outline-color:#9DB4DA;background:#F4F7FC}
+.ed:focus{outline:1.5px solid #2455A4;background:#F4F7FC}
+.ed:empty::before{content:attr(data-pista);color:#9AA6B6;font-style:italic;font-weight:400}
+.doc-dades .linia .ed{flex:1;min-height:5mm}
+.ed-data{cursor:pointer}
+.linia{position:relative}
+/* El calendari de la data: invisible, només hi és perquè `showPicker()`
+   obri el del navegador. */
+.tria-data{position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
+.doc-instruccions.buit{border-style:dashed;color:#9AA6B6}
 
 .preguntes{list-style:none;margin:0;padding:0}
 .pregunta{margin-bottom:var(--separacio,5mm);break-inside:avoid;page-break-inside:avoid}

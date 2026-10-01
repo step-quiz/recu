@@ -11,6 +11,7 @@ require(path.join(arrel, 'assets/js/banc.js'));
 require(path.join(arrel, 'assets/js/atzar.js'));
 require(path.join(arrel, 'assets/js/generadors.js'));
 require(path.join(arrel, 'assets/js/composa.js'));
+require(path.join(arrel, 'assets/js/full.js'));
 
 let ok = 0, ko = 0;
 function comprova(nom, cond, extra) {
@@ -406,6 +407,13 @@ comprova('l\'avís nomena els continguts sense pregunta',
   const niv = r.preguntes.map(q => banc[q.itemId].nivell);
   comprova('«De fàcil a difícil» ordena pel nivell',
     niv.every((n, i) => !i || niv[i - 1] <= n), niv.join(''));
+  /* A igual nivell, l'ordre del currículum, sempre: mai l'atzar. */
+  const pos = q => tots.indexOf(q.saberId);
+  const p = r.preguntes;
+  comprova('a igual nivell, l\'ordre del currículum',
+    p.every((q, i) => !i || banc[p[i - 1].itemId].nivell !== banc[q.itemId].nivell ||
+                            pos(p[i - 1]) <= pos(q)),
+    p.map(q => banc[q.itemId].nivell + ':' + pos(q)).join(' '));
 }
 
 /* ------------------------------------------------------ pla de repàs */
@@ -499,6 +507,37 @@ const bar = new window.Atzar('X').barreja(llista);
 comprova('barreja conserva tots els elements',
   bar.slice().sort().join() === llista.join());
 comprova('barreja no toca l\'original', llista.join() === '1,2,3,4,5,6,7,8');
+
+/* ------------------------------------------------------ LaTeX fora de lloc */
+console.log('LaTeX');
+/* KaTeX només compon el que hi ha entre dòlars: una ordre com «\\quad»
+   escrita fora sortia en lletra al full de correcció. Es revisa tot el que
+   pot arribar al paper (encapçalament, enunciat, resposta i passos) tal
+   com el deixa `Full`, per a tot el banc i 20 variants de cada generador. */
+{
+  const F = window.Full;
+  const fora = t => (String(t || '').replace(/\$[^$]*\$/g, '').match(/\\[a-zA-Z]+/g) || []);
+  const dolents = [];
+  const revisa = (id, it) => {
+    const s = F.solucio(it);
+    [F.textMates(it.cap), F.textMates(it.enunciat), s.r].concat(s.p).forEach(t => {
+      if (fora(t).length) dolents.push(id + ': ' + fora(t).join(','));
+    });
+  };
+  window.BANC.items.forEach(it => revisa(it.id, it));
+  window.GENERADORS.llista.forEach(g => {
+    for (let k = 0; k < 20; k++) {
+      const v = window.GENERADORS.crea(g.id, 'tex' + k);
+      if (!v) continue;
+      revisa(g.id, { cap: v.cap, enunciat: v.enunciat, sol: Buffer.from(
+        JSON.stringify({ r: v.resposta, p: v.passos })).toString('base64') });
+    }
+  });
+  comprova('cap ordre de LaTeX fora dels dòlars', !dolents.length,
+    [...new Set(dolents)].slice(0, 3).join(' | '));
+  comprova('«\\quad» fora de les fórmules es torna un espai',
+    F.textMates('$a$ \\quad i \\quad $b \\quad c$') === '$a$ \u2003 i \u2003 $b \\quad c$');
+}
 
 console.log(`\n${ok} correctes, ${ko} fallades`);
 process.exit(ko ? 1 : 0);

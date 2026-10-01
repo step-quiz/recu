@@ -24,6 +24,11 @@
   /* Les eines de cada pregunta són interfície, no document. */
   .pregunta-eines{display:none!important}
   .activa{outline:none!important}
+  /* La capçalera editable: sense contorns, sense pistes, sense calendari
+     i sense la caixa d'instruccions buida. */
+  .ed{outline:none!important;background:none!important}
+  .ed:empty::before{content:none!important}
+  .tria-data,.doc-instruccions.buit{display:none!important}
   /* I el carril que les allotja tampoc: a pantalla cau dins del marge de
      `.full`, però en imprimir `.full` no en té i sobresortiria de la pàgina. */
   .pregunta,.apartat{padding-left:0;margin-left:0}

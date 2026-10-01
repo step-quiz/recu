@@ -65,6 +65,17 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
     llavor: (document.querySelector('#llavor') || {}).textContent
   }));
   comprova('es llisten els continguts', inici.sabers >= 50, inici.sabers);
+  const perDefecte = await pag.evaluate(() => ({
+    punts: document.querySelector('[data-criteri][aria-pressed=true]').dataset.criteri,
+    pes: document.querySelector('[data-pes][aria-pressed=true]').dataset.pes,
+    ordre: document.querySelector('#ordre').value,
+    ultima: [...document.querySelectorAll('.panell details')].pop().dataset.sec
+  }));
+  comprova('per defecte: punts iguals, mateix nombre per contingut, de fàcil a difícil',
+    perDefecte.punts === 'igual' && perDefecte.pes === 'igual' && perDefecte.ordre === 'dificultat',
+    JSON.stringify(perDefecte));
+  comprova('«Punts, temps i ordre» és la darrera secció del panell', perDefecte.ultima === 'punts',
+    perDefecte.ultima);
   comprova('hi ha un codi de tria de cinc caràcters', /^[0-9A-Z]{5}$/.test(inici.llavor), inici.llavor);
 
   /* Cada curs es plega i es desplega clicant-ne la barra. */
@@ -130,16 +141,18 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
   }));
   comprova('clicar una pregunta del panell l\'obre i la ressalta al full',
     oberta.detalls === 1 && oberta.nivell && oberta.activa === 1, JSON.stringify(oberta));
-  await pag.click('[data-obre="2"]');
+  await pag.click('.q-tanca');
   await pag.waitForTimeout(150);
-  comprova('tornar-la a clicar la tanca',
+  comprova('el botó ▴ la plega',
     await pag.evaluate(() => !document.querySelector('.q-detall') &&
                              !document.querySelector('#full .activa')));
   await pag.locator(PREGUNTES).nth(4).locator('.pregunta-cos').first().click();
   await pag.waitForTimeout(150);
   comprova('clicar una pregunta del full l\'obre al panell',
     await pag.evaluate(() => !!document.querySelector('.q.oberta [data-punts="4"]')));
-  await pag.click('[data-obre="4"]');
+  await pag.keyboard.press('Escape');
+  await pag.waitForTimeout(150);
+  comprova('Esc la plega', await pag.evaluate(() => !document.querySelector('.q-detall')));
 
   /* Aparença: un sol botó que passa per sistema → clar → fosc → sistema. */
   const temes = [];
@@ -307,8 +320,23 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
   console.log('Adreça');
   /* L'adreça ha de tornar a muntar exactament el mateix full, capçalera
      inclosa. */
-  await pag.fill('#alumne', 'Pau Serra');
-  await pag.fill('#titol', 'Recuperació de 1r i 3r');
+  /* La capçalera s'escriu damunt del mateix full. */
+  await pag.fill('#full [data-camp="alumne"]', 'Pau Serra');
+  await pag.fill('#full [data-camp="titol"]', 'Recuperació de 1r i 3r');
+  await pag.fill('#full [data-camp="instruccions"]', 'Primera línia.\nSegona línia.');
+  await pag.click('[data-doc="prova"]');            // el focus surt de la capçalera
+  await pag.waitForTimeout(200);
+  const cap = await pag.evaluate(() => ({
+    alumne: document.querySelector('#full [data-camp="alumne"]').textContent,
+    titol: document.querySelector('.doc-cap h1').textContent,
+    peu: document.querySelector('.doc-peu').textContent,
+    instr: document.querySelector('.doc-instruccions').innerText
+  }));
+  comprova('la capçalera s\'edita damunt del full (nom, títol i peu)',
+    cap.alumne === 'Pau Serra' && cap.titol === 'Recuperació de 1r i 3r' &&
+    cap.peu.includes('Recuperació de 1r i 3r'), JSON.stringify(cap));
+  comprova('les instruccions conserven els salts de línia',
+    cap.instr.trim() === 'Primera línia.\nSegona línia.', JSON.stringify(cap.instr));
   await pag.evaluate(() => {
     const g = document.querySelector('#figures');
     g.checked = false; g.dispatchEvent(new Event('change'));
@@ -322,6 +350,18 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
   await pag2.waitForTimeout(600);
   const full2 = await pag2.evaluate(() => document.querySelector('#full').innerHTML);
   comprova('l\'adreça reprodueix el full idèntic (capçalera i figures incloses)', full1 === full2);
+
+  /* «Desa la prova» baixa un fitxer; «Obre…» el torna a carregar. */
+  const [baixada] = await Promise.all([pag.waitForEvent('download'), pag.click('#desa-fitxer')]);
+  const desat = await baixada.path();
+  const pag4 = await nav.newPage({ viewport: { width: 1560, height: 1000 } });
+  await pag4.goto(URL_EINA);
+  await pag4.waitForTimeout(400);
+  await pag4.setInputFiles('#fitxer', desat);
+  await pag4.waitForTimeout(800);
+  comprova('«Obre…» torna a carregar una prova desada',
+    await pag4.evaluate(() => document.querySelector('#full').innerHTML) === full1);
+  await pag4.close();
 
   /* Una adreça retallada, editada a mà o amb ids que no existeixen no pot
      trencar la pàgina ni fer sortir preguntes buides. */

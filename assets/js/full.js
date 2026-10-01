@@ -19,8 +19,26 @@
       .replace(/"/g, '&quot;');
   }
 
+  /**
+   * Ordres d'espaiat de LaTeX escrites FORA dels dòlars. 28 resolucions del
+   * banc de `repas` separen dos càlculs amb «$…$ \quad i \quad $…$»: KaTeX
+   * només compon el que hi ha entre dòlars, i al full de correcció sortia
+   * «\quad» en lletra. Fora de les fórmules es converteixen en espais.
+   */
+  function textMates(t) {
+    if (t == null) return t;
+    return String(t).split(/(\$[^$]*\$)/).map(function (tros, k) {
+      if (k % 2) return tros;                       // dins dels dòlars: intacte
+      return tros.replace(/\\qquad\b/g, '\u2003\u2003').replace(/\\quad\b/g, '\u2003')
+                 .replace(/\\[,;:]/g, ' ');
+    }).join('');
+  }
+
   function solucio(item) {
-    try { return JSON.parse(decodeURIComponent(escape(atob(item.sol)))); }
+    try {
+      var s = JSON.parse(decodeURIComponent(escape(atob(item.sol))));
+      return { r: textMates(s.r), p: (s.p || []).map(textMates) };
+    }
     catch (e) { return { r: '(no disponible)', p: [] }; }
   }
 
@@ -37,25 +55,51 @@
     return String(n).replace('.', ',');
   }
 
-  /* ------------------------------------------------------------ capçalera */
-  function capcalera(cfg, subtitol) {
+  /* ------------------------------------------------------------ capçalera
+     A la vista «Prova», la capçalera s'edita directament damunt del full:
+     cada text és un `contenteditable` amb `data-camp`, i app.js en recull
+     el valor. Un camp buit mostra una pista en gris que no s'imprimeix
+     (vegeu `.ed:empty::before` i imprimir.css). A la clau i al pla, text. */
+  function ed(cfg, camp, valor, pista) {
+    if (!cfg.editable) return esc(valor);
+    return '<span class="ed" contenteditable="plaintext-only" spellcheck="false" ' +
+           'data-camp="' + camp + '" data-pista="' + esc(pista) + '" ' +
+           'title="Clica per editar">' + esc(valor) + '</span>';
+  }
+
+  function capcalera(cfg, subtitol, subtitolEditable) {
+    var centre = cfg.centre || cfg.editable;
     return '' +
       '<header class="doc-cap">' +
-        (cfg.centre ? '<div class="centre">' + esc(cfg.centre) + '</div>' : '') +
-        '<h1>' + esc(cfg.titol) + '</h1>' +
-        (subtitol ? '<p class="subtitol">' + esc(subtitol) + '</p>' : '') +
+        (centre ? '<div class="centre">' + ed(cfg, 'centre', cfg.centre, 'Centre o departament') + '</div>' : '') +
+        '<h1>' + ed(cfg, 'titol', cfg.titol, 'Títol de la prova') + '</h1>' +
+        (subtitol
+          ? '<p class="subtitol">' + (subtitolEditable
+              ? ed(cfg, 'subtitol', subtitol, 'Subtítol')
+              : esc(subtitol)) + '</p>'
+          : '') +
       '</header>';
   }
 
   function dades(cfg) {
+    /* La data no és un text lliure: clicar-la obre el calendari del
+       navegador (un <input type=date> invisible), i al paper surt en
+       lletra, «1 d'octubre de 2026». */
+    var data = esc(dataLlarga(cfg.data));
+    if (cfg.editable) {
+      data = '<span class="ed ed-data" data-tria-data tabindex="0" role="button" ' +
+               'data-pista="Data" title="Clica per triar la data">' + data + '</span>' +
+             '<input type="date" class="tria-data" value="' + esc(cfg.data) + '" ' +
+               'tabindex="-1" aria-label="Data de la prova">';
+    }
     return '' +
       '<div class="doc-dades">' +
         '<div><span class="etq">Nom i cognoms</span><div class="linia">' +
-          esc(cfg.alumne || '') + '</div></div>' +
+          ed(cfg, 'alumne', cfg.alumne || '', 'Clica per escriure el nom (o deixa-ho en blanc)') +
+          '</div></div>' +
         '<div class="estret"><span class="etq">Grup</span>' +
-          '<div class="linia">' + esc(cfg.grup || '') + '</div></div>' +
-        '<div><span class="etq">Data</span><div class="linia">' +
-          esc(dataLlarga(cfg.data)) + '</div></div>' +
+          '<div class="linia">' + ed(cfg, 'grup', cfg.grup || '', '3r A') + '</div></div>' +
+        '<div><span class="etq">Data</span><div class="linia">' + data + '</div></div>' +
         '<div class="estret"><span class="etq">Qualificació</span>' +
           '<div class="linia"></div></div>' +
       '</div>';
@@ -109,8 +153,8 @@
    */
   function cosItem(it, cfg) {
     return (it.cap && (cfg.encapcalaments || it.capCal)
-              ? '<span class="encap">' + it.cap + '</span>' : '') +
-           it.enunciat +
+              ? '<span class="encap">' + textMates(it.cap) + '</span>' : '') +
+           textMates(it.enunciat) +
            (it.figura && (cfg.figures || it.figuraCal)
               ? '<div class="figura-cont">' + it.figura + '</div>' : '');
   }
@@ -132,13 +176,21 @@
     var cfg = estat.cfg, p = estat.preguntes;
     var total = p.reduce(function (a, q) { return a + q.punts; }, 0);
 
-    var h = capcalera(cfg, cfg.subtitol) + dades(cfg);
+    var h = capcalera(cfg, cfg.subtitol, true) + dades(cfg);
 
-    if (cfg.instruccions) {
-      h += '<div class="doc-instruccions">' +
-             cfg.instruccions.split('\n').filter(Boolean)
-               .map(function (l) { return '<p>' + esc(l) + '</p>'; }).join('') +
-           '</div>';
+    /* Un sol bloc amb `white-space: pre-line`, i no un <p> per línia:
+       així es pot editar damunt del full com un text qualsevol. Buit, només
+       hi és a pantalla (per poder-hi escriure) i no s'imprimeix. */
+    var instr = (cfg.instruccions || '').replace(/\n{2,}/g, '\n').trim();
+    if (instr) {
+      h += '<div class="doc-instruccions' + (cfg.editable ? ' ed' : '') + '"' +
+           (cfg.editable ? ' contenteditable="plaintext-only" spellcheck="false" ' +
+             'data-camp="instruccions" data-pista="Instruccions" title="Clica per editar"' : '') +
+           '>' + esc(instr) + '</div>';
+    } else if (cfg.editable) {
+      h += '<div class="doc-instruccions ed buit" contenteditable="plaintext-only" ' +
+           'spellcheck="false" data-camp="instruccions" ' +
+           'data-pista="Instruccions per a l\'alumne (opcional)"></div>';
     }
 
     if (!p.length) {
@@ -191,7 +243,7 @@
              '<div class="pregunta-cap grup-cap">' +
                '<span class="pregunta-num">' + (n + 1) + '.</span>' +
                '<div class="pregunta-cos">' +
-                 (ambCap ? '<span class="encap">' + primer.cap + '</span>' : '') +
+                 (ambCap ? '<span class="encap">' + textMates(primer.cap) + '</span>' : '') +
                '</div>' +
              '</div>';
       g.forEach(function (i, k) {
@@ -199,7 +251,7 @@
         h += '<div class="apartat">' +
                '<div class="pregunta-cap">' +
                  '<span class="apartat-lletra">' + 'abcdefghijklmnopqrstuvwxyz'.charAt(k) + ')</span>' +
-                 '<div class="pregunta-cos">' + it.enunciat +
+                 '<div class="pregunta-cos">' + textMates(it.enunciat) +
                    (it.figura && (cfg.figures || it.figuraCal)
                      ? '<div class="figura-cont">' + it.figura + '</div>' : '') +
                  '</div>' +
@@ -380,5 +432,5 @@
   }
 
   glob.Full = { prova: prova, clau: clau, pla: pla, solucio: solucio,
-                esc: esc, num: num };
+                esc: esc, num: num, textMates: textMates };
 })(window);

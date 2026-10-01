@@ -29,19 +29,25 @@ Genera tres documents des d'una sola selecció de continguts:
    saber. Clicant el títol del curs es marquen o desmarquen tots de cop.
 2. **Ajusta la prova** a la dreta. A dalt hi ha el que es toca a cada prova:
    quantes preguntes, quin nivell i la llista de preguntes. A sota, plegat,
-   el que es toca de tant en tant: *Punts, temps i ordre*, *Format del full*,
-   *Capçalera*, *Pla de repàs* i *Preferències*. Cada secció plegada diu al
+   el que es toca de tant en tant: *Format del full*, *Pla de repàs*,
+   *Preferències* i, al final de tot, *Punts, temps i ordre*. Cada secció plegada diu al
    títol què hi tens triat (per exemple «38 mm · quadrícula»), o sigui que
    no cal obrir-la per saber-ho; el navegador recorda quines tens obertes.
 3. **Revisa el full** al centre. El que hi veus és exactament el que sortirà per
-   la impressora; no hi ha una segona maquetació.
+   la impressora; no hi ha una segona maquetació. **La capçalera s'escriu
+   damunt del mateix full**: clica el centre, el títol, el subtítol, el nom,
+   el grup o les instruccions i escriu-hi (Retorn acaba el camp; a les
+   instruccions fa línia nova). Clicant la data s'obre el calendari. Els camps
+   buits mostren una pista en gris que no s'imprimeix. El subtítol, si el
+   deixes en blanc, torna a ser l'automàtic («Continguts de 2n d'ESO»).
 4. **Imprimeix.** Al diàleg del navegador, desmarca *Capçaleres i peus de pàgina*
    i deixa els marges *Per defecte*: els marges reals els posa `@page`.
    «Desa com a PDF» dona el PDF.
 
 **Desa la prova** baixa un fitxer HTML petit que només conté l'adreça d'aquesta
-prova exacta, amb el codi i el model ben visibles. Obre'l amb doble clic i tens
-la prova tal com la vas deixar: les preguntes, els punts, el format del full
+prova exacta, amb el codi i el model ben visibles. Per recuperar-la, fes doble
+clic al fitxer, o bé prem **Obre…** a la barra de dalt i tria'l (també el pots
+arrossegar damunt de la pàgina). Tens la prova tal com la vas deixar: les preguntes, els punts, el format del full
 (espai, fons, figures, enunciats generals) i la capçalera sencera, **nom de
 l'alumne inclòs**. Va bé per guardar-la a la carpeta del curs o per passar-la a
 un company. (Si hi ha escrit el nom de l'alumne, el fitxer també el porta: tingues-ho
@@ -62,9 +68,23 @@ codi de la tria, perquè aquests han de començar de zero cada cop.
 Cada prova porta un **codi de cinc caràcters** al peu. Mateix codi, mateixa
 prova, sempre. L'adreça de la pàgina el guarda, així que pots desar l'enllaç i
 recuperar l'examen mesos després. Per fer models A i B del mateix examen: prem
-**Altres preguntes** (o `Ctrl+G`), canvia el camp *Model* i torna a imprimir.
+**Altres preguntes** (o `Ctrl+G`), canvia el camp *Model* (al costat del codi,
+a dalt del panell) i torna a imprimir.
 
 ### Els controls que no són obvis
+
+**Valors per defecte de *Punts, temps i ordre*.** Gairebé sempre es fan
+servir tal com venen, i per això la secció és l'última del panell:
+
+| Paràmetre | Per defecte | Què vol dir | Altres opcions |
+|---|---|---|---|
+| *Els punts es reparteixen* | **Igual** | totes les preguntes valen el mateix | *Per nivell* (les de nivell 2 i 3 valen més), *Per hores* (valen més les dels continguts amb més hores) |
+| *Ordre de les preguntes* | **De fàcil a difícil** | per nivell; a igual nivell, en l'ordre del currículum (mai a l'atzar) | *Del currículum*, *Barrejat* |
+| *Reparteix les preguntes segons* | **Igual** | el mateix nombre de preguntes per a cada contingut marcat | *Hores* (més preguntes als continguts amb més hores), *Banc* (més als que tenen més preguntes al banc) |
+
+Si escrius a mà els punts d'una pregunta, es queden fixos i la resta es
+reparteix el que sobra. Canviar l'ordre només reordena; canviar el criteri de
+repartiment refà la prova (conservant les ★ i les pròpies).
 
 **El zoom del full.** El full fa sempre 210 mm d'ample, també en un portàtil on
 no hi cap: és l'única manera que la pantalla parteixi les línies igual que el
@@ -187,7 +207,8 @@ dels dos interruptors i verifica que cap ítem no es quedi buit amb cap.
 **Les accions de cada pregunta.** Al panell de la dreta, cada pregunta és
 una fila plegada que només diu què és, de quin contingut i quant val.
 Clicant-la (al panell o al mateix full) s'obre, es ressalta al full i
-mostra tot el que s'hi pot fer: nivell, punts i aquests botons.
+mostra tot el que s'hi pot fer: nivell, punts i aquests botons. Per plegar-la,
+el botó `▴` de la fila, tornar-la a clicar o la tecla `Esc`.
 
 | | Què fa | Al marge del full? |
 |---|---|---|

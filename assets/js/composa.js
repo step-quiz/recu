@@ -260,10 +260,14 @@
       /* Pel NIVELL recalculat, no pel `dif` de repàs: és el que es mostra
          al panell i el que fa servir app.js en reordenar. Amb `dif`, la
          mateixa prova sortia en un ordre o en un altre segons si s'havia
-         generat o reordenat. L'ordenació és estable: dins d'un nivell es
-         conserva l'ordre del currículum. */
+         generat o reordenat. A igual nivell, l'ordre del currículum: es
+         fa explícit, i no es confia en l'ordre d'arribada. */
+      var posicio = {};
+      spec.sabers.forEach(function (id, k) { posicio[id] = k; });
+      var pos = function (q) { return posicio[q.saberId] != null ? posicio[q.saberId] : 1e6; };
       preguntes.sort(function (a, b) {
-        return (banc[a.itemId].nivell || 2) - (banc[b.itemId].nivell || 2);
+        return (banc[a.itemId].nivell || 2) - (banc[b.itemId].nivell || 2) ||
+               pos(a) - pos(b);
       });
     } else if (spec.ordre === 'barrejat') {
       preguntes = atzar.barreja(preguntes);

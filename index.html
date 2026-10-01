@@ -25,7 +25,9 @@
     <button type="button" class="aparenca" id="aparenca" data-aparenca-cicle
       title="Aparença" aria-label="Aparença">◐</button>
     <div class="barra-accions">
-      <button class="btn" id="desa-fitxer" title="Baixa un fitxer que torna a obrir aquesta prova exacta">Desa la prova</button>
+      <button class="btn" id="obre-fitxer" title="Torna a obrir una prova desada amb «Desa la prova» (també pots arrossegar el fitxer damunt de la pàgina)">Obre…</button>
+      <input type="file" id="fitxer" accept=".html,.htm,text/html" hidden>
+      <button class="btn" id="desa-fitxer" title="Baixa un fitxer amb aquesta prova exacta. Per recuperar-la: doble clic al fitxer, o el botó «Obre…»">Desa la prova</button>
       <button class="btn principal" id="imprimeix">Imprimeix la prova<small id="pagines"></small></button>
     </div>
   </header>
@@ -46,7 +48,9 @@
     <div id="rail-cos"></div>
   </aside>
 
-  <!-- ---------------------------------------------------- taula: el full -->
+  <!-- ---------------------------------------------------- taula: el full
+       La capçalera (centre, títol, alumne, grup, data, instruccions)
+       s'edita clicant-la directament damunt del full. -->
   <main class="taula">
     <div class="taula-eines">
       <div class="pestanyes" role="tablist">
@@ -106,7 +110,11 @@
       <div class="tria">
         <button class="btn petit" id="altra"
           title="Refà la prova amb unes altres preguntes (Ctrl+G). Es conserven les marcades amb ★ i les pròpies.">↻ Altres preguntes</button>
+        <span class="tria-dades">
         <span class="codi" title="Mateix codi, mateixa prova">Codi <b id="llavor"></b></span>
+        <label class="model" title="Surt al peu del full. Per fer el model B: «Altres preguntes» i canvia la lletra">Model
+          <input type="text" id="model" placeholder="—" maxlength="40"></label>
+        </span>
       </div>
     </div>
 
@@ -130,46 +138,6 @@
       </div>
     </div>
 
-    <details class="sec" data-sec="punts">
-      <summary>Punts, temps i ordre <span class="resum" id="resum-punts"></span></summary>
-      <div class="sec-cos">
-        <div class="fila">
-          <label class="camp">
-            <span>Punts en total</span>
-            <input type="number" id="punts" min="1" max="100" step="0.5" value="10">
-          </label>
-          <label class="camp">
-            <span>Durada (minuts)</span>
-            <input type="number" id="durada" min="5" max="600" step="5" value="55">
-          </label>
-        </div>
-        <div class="camp">
-          <span>Els punts es reparteixen</span>
-          <div class="seg" role="group" aria-label="Criteri de puntuació">
-            <button type="button" data-criteri="igual" aria-pressed="false">Igual</button>
-            <button type="button" data-criteri="nivell" aria-pressed="true">Per nivell</button>
-            <button type="button" data-criteri="hores" aria-pressed="false">Per hores</button>
-          </div>
-        </div>
-        <label class="camp">
-          <span>Ordre de les preguntes</span>
-          <select id="ordre">
-            <option value="curriculum">Del currículum</option>
-            <option value="dificultat">De fàcil a difícil</option>
-            <option value="barrejat">Barrejat</option>
-          </select>
-        </label>
-        <div class="camp">
-          <span>Reparteix les preguntes segons</span>
-          <div class="seg" role="group" aria-label="Criteri de repartiment">
-            <button type="button" data-pes="hores" aria-pressed="true">Hores</button>
-            <button type="button" data-pes="items" aria-pressed="false">Banc</button>
-            <button type="button" data-pes="igual" aria-pressed="false">Igual</button>
-          </div>
-        </div>
-      </div>
-    </details>
-
     <details class="sec" data-sec="full">
       <summary>Format del full <span class="resum" id="resum-full"></span></summary>
       <div class="sec-cos">
@@ -189,26 +157,6 @@
         <label class="check"><input type="checkbox" id="encapcalaments" checked> Enunciats generals</label>
         <label class="check"><input type="checkbox" id="mostraPunts"> Punts de cada pregunta</label>
         <label class="check"><input type="checkbox" id="agrupa" checked> Agrupa apartats (6a, 6b)</label>
-      </div>
-    </details>
-
-    <details class="sec" data-sec="capcalera">
-      <summary>Capçalera <span class="resum" id="resum-capcalera"></span></summary>
-      <div class="sec-cos">
-        <div class="fila">
-          <label class="camp"><span>Alumne/a</span><input type="text" id="alumne" placeholder="(en blanc)"></label>
-          <label class="camp"><span>Grup</span><input type="text" id="grup" placeholder="3r A"></label>
-        </div>
-        <div class="fila">
-          <label class="camp"><span>Data</span><input type="date" id="data"></label>
-          <label class="camp"><span>Model</span><input type="text" id="model" placeholder="A"></label>
-        </div>
-        <label class="camp"><span>Centre o departament</span><input type="text" id="centre"></label>
-        <label class="camp"><span>Títol</span><input type="text" id="titol"></label>
-        <label class="camp">
-          <span>Instruccions</span>
-          <textarea id="instruccions" rows="4"></textarea>
-        </label>
       </div>
     </details>
 
@@ -248,6 +196,49 @@
           pública, el fitxer desat funciona des de qualsevol ordinador.</p>
       </div>
     </details>
+    <!-- Al final de tot: gairebé sempre es fan servir els valors per
+         defecte (totes valen el mateix, de fàcil a difícil, el mateix
+         nombre de preguntes per contingut). -->
+    <details class="sec" data-sec="punts">
+      <summary>Punts, temps i ordre <span class="resum" id="resum-punts"></span></summary>
+      <div class="sec-cos">
+        <div class="fila">
+          <label class="camp">
+            <span>Punts en total</span>
+            <input type="number" id="punts" min="1" max="100" step="0.5" value="10">
+          </label>
+          <label class="camp">
+            <span>Durada (minuts)</span>
+            <input type="number" id="durada" min="5" max="600" step="5" value="55">
+          </label>
+        </div>
+        <div class="camp">
+          <span>Els punts es reparteixen</span>
+          <div class="seg" role="group" aria-label="Criteri de puntuació">
+            <button type="button" data-criteri="igual" aria-pressed="true">Igual</button>
+            <button type="button" data-criteri="nivell" aria-pressed="false">Per nivell</button>
+            <button type="button" data-criteri="hores" aria-pressed="false">Per hores</button>
+          </div>
+        </div>
+        <label class="camp">
+          <span>Ordre de les preguntes</span>
+          <select id="ordre">
+            <option value="dificultat">De fàcil a difícil</option>
+            <option value="curriculum">Del currículum</option>
+            <option value="barrejat">Barrejat</option>
+          </select>
+        </label>
+        <div class="camp">
+          <span>Reparteix les preguntes segons</span>
+          <div class="seg" role="group" aria-label="Criteri de repartiment">
+            <button type="button" data-pes="hores" aria-pressed="false">Hores</button>
+            <button type="button" data-pes="items" aria-pressed="false">Banc</button>
+            <button type="button" data-pes="igual" aria-pressed="true">Igual</button>
+          </div>
+        </div>
+      </div>
+    </details>
+
   </aside>
 </div>
 
