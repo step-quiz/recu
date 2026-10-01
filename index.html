@@ -22,13 +22,9 @@
       <span>Matemàtiques · 1r, 2n i 3r d'ESO</span>
     </div>
     <div class="buit"></div>
-    <div class="aparenca" role="group" aria-label="Aparença">
-      <button type="button" data-aparenca="clar" aria-pressed="false" title="Mode clar" aria-label="Mode clar">☀</button>
-      <button type="button" data-aparenca="fosc" aria-pressed="false" title="Mode fosc" aria-label="Mode fosc">☾</button>
-      <button type="button" data-aparenca="sistema" aria-pressed="true" title="El del sistema operatiu" aria-label="Aparença del sistema">◐</button>
-    </div>
+    <button type="button" class="aparenca" id="aparenca" data-aparenca-cicle
+      title="Aparença" aria-label="Aparença">◐</button>
     <div class="barra-accions">
-      <button class="btn" id="altra" title="Genera una altra tria de preguntes (Ctrl+G)">Altres preguntes</button>
       <button class="btn" id="desa-fitxer" title="Baixa un fitxer que torna a obrir aquesta prova exacta">Desa la prova</button>
       <button class="btn principal" id="imprimeix">Imprimeix la prova<small id="pagines"></small></button>
     </div>
@@ -45,7 +41,6 @@
   <aside class="rail">
     <div class="rail-cap">
       <h2>Continguts a recuperar</h2>
-      <p>Repartiment de continguts ESO.</p>
       <input class="cerca" id="cerca" type="search" placeholder="Cerca un contingut…" aria-label="Cerca un contingut">
     </div>
     <div id="rail-cos"></div>
@@ -60,45 +55,46 @@
         <button role="tab" data-doc="pla" aria-selected="false">Pla de repàs</button>
       </div>
       <div class="buit"></div>
-      <div class="zoom">
-        <label for="zoom">Zoom</label>
-        <input type="range" id="zoom" min="0.3" max="1.3" step="0.05" value="1">
-        <span id="zoom-valor">100 %</span>
-        <button type="button" class="mini" id="zoom-ajusta" aria-pressed="true"
-          title="Que el full hi càpiga sencer d'ample">Ajusta</button>
-      </div>
+      <label class="zoom">
+        <span>Zoom</span>
+        <select id="zoom" aria-label="Zoom del full">
+          <option value="auto">Ajustat</option>
+          <option value="0.5">50 %</option>
+          <option value="0.75">75 %</option>
+          <option value="1">100 %</option>
+          <option value="1.25">125 %</option>
+        </select>
+      </label>
     </div>
     <div class="escena">
       <article class="full" id="full"></article>
     </div>
   </main>
 
-  <!-- ------------------------------------------------ panell: composició
+  <!-- ------------------------------------------------ panell: la prova
+       Ordenat per freqüència d'ús: a dalt, el que es toca a cada prova
+       (quantes preguntes, quin nivell, la llista); a sota, plegat, el que
+       es toca de tant en tant. Cada secció plegada diu al títol què hi ha
+       triat, perquè no calgui obrir-la per saber-ho.
+
        Els grups de botons (.seg) van dins d'un <div class="camp">, no d'un
        <label>: un <label> passa el clic al primer control que conté, i
        clicar el text «Nivell de les preguntes» premia «Mínims» i refeia la
        prova sencera. -->
   <aside class="panell">
-    <div class="panell-cap"><h2>La prova</h2></div>
+    <div class="panell-cap">
+      <h2>La prova</h2>
+      <span class="temps-caixa" title="Temps estimat per fer la prova">
+        <output id="temps" class="temps" for="durada nombre">—</output>
+        <span id="temps-de"></span>
+      </span>
+    </div>
 
     <div class="grup">
-      <h3>Composició</h3>
       <label class="camp">
         <span>Preguntes: <b id="nombre-valor">10</b></span>
         <input type="range" id="nombre" min="3" max="30" step="1" value="10">
       </label>
-
-      <div class="fila">
-        <label class="camp">
-          <span>Durada (minuts)</span>
-          <input type="number" id="durada" min="5" max="600" step="5" value="55">
-        </label>
-        <div class="camp">
-          <span>Temps estimat</span>
-          <output id="temps" class="temps" for="durada nombre">—</output>
-        </div>
-      </div>
-
       <div class="camp">
         <span>Nivell de les preguntes</span>
         <div class="seg" role="group" aria-label="Nivell de les preguntes">
@@ -107,43 +103,15 @@
           <button type="button" data-perfil="exigent" aria-pressed="false">Exigent</button>
         </div>
       </div>
-
-      <div class="camp">
-        <span>Reparteix les preguntes segons</span>
-        <div class="seg" role="group" aria-label="Criteri de repartiment">
-          <button type="button" data-pes="hores" aria-pressed="true">Hores</button>
-          <button type="button" data-pes="items" aria-pressed="false">Banc</button>
-          <button type="button" data-pes="igual" aria-pressed="false">Igual</button>
-        </div>
+      <div class="tria">
+        <button class="btn petit" id="altra"
+          title="Refà la prova amb unes altres preguntes (Ctrl+G). Es conserven les marcades amb ★ i les pròpies.">↻ Altres preguntes</button>
+        <span class="codi" title="Mateix codi, mateixa prova">Codi <b id="llavor"></b></span>
       </div>
-
-      <div class="fila fila-ample">
-        <label class="camp">
-          <span>Ordre</span>
-          <select id="ordre">
-            <option value="curriculum">Del currículum</option>
-            <option value="dificultat">De fàcil a difícil</option>
-            <option value="barrejat">Barrejat</option>
-          </select>
-        </label>
-        <label class="camp">
-          <span>Punts en total</span>
-          <input type="number" id="punts" min="1" max="100" step="0.5" value="10">
-        </label>
-      </div>
-      <div class="camp">
-        <span>Els punts es reparteixen</span>
-        <div class="seg" role="group" aria-label="Criteri de puntuació">
-          <button type="button" data-criteri="igual" aria-pressed="false">Igual</button>
-          <button type="button" data-criteri="nivell" aria-pressed="true">Per nivell</button>
-          <button type="button" data-criteri="hores" aria-pressed="false">Per hores</button>
-        </div>
-      </div>
-      <p class="codi">Codi de la tria: <b id="llavor"></b></p>
     </div>
 
     <div class="grup">
-      <h3>Preguntes</h3>
+      <h3>Preguntes <small>· clica'n una per canviar-la</small></h3>
       <div class="llista" id="llista"></div>
       <button class="btn petit" id="obre-propia">+ Pregunta pròpia</button>
       <div id="propia" hidden>
@@ -162,83 +130,124 @@
       </div>
     </div>
 
-    <div class="grup">
-      <h3>Full</h3>
-      <label class="camp">
-        <span>Espai per respondre: <b id="espai-valor">38 mm</b></span>
-        <input type="range" id="espai" min="0" max="90" step="2" value="38">
-      </label>
-      <label class="camp">
-        <span>Fons de l'espai</span>
-        <select id="paper">
-          <option value="quadricula">Quadrícula de 5 mm</option>
-          <option value="ratlles">Ratlles</option>
-          <option value="blanc">En blanc</option>
-        </select>
-      </label>
-      <label class="check"><input type="checkbox" id="figures" checked> Inclou les figures</label>
-      <label class="check"><input type="checkbox" id="encapcalaments" checked> Inclou els enunciats generals</label>
-      <label class="check"><input type="checkbox" id="mostraPunts"> Mostra els punts de cada pregunta</label>
-      <label class="check"><input type="checkbox" id="agrupa" checked> Agrupa els apartats d'un mateix exercici (6a, 6b)</label>
-    </div>
-
-    <div class="grup">
-      <h3>Pla de repàs</h3>
-      <div class="camp">
-        <span>Exercicis de pràctica per contingut</span>
-        <div class="seg" role="group" aria-label="Exercicis de pràctica per contingut">
-          <button type="button" data-practica="0" aria-pressed="false">Cap</button>
-          <button type="button" data-practica="1" aria-pressed="false">1</button>
-          <button type="button" data-practica="2" aria-pressed="true">2</button>
-          <button type="button" data-practica="3" aria-pressed="false">3</button>
+    <details class="sec" data-sec="punts">
+      <summary>Punts, temps i ordre <span class="resum" id="resum-punts"></span></summary>
+      <div class="sec-cos">
+        <div class="fila">
+          <label class="camp">
+            <span>Punts en total</span>
+            <input type="number" id="punts" min="1" max="100" step="0.5" value="10">
+          </label>
+          <label class="camp">
+            <span>Durada (minuts)</span>
+            <input type="number" id="durada" min="5" max="600" step="5" value="55">
+          </label>
+        </div>
+        <div class="camp">
+          <span>Els punts es reparteixen</span>
+          <div class="seg" role="group" aria-label="Criteri de puntuació">
+            <button type="button" data-criteri="igual" aria-pressed="false">Igual</button>
+            <button type="button" data-criteri="nivell" aria-pressed="true">Per nivell</button>
+            <button type="button" data-criteri="hores" aria-pressed="false">Per hores</button>
+          </div>
+        </div>
+        <label class="camp">
+          <span>Ordre de les preguntes</span>
+          <select id="ordre">
+            <option value="curriculum">Del currículum</option>
+            <option value="dificultat">De fàcil a difícil</option>
+            <option value="barrejat">Barrejat</option>
+          </select>
+        </label>
+        <div class="camp">
+          <span>Reparteix les preguntes segons</span>
+          <div class="seg" role="group" aria-label="Criteri de repartiment">
+            <button type="button" data-pes="hores" aria-pressed="true">Hores</button>
+            <button type="button" data-pes="items" aria-pressed="false">Banc</button>
+            <button type="button" data-pes="igual" aria-pressed="false">Igual</button>
+          </div>
         </div>
       </div>
-      <label class="check"><input type="checkbox" id="solucionsPla" checked> Amb les solucions al final</label>
-      <p class="ajuda">Del mateix contingut i del mateix nivell que la prova,
-        però mai una pregunta de la prova ni, si n'hi ha d'altres, un apartat
-        del mateix exercici.</p>
-    </div>
+    </details>
 
-    <div class="grup">
-      <h3>Capçalera</h3>
-      <label class="camp"><span>Centre o departament</span><input type="text" id="centre"></label>
-      <label class="camp"><span>Títol</span><input type="text" id="titol"></label>
-      <div class="fila">
-        <label class="camp"><span>Alumne/a</span><input type="text" id="alumne" placeholder="(en blanc)"></label>
-        <label class="camp"><span>Grup</span><input type="text" id="grup" placeholder="3r A"></label>
+    <details class="sec" data-sec="full">
+      <summary>Format del full <span class="resum" id="resum-full"></span></summary>
+      <div class="sec-cos">
+        <label class="camp">
+          <span>Espai per respondre: <b id="espai-valor">38 mm</b></span>
+          <input type="range" id="espai" min="0" max="90" step="2" value="38">
+        </label>
+        <label class="camp">
+          <span>Fons de l'espai</span>
+          <select id="paper">
+            <option value="quadricula">Quadrícula de 5 mm</option>
+            <option value="ratlles">Ratlles</option>
+            <option value="blanc">En blanc</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="figures" checked> Figures</label>
+        <label class="check"><input type="checkbox" id="encapcalaments" checked> Enunciats generals</label>
+        <label class="check"><input type="checkbox" id="mostraPunts"> Punts de cada pregunta</label>
+        <label class="check"><input type="checkbox" id="agrupa" checked> Agrupa apartats (6a, 6b)</label>
       </div>
-      <div class="fila">
-        <label class="camp"><span>Data</span><input type="date" id="data"></label>
-        <label class="camp"><span>Model</span><input type="text" id="model" placeholder="A"></label>
-      </div>
-      <label class="camp">
-        <span>Instruccions</span>
-        <textarea id="instruccions" rows="4"></textarea>
-      </label>
-      <label class="camp">
-        <span>Adreça pública de l'eina</span>
-        <input type="text" id="baseUrl" placeholder="https://exemple.cat/recuperacio/">
-      </label>
-      <p class="ajuda">Només s'utilitza per al botó <b>Desa la prova</b>. Si l'eina
-        està publicada en un web, posa-hi l'adreça: així el fitxer desat funciona
-        des de qualsevol ordinador. En blanc, l'enllaç apunta a la còpia
-        d'aquest ordinador.</p>
-    </div>
+    </details>
 
-    <div class="grup">
-      <h3>Els meus valors inicials</h3>
-      <p class="ajuda">Deixa-ho tot com t'agrada —continguts, nivell, format del
-        full, capçalera— i desa-ho: cada vegada que obris l'eina en aquest
-        navegador la trobaràs així. No es desen el nom de l'alumne, el grup, la
-        data ni el model.</p>
-      <p class="ajuda" id="inicials-nota" hidden><b>Estàs fent servir els teus
-        valors inicials.</b></p>
-      <div class="fila">
-        <button class="btn petit" id="desa-inicials">Desa'ls</button>
-        <button class="btn petit" id="oblida-inicials">Oblida'ls</button>
+    <details class="sec" data-sec="capcalera">
+      <summary>Capçalera <span class="resum" id="resum-capcalera"></span></summary>
+      <div class="sec-cos">
+        <div class="fila">
+          <label class="camp"><span>Alumne/a</span><input type="text" id="alumne" placeholder="(en blanc)"></label>
+          <label class="camp"><span>Grup</span><input type="text" id="grup" placeholder="3r A"></label>
+        </div>
+        <div class="fila">
+          <label class="camp"><span>Data</span><input type="date" id="data"></label>
+          <label class="camp"><span>Model</span><input type="text" id="model" placeholder="A"></label>
+        </div>
+        <label class="camp"><span>Centre o departament</span><input type="text" id="centre"></label>
+        <label class="camp"><span>Títol</span><input type="text" id="titol"></label>
+        <label class="camp">
+          <span>Instruccions</span>
+          <textarea id="instruccions" rows="4"></textarea>
+        </label>
       </div>
-      <p class="ajuda" id="inicials-avis" role="status" aria-live="polite"></p>
-    </div>
+    </details>
+
+    <details class="sec" data-sec="pla">
+      <summary>Pla de repàs <span class="resum" id="resum-pla"></span></summary>
+      <div class="sec-cos">
+        <div class="camp">
+          <span>Exercicis de pràctica per contingut</span>
+          <div class="seg" role="group" aria-label="Exercicis de pràctica per contingut">
+            <button type="button" data-practica="0" aria-pressed="false">Cap</button>
+            <button type="button" data-practica="1" aria-pressed="false">1</button>
+            <button type="button" data-practica="2" aria-pressed="true">2</button>
+            <button type="button" data-practica="3" aria-pressed="false">3</button>
+          </div>
+        </div>
+        <label class="check"><input type="checkbox" id="solucionsPla" checked> Amb les solucions al final</label>
+        <p class="ajuda">Mai no hi surt cap pregunta de la prova.</p>
+      </div>
+    </details>
+
+    <details class="sec" data-sec="prefs">
+      <summary>Preferències <span class="resum" id="resum-prefs"></span></summary>
+      <div class="sec-cos">
+        <p class="ajuda">Deixa l'eina com t'agrada i desa-ho: cada vegada que
+          l'obris en aquest navegador la trobaràs així (menys l'alumne, el
+          grup, la data i el model).</p>
+        <div class="fila">
+          <button class="btn petit" id="desa-inicials">Desa com a valors inicials</button>
+          <button class="btn petit" id="oblida-inicials">Oblida'ls</button>
+        </div>
+        <p class="ajuda" id="inicials-avis" role="status" aria-live="polite"></p>
+        <label class="camp">
+          <span>Adreça pública de l'eina</span>
+          <input type="text" id="baseUrl" placeholder="https://exemple.cat/recuperacio/">
+        </label>
+        <p class="ajuda">Per al botó <b>Desa la prova</b>: amb l'adreça
+          pública, el fitxer desat funciona des de qualsevol ordinador.</p>
+      </div>
+    </details>
   </aside>
 </div>
 

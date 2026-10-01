@@ -94,6 +94,7 @@
 
   /* ---------------------------------------------------------------- estat */
   var CAPCALERA_DESADA = 'recuperacio-eso:inicials';
+  var valorsInicials = false;    // n'hi ha de desats en aquest navegador?
 
   /* La data d'avui en hora local. `toISOString()` treballa en UTC i
      escrivia el dia d'ahir per a qualsevol prova preparada de matinada. */
@@ -171,6 +172,8 @@
       SPEC_INICIALS.forEach(function (k) { spec[k] = estat.spec[k]; });
       localStorage.setItem(CAPCALERA_DESADA, JSON.stringify(
         { cfg: cfg, spec: spec, sabers: estat.sabers }));
+      valorsInicials = true;
+      pintaResums();
       avisaInicials('Desat. En obrir l\'eina en aquest navegador, la trobaràs així.');
     } catch (e) {
       avisaInicials('No s\'han pogut desar: el navegador no ho permet ' +
@@ -180,6 +183,8 @@
 
   function oblidaInicials() {
     try { localStorage.removeItem(CAPCALERA_DESADA); } catch (e) { /* res */ }
+    valorsInicials = false;
+    pintaResums();
     avisaInicials('Oblidats. La pròxima vegada l\'eina s\'obrirà de sèrie.');
   }
 
@@ -630,6 +635,7 @@
     if (desti === i) return;
     var q = estat.preguntes.splice(i, 1)[0];
     estat.preguntes.splice(desti, 0, q);
+    if (oberta === i) oberta = desti;
     acabaCanvi();
   }
 
@@ -639,6 +645,7 @@
     var t = estat.preguntes[i];
     estat.preguntes[i] = estat.preguntes[j];
     estat.preguntes[j] = t;
+    if (oberta === i) oberta = j;
     estat.editat = true;
     reparteixPunts();
     pinta();
@@ -650,6 +657,7 @@
     delete estat.fixades[q.itemId];
     delete estat.propies[q.itemId];
     estat.preguntes.splice(i, 1);
+    oberta = -1;
     acabaCanvi();
   }
 
@@ -816,11 +824,14 @@
           sentitActual = s.sentit;
           var germans = mostrats.filter(function (x) { return x.sentit === s.sentit; });
           var totsSentit = germans.every(function (x) { return estat.sabers.indexOf(x.id) >= 0; });
+          // Un enllaç discret i no un botó amb vora: n'hi ha un per sentit
+          // i, com a botons, la columna semblava un tauler de comandament.
           cos += '<div class="sentit-tit">' +
                    '<span>' + esc(s.sentitTitol) + '</span>' +
-                   '<button class="mini" data-sentit="' + esc(curs.id + '|' + s.sentit) + '" ' +
-                     'aria-pressed="' + totsSentit + '">' +
-                     (totsSentit ? 'Treu' : 'Tot') + '</button>' +
+                   '<button class="enllac" data-sentit="' + esc(curs.id + '|' + s.sentit) + '" ' +
+                     'aria-pressed="' + totsSentit + '" title="' +
+                     (totsSentit ? 'Desmarca' : 'Marca') + ' tot el sentit">' +
+                     (totsSentit ? 'cap' : 'tots') + '</button>' +
                  '</div>';
         }
         var marcat = estat.sabers.indexOf(s.id) >= 0;
@@ -835,20 +846,24 @@
                   Math.round(3 + (s.hores / maxHores) * 34) + 'px"></span>' +
                 '<span>' + s.hores + ' h</span><span>·</span>' +
                 '<span>' + s.items.length + ' al banc</span>' +
-                (quantes ? '<span class="a-prova">· ' + quantes +
-                  (quantes === 1 ? ' triada' : ' triades') + '</span>' : '') +
               '</div>' +
             '</div>' +
           '</label>' +
-          '<span class="quants">' +
-            '<button class="menys" data-menys="' + esc(s.id) + '"' +
-              (quantes ? '' : ' disabled') +
-              ' title="Treu una pregunta d\'aquest contingut"' +
-              ' aria-label="Treu una pregunta de ' + esc(s.titol) + '">\u2212</button>' +
-            '<button class="mes" data-mes="' + esc(s.id) + '" ' +
-              'title="Afegeix una pregunta d\'aquest contingut" ' +
-              'aria-label="Afegeix una pregunta de ' + esc(s.titol) + '">+</button>' +
-          '</span>' +
+          /* El comptador «− 2 +» només als continguts marcats. Als altres
+             no diu res: marcar la casella ja hi posa una pregunta, i cent
+             botons «− +» desactivats eren soroll a tota la columna. */
+          (marcat
+            ? '<span class="quants" title="Preguntes d\'aquest contingut a la prova">' +
+                '<button class="menys" data-menys="' + esc(s.id) + '"' +
+                  (quantes ? '' : ' disabled') +
+                  ' title="Una pregunta menys d\'aquest contingut"' +
+                  ' aria-label="Treu una pregunta de ' + esc(s.titol) + '">\u2212</button>' +
+                '<span class="quantes">' + quantes + '</span>' +
+                '<button class="mes" data-mes="' + esc(s.id) + '" ' +
+                  'title="Una pregunta més d\'aquest contingut" ' +
+                  'aria-label="Afegeix una pregunta de ' + esc(s.titol) + '">+</button>' +
+              '</span>'
+            : '') +
         '</div>';
       });
 
@@ -873,8 +888,8 @@
         (plegat ? '' :
           '<div class="sentit">' + cos + '</div>' +
           (buits && !filtre
-            ? '<p class="curs-peu">' + buits + ' continguts del currículum no tenen ' +
-              'preguntes al banc i no es llisten. Fes-los amb «+ Pregunta pròpia».</p>'
+            ? '<p class="curs-peu">' + buits + ' continguts més, sense preguntes al banc ' +
+              '(per a aquests, «+ Pregunta pròpia»).</p>'
             : '')) +
       '</section>';
     });
@@ -915,80 +930,61 @@
    */
   function selectorNivell(i, q, it, saber) {
     var disp = nivellsDisponibles(saber.id);
-    var opcions = '<option value="">nivell ' + it.nivell + ' (general)</option>';
+    var opcions = '<option value="">General (ara ' + it.nivell + ')</option>';
     for (var n = 1; n <= 3; n++) {
       opcions += '<option value="' + n + '"' +
         (q.nivell === n ? ' selected' : '') +
         (disp[n - 1] ? '' : ' disabled') +
-        '>nivell ' + n + (disp[n - 1] ? '' : ' \u2014 no en té') + '</option>';
+        '>' + n + (disp[n - 1] ? '' : ' — no en té') + '</option>';
     }
     return '<select class="q-nivell' + (q.nivell ? ' fixat' : '') +
       '" data-nivell="' + i + '" aria-label="Nivell de la pregunta ' + (i + 1) +
       '">' + opcions + '</select>';
   }
 
+  /* Quina pregunta del panell està oberta. Tancades, les files només diuen
+     què és cada pregunta i quant val; obrir-ne una mostra tot el que s'hi
+     pot fer. Abans cada fila portava sempre el selector de nivell, el camp
+     de punts i set botons, i amb vint preguntes el panell feia cinc
+     pantalles. */
+  var oberta = -1;
+
+  function obre(i, desdeFull) {
+    oberta = oberta === i && !desdeFull ? -1 : i;
+    pintaLlista();
+    var fila = $('#llista [data-fila="' + oberta + '"]');
+    if (fila) fila.scrollIntoView({ block: 'nearest' });
+    // I al full, la mateixa pregunta, perquè es vegi què s'està tocant.
+    if (!desdeFull && oberta >= 0 && estat.vista === 'prova') {
+      var b = $('#full .pregunta-eines [data-treu="' + oberta + '"]');
+      var pr = b && b.closest('.apartat, .pregunta');
+      if (pr) pr.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+    marcaAlFull();
+  }
+
+  /** Ressalta al full la pregunta oberta al panell. */
+  function marcaAlFull() {
+    document.querySelectorAll('#full .activa').forEach(function (x) {
+      x.classList.remove('activa');
+    });
+    if (oberta < 0) return;
+    var b = $('#full .pregunta-eines [data-treu="' + oberta + '"]');
+    var pr = b && b.closest('.apartat, .pregunta');
+    if (pr) pr.classList.add('activa');
+  }
+
   function pintaLlista() {
     var h = '';
     var etiq = window.Composa.agrupa(estat.preguntes, banc, estat.cfg.agrupa).etiquetes;
+    var n = window.Full.num;
+    if (oberta >= estat.preguntes.length) oberta = -1;
     pintaTemps();
-    if (!estat.preguntes.length) {
-      h = '<p class="buida">' + (estat.sabers.length
-        ? 'Cap pregunta. Puja el nombre de preguntes o revisa els avisos.'
-        : 'Marca continguts a l\'esquerra i la prova es muntarà sola.') + '</p>';
-    } else {
-      estat.preguntes.forEach(function (q, i) {
-        var it = banc[q.itemId];
-        var saber = sabersPerId[q.saberId];
-        if (!it) return;
-        h += '<div class="q' + (estat.fixades[q.itemId] ? ' marcada' : '') + '">' +
-          /* La posició és un camp: escriure-hi 3 la porta a la tercera
-             d'una passa. Amb només les fletxes, passar de la catorzena a
-             la tercera eren onze clics. */
-          '<input class="q-num" type="number" min="1" max="' + estat.preguntes.length +
-            '" value="' + (i + 1) + '" data-posicio="' + i +
-            '" aria-label="Posició de la pregunta ' + (i + 1) + '">' +
-          '<span class="q-cos">' +
-            '<span class="q-tit">' + esc(resumeix(it.cap) || resumeix(it.enunciat) || it.id) + '</span>' +
-            '<span class="q-saber">' +
-              // Si és un apartat, com surt al full: «6b».
-              (etiq[i] !== String(i + 1)
-                ? '<span class="q-etiqueta" title="Al full surt com a ' + etiq[i] + '">' +
-                  etiq[i] + '</span> ' : '') +
-              esc(saber ? saber.titol : it.blocTitol) + '</span>' +
-            /* El selector va en una línia pròpia. Enganxat al nom del
-               contingut, dins d'una línia amb `nowrap` i punts suspensius,
-               a l'amplada d'un portàtil quedava retallat: es veia
-               «Divisibilitat · …» i el control no es trobava. */
-            (saber ? selectorNivell(i, q, it, saber) : '') +
-          '</span>' +
-          '<span class="q-punts">' +
-            '<input type="number" min="0" max="20" step="0.25" ' +
-              'value="' + q.punts + '" data-punts="' + i + '" ' +
-              'class="' + (q.fix != null ? 'fixat' : '') + '" ' +
-              'aria-label="Punts de la pregunta ' + (i + 1) + '">' +
-            '<span>p</span>' +
-          '</span>' +
-          '<span class="q-eines">' +
-            '<button data-fixa="' + i + '" title="Conserva-la en tornar a generar" ' +
-              'aria-label="Fixa la pregunta ' + (i + 1) + '">' +
-              (estat.fixades[q.itemId] ? '★' : '☆') + '</button>' +
-            '<button data-anterior="' + i + '" title="L\'anterior d\'aquest contingut"' +
-              (saber ? '' : ' disabled') + '>\u27f2</button>' +
-            '<button data-seguent="' + i + '" title="La següent d\'aquest contingut"' +
-              (saber ? '' : ' disabled') + '>\u27f3</button>' +
-            (it.gen
-              ? '<button data-nombres="' + i + '" title="Uns altres nombres, ' +
-                'la mateixa pregunta">\u21bb</button>' : '') +
-            '<button data-amunt="' + i + '" title="Amunt"' + (i ? '' : ' disabled') + '>↑</button>' +
-            '<button data-avall="' + i + '" title="Avall"' +
-              (i === estat.preguntes.length - 1 ? ' disabled' : '') + '>↓</button>' +
-            '<button data-treu="' + i + '" title="Treu-la">✕</button>' +
-          '</span>' +
-        '</div>';
-      });
-    }
+
+    /* Els avisos, a DALT: a sota d'una llista de vint preguntes no els
+       veia ningú. */
     if (estat.desquadrat) {
-      var d = estat.desquadrat, n = window.Full.num;
+      var d = estat.desquadrat;
       h += '<p class="avis">La prova suma ' + n(d.suma) + ' punts i no ' +
         n(estat.spec.punts) + ': ' +
         (d.fixats
@@ -999,7 +995,88 @@
         '</p>';
     }
     estat.avisos.forEach(function (a) { h += '<p class="avis">' + esc(a) + '</p>'; });
+
+    if (!estat.preguntes.length) {
+      h += '<p class="buida">' + (estat.sabers.length
+        ? 'Cap pregunta. Puja el nombre de preguntes o revisa els avisos.'
+        : 'Marca continguts a l\'esquerra i la prova es muntarà sola.') + '</p>';
+    }
+    estat.preguntes.forEach(function (q, i) {
+      var it = banc[q.itemId];
+      var saber = sabersPerId[q.saberId];
+      if (!it) return;
+      var obert = i === oberta, fixada = !!estat.fixades[q.itemId];
+      h += '<div class="q' + (fixada ? ' marcada' : '') + (obert ? ' oberta' : '') +
+          '" data-fila="' + i + '">' +
+        /* La posició és un camp: escriure-hi 3 la porta a la tercera
+           d'una passa. Amb només les fletxes, passar de la catorzena a
+           la tercera eren onze clics. */
+        '<input class="q-num" type="number" min="1" max="' + estat.preguntes.length +
+          '" value="' + (i + 1) + '" data-posicio="' + i +
+          '" aria-label="Posició de la pregunta ' + (i + 1) + '">' +
+        '<button type="button" class="q-cos" data-obre="' + i + '" aria-expanded="' + obert + '">' +
+          '<span class="q-tit">' + (fixada ? '<span class="estrella" title="Fixada">★</span> ' : '') +
+            esc(resumeix(it.cap) || resumeix(it.enunciat) || it.id) + '</span>' +
+          '<span class="q-saber">' +
+            // Si és un apartat, com surt al full: «6b».
+            (etiq[i] !== String(i + 1)
+              ? '<span class="q-etiqueta" title="Al full surt com a ' + etiq[i] + '">' +
+                etiq[i] + '</span> ' : '') +
+            esc(saber ? saber.titol : it.blocTitol) +
+            (q.nivell ? ' <span class="q-fix" title="Nivell fixat">niv. ' + q.nivell + '</span>' : '') +
+          '</span>' +
+        '</button>' +
+        '<span class="q-p' + (q.fix != null ? ' fixat' : '') + '">' + n(q.punts) + ' p</span>';
+
+      if (obert) {
+        h += '<div class="q-detall">' +
+          '<div class="fila">' +
+            (saber
+              ? '<label class="camp"><span>Nivell</span>' + selectorNivell(i, q, it, saber) + '</label>'
+              : '') +
+            '<label class="camp q-punts"><span>Punts</span>' +
+              '<input type="number" min="0" max="20" step="0.25" ' +
+                'value="' + q.punts + '" data-punts="' + i + '" ' +
+                'class="' + (q.fix != null ? 'fixat' : '') + '" ' +
+                'aria-label="Punts de la pregunta ' + (i + 1) + '">' +
+            '</label>' +
+          '</div>' +
+          '<div class="q-eines">' +
+            '<button data-anterior="' + i + '" title="L\'anterior d\'aquest contingut"' +
+              (saber ? '' : ' disabled') + '>⟲</button>' +
+            '<button data-seguent="' + i + '" title="Una altra d\'aquest contingut"' +
+              (saber ? '' : ' disabled') + '>⟳ Una altra</button>' +
+            (it.gen
+              ? '<button data-nombres="' + i + '" title="Uns altres nombres, ' +
+                'la mateixa pregunta">↻ Nombres</button>' : '') +
+            '<button data-amunt="' + i + '" title="Amunt"' + (i ? '' : ' disabled') + '>↑</button>' +
+            '<button data-avall="' + i + '" title="Avall"' +
+              (i === estat.preguntes.length - 1 ? ' disabled' : '') + '>↓</button>' +
+          '</div>' +
+          '<div class="q-eines">' +
+            '<button data-fixa="' + i + '" aria-pressed="' + fixada + '" ' +
+              'title="Que «Altres preguntes» no la canviï">' +
+              (fixada ? '★ Fixada' : '☆ Fixa-la') + '</button>' +
+            '<button data-treu="' + i + '" class="perill" title="Treu-la de la prova">✕ Treu-la</button>' +
+          '</div>' +
+        '</div>';
+      }
+      h += '</div>';
+    });
+
+    // Es refà tot l'HTML: sense tornar el focus on era, la llista no es
+    // podria fer servir amb el teclat.
+    var focus = document.activeElement, tornar = null;
+    if (focus && $('#llista').contains(focus)) {
+      ['obre', 'posicio', 'punts', 'nivell', 'anterior', 'seguent', 'nombres',
+       'amunt', 'avall', 'fixa'].some(function (k) {
+        if (focus.dataset[k] == null) return false;
+        tornar = '#llista [data-' + k + '="' + focus.dataset[k] + '"]';
+        return true;
+      });
+    }
     $('#llista').innerHTML = h;
+    if (tornar && $(tornar)) $(tornar).focus();
   }
 
   /* ------------------------------------------------ exercicis de pràctica */
@@ -1053,6 +1130,7 @@
     var el = $('#temps');
     el.textContent = estat.preguntes.length ? '\u2248 ' + t + ' min' : '\u2014';
     el.className = 'temps' + (!estat.preguntes.length ? '' : t > d ? ' fora' : ' dins');
+    $('#temps-de').textContent = estat.preguntes.length ? 'de ' + d : '';
     el.title = estat.preguntes.length
       ? (t > d ? 'Probablement massa llarga per a ' + d + ' minuts. ' : '') +
         'Estimació: ' + window.Composa.MINUTS_NIVELL[1] + ' min per pregunta de nivell 1, ' +
@@ -1088,6 +1166,7 @@
     }
     comptaPagines();
     aplicaZoom();
+    marcaAlFull();
   }
 
   /* Quantes pàgines A4 sortiran. És la decisió real del professor i abans
@@ -1173,9 +1252,9 @@
     // L'escala no redueix la caixa del full: sense això, sota un full al
     // 70 % hi quedaria un 30 % de la seva alçada en blanc.
     full.style.setProperty('--baix', ((s - 1) * full.offsetHeight) + 'px');
-    $('#zoom').value = s;
-    $('#zoom-valor').textContent = Math.round(s * 100) + ' %';
-    $('#zoom-ajusta').setAttribute('aria-pressed', zoom === 'auto');
+    // Un sol selector: «Ajustat» diu entre parèntesis a quina mida queda.
+    $('#zoom option[value=auto]').textContent = 'Ajustat (' + Math.round(s * 100) + ' %)';
+    $('#zoom').value = zoom === 'auto' ? 'auto' : String(zoom);
   }
 
   function pinta() {
@@ -1192,6 +1271,7 @@
 
   /* ------------------------------------------------- estat a l'adreça (hash) */
   function desaAlHash() {
+    pintaResums();
     try {
       var d = {
         s: estat.sabers, n: estat.spec.nombre, p: estat.spec.perfil,
@@ -1471,6 +1551,25 @@
     $('#solucionsPla').checked = estat.cfg.solucionsPla;
     $('#agrupa').checked = estat.cfg.agrupa;
     $('#durada').value = estat.spec.durada;
+    pintaResums();
+  }
+
+  /* El títol de cada secció plegada del panell diu què hi ha triat: així no
+     cal obrir-les per saber com sortirà la prova. */
+  var NOM_PAPER = { quadricula: 'quadrícula', ratlles: 'ratlles', blanc: 'en blanc' };
+  var NOM_ORDRE = { curriculum: 'currículum', dificultat: 'fàcil → difícil', barrejat: 'barrejat' };
+  function pintaResums() {
+    var c = estat.cfg, sp = estat.spec, n = window.Full.num;
+    $('#resum-punts').textContent =
+      n(sp.punts) + ' p · ' + sp.durada + ' min · ' + NOM_ORDRE[sp.ordre];
+    $('#resum-full').textContent = c.espai + ' mm · ' + NOM_PAPER[c.paper];
+    $('#resum-capcalera').textContent =
+      [c.alumne, c.grup, c.model && 'model ' + c.model].filter(Boolean).join(' · ');
+    $('#resum-pla').textContent = c.practica
+      ? c.practica + ' exercici' + (c.practica === 1 ? '' : 's') +
+        (c.solucionsPla ? ' · amb solucions' : '')
+      : 'sense exercicis';
+    $('#resum-prefs').textContent = valorsInicials ? 'valors inicials desats' : '';
   }
 
   function lliga() {
@@ -1559,9 +1658,18 @@
         return;
       }
       var b = ev.target.closest('button');
-      if (!b || b.disabled) return;
+      if (!b) {
+        // Clicar una pregunta del full l'obre al panell.
+        var pr = this.id === 'full' && estat.vista === 'prova' &&
+                 ev.target.closest('.apartat, .pregunta:not(.pregunta-grup)');
+        var t = pr && pr.querySelector(':scope > .pregunta-eines [data-treu]');
+        if (t) obre(+t.dataset.treu, true);
+        return;
+      }
+      if (b.disabled) return;
       var d = b.dataset;
-      if (d.nombres != null) altresNombres(+d.nombres);
+      if (d.obre != null) obre(+d.obre);
+      else if (d.nombres != null) altresNombres(+d.nombres);
       else if (d.seguent != null) passa(+d.seguent, 1);
       else if (d.anterior != null) passa(+d.anterior, -1);
       else if (d.amunt != null) mou(+d.amunt, -1);
@@ -1680,12 +1788,8 @@
       b.addEventListener('click', function () { mostraVista(b.dataset.doc); });
     });
 
-    $('#zoom').addEventListener('input', function () {
-      zoom = +this.value;
-      aplicaZoom();
-    });
-    $('#zoom-ajusta').addEventListener('click', function () {
-      zoom = 'auto';
+    $('#zoom').addEventListener('change', function () {
+      zoom = this.value === 'auto' ? 'auto' : +this.value;
       aplicaZoom();
     });
 
@@ -1736,12 +1840,32 @@
     window.addEventListener('resize', function () { comptaPagines(); aplicaZoom(); });
   }
 
+  /* Les seccions plegades del panell. Quines tens obertes és una preferència
+     teva, no de la prova: va a la memòria del navegador, com els cursos
+     plegats de l'esquerra. */
+  var OBERTES = 'recuperacio-eso:seccions';
+  function obrePlegables() {
+    var obertes = [];
+    try { obertes = JSON.parse(localStorage.getItem(OBERTES) || '[]'); } catch (e) { /* res */ }
+    document.querySelectorAll('details[data-sec]').forEach(function (det) {
+      det.open = obertes.indexOf(det.dataset.sec) >= 0;
+      det.addEventListener('toggle', function () {
+        var ara = [];
+        document.querySelectorAll('details[data-sec]').forEach(function (x) {
+          if (x.open) ara.push(x.dataset.sec);
+        });
+        try { localStorage.setItem(OBERTES, JSON.stringify(ara)); } catch (e) { /* res */ }
+      });
+    });
+  }
+
   function arrenca() {
     var teInicials = recuperaInicials();
     var delHash = llegeixDelHash();
+    valorsInicials = teInicials;
     sincronitzaControls();
     lliga();
-    if (teInicials && !delHash) $('#inicials-nota').hidden = false;
+    obrePlegables();
     if (delHash && estat.editat) { pinta(); } else { recomposa(); }
   }
 

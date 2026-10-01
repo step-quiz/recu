@@ -27,8 +27,12 @@ Genera tres documents des d'una sola selecció de continguts:
 1. **Marca els continguts** a la columna de l'esquerra. És el *Repartiment de
    continguts ESO 2025-26* del departament, tal com està escrit: curs → sentit →
    saber. Clicant el títol del curs es marquen o desmarquen tots de cop.
-2. **Ajusta la prova** a la dreta: quantes preguntes, quin nivell, com es
-   reparteixen i quants punts val en total.
+2. **Ajusta la prova** a la dreta. A dalt hi ha el que es toca a cada prova:
+   quantes preguntes, quin nivell i la llista de preguntes. A sota, plegat,
+   el que es toca de tant en tant: *Punts, temps i ordre*, *Format del full*,
+   *Capçalera*, *Pla de repàs* i *Preferències*. Cada secció plegada diu al
+   títol què hi tens triat (per exemple «38 mm · quadrícula»), o sigui que
+   no cal obrir-la per saber-ho; el navegador recorda quines tens obertes.
 3. **Revisa el full** al centre. El que hi veus és exactament el que sortirà per
    la impressora; no hi ha una segona maquetació.
 4. **Imprimeix.** Al diàleg del navegador, desmarca *Capçaleres i peus de pàgina*
@@ -44,13 +48,13 @@ un company. (Si hi ha escrit el nom de l'alumne, el fitxer també el porta: ting
 present abans de passar-lo a ningú.)
 
 Si l'eina està publicada en un web, escriu-ne l'adreça al camp **Adreça pública
-de l'eina** (a *Capçalera*): el fitxer desat hi apuntarà i funcionarà des de
+de l'eina** (a *Preferències*): el fitxer desat hi apuntarà i funcionarà des de
 qualsevol ordinador. En blanc, l'enllaç apunta a la còpia d'aquest ordinador
 (`file:///…`), i el mateix fitxer t'avisa que si mous la carpeta deixarà de
 funcionar. L'adreça es desa amb els valors inicials, o sigui que s'escriu un
 cop.
 
-**Els meus valors inicials** desa al navegador com vols trobar l'eina cada
+**Desa com a valors inicials** (a *Preferències*) desa al navegador com vols trobar l'eina cada
 vegada: continguts marcats, nivell, criteri de punts, format del full i
 capçalera. No s'hi desen el nom de l'alumne, el grup, la data, el model ni el
 codi de la tria, perquè aquests han de començar de zero cada cop.
@@ -65,8 +69,10 @@ recuperar l'examen mesos després. Per fer models A i B del mateix examen: prem
 **El zoom del full.** El full fa sempre 210 mm d'ample, també en un portàtil on
 no hi cap: és l'única manera que la pantalla parteixi les línies igual que el
 paper i que el comptador de pàgines encerti. Per defecte s'escala perquè hi
-càpiga sencer d'ample (a 1366 px, un 93 %). Si mous el control, mana el teu
-valor fins que premis **Ajusta**.
+càpiga sencer d'ample (a 1366 px, un 93 %): és l'opció **Ajustat** del
+selector *Zoom*, que diu entre parèntesis a quina mida queda. Si hi tries un
+altre valor (50, 75, 100 o 125 %), mana el teu fins que hi tornis a posar
+*Ajustat*.
 
 Fins ara no era així: a les pantalles de 1280–1440 px el full s'encongia
 (fins a 592 px en lloc de 794), el text es partia en més línies que en paper i
@@ -77,8 +83,8 @@ el que es veia deixava de ser el que s'imprimia.
 quants n'hi ha de marcats. Una cerca desplega el que troba. El navegador recorda
 quins cursos tens plegats.
 
-**Aparença.** Els botons ☀ ☾ ◐ de dalt trien el mode clar, el fosc o el del
-sistema operatiu. El full no canvia mai de color: és paper. La preferència es
+**Aparença.** El botó ◐ de dalt passa pel mode del sistema operatiu, el
+clar (☀) i el fosc (☾); la icona diu el mode d'ara. El full no canvia mai de color: és paper. La preferència es
 desa al navegador, no a la prova.
 
 **Apartats (6a, 6b).** Si dues o més preguntes SEGUIDES són del mateix
@@ -90,10 +96,11 @@ panell de la dreta cada pregunta porta l'etiqueta que té al full quan no
 coincideix amb la posició. Passa amb els apartats del banc de repàs (f5-75a,
 f5-75b…) i amb les variants d'un mateix generador; dos problemes de
 *Comprensió lectora*, que no tenen consigna comuna, no s'agrupen. Per tenir-les
-separades, desmarca *Agrupa els apartats d'un mateix exercici* al grup *Full*.
+separades, desmarca *Agrupa apartats* a la secció *Format del full*.
 
-**Temps estimat.** Al costat de *Durada (minuts)* (per defecte 55, una hora de
-classe) surt quant tardarà l'alumne a fer la prova: en verd si hi cap, en ambre
+**Temps estimat.** A dalt del panell, al costat de «La prova», surt quant
+tardarà l'alumne a fer la prova contra la *Durada (minuts)* que té (per defecte
+55, una hora de classe; es canvia a *Punts, temps i ordre*): en verd si hi cap, en ambre
 si probablement no. Compta 4 minuts per pregunta de nivell 1, 6 de nivell 2 i 9
 de nivell 3 (les pròpies, com a nivell 2). No surt dels passos de la resolució:
 mesurats, els tres nivells en tenen de mitjana gairebé els mateixos (1,8, 2,0 i
@@ -103,7 +110,7 @@ sistemàticament curtes o llargues, els tres valors són a `MINUTS_NIVELL`, a
 `assets/js/composa.js`. Una prova de mínims de 10 preguntes surt a uns 40
 minuts. La durada es desa amb *Els meus valors inicials* i a l'adreça.
 
-**Exercicis de pràctica.** Al grup *Pla de repàs* del panell tries quants
+**Exercicis de pràctica.** A la secció *Pla de repàs* del panell tries quants
 exercicis per contingut (cap, 1, 2 o 3) porta el pla, i si hi van les solucions
 al final. Són del mateix contingut i del mateix nivell que la prova, i la regla
 que importa és que **cap no és una pregunta de la prova**; mentre n'hi hagi
@@ -114,9 +121,9 @@ nombres. Surten del codi de la prova, o sigui que el mateix enllaç dona sempre
 el mateix pla. Cada contingut porta una casella perquè l'alumne el marqui quan
 l'ha repassat.
 
-**El nivell d'una pregunta concreta.** Al panell de la dreta, on cada pregunta
-diu de quin contingut és, hi ha un selector de nivell. Per defecte diu «nivell
-1 (general)»: segueix la barreja del control de dalt. Si hi tries 1, 2 o 3, la
+**El nivell d'una pregunta concreta.** Al panell de la dreta, clicant una
+pregunta, s'obre amb un selector de nivell. Per defecte diu «General (ara 1)»:
+segueix la barreja del control de dalt. Si hi tries 1, 2 o 3, la
 clava a aquell nivell i s'hi queda —les fletxes `⟲ ⟳` només oferiran preguntes
 d'aquell nivell— fins que la tornis a posar a «general».
 
@@ -177,16 +184,22 @@ respondre. Els declara el generador; per als 592 ítems de `repas` els dedueix
 el compilador. Una comprovació de `tests.js` recorre les quatre combinacions
 dels dos interruptors i verifica que cap ítem no es quedi buit amb cap.
 
-**Les icones de cada pregunta** viuen **al marge esquerre del full**, al costat
-de la pregunta a què afecten:
+**Les accions de cada pregunta.** Al panell de la dreta, cada pregunta és
+una fila plegada que només diu què és, de quin contingut i quant val.
+Clicant-la (al panell o al mateix full) s'obre, es ressalta al full i
+mostra tot el que s'hi pot fer: nivell, punts i aquests botons.
 
-| | Què fa | On surt |
+| | Què fa | Al marge del full? |
 |---|---|---|
-| `⟲ ⟳` | la pregunta anterior i la següent d'aquest contingut | totes |
-| `↻` | uns altres nombres, **la mateixa pregunta** | material propi |
-| `☆` | la fixa perquè sobrevisqui a *Altres preguntes* | totes |
-| `↑ ↓` | la mou una posició | totes |
-| `✕` | la treu de la prova | totes |
+| `⟲ ⟳` | la pregunta anterior i la següent d'aquest contingut | `⟳` sí |
+| `↻` | uns altres nombres, **la mateixa pregunta** (material propi) | sí |
+| `☆` | la fixa perquè sobrevisqui a *Altres preguntes* | no |
+| `↑ ↓` | la mou una posició | no |
+| `✕` | la treu de la prova | sí |
+
+Al marge esquerre del full només hi ha les tres que es fan mirant la
+pregunta (`⟳ ↻ ✕`); abans n'hi havia set a cada pregunta i eren més soroll
+que ajuda.
 
 **`⟲` i `⟳` no tiren un dau cada cop.** L'atzar decideix una sola vegada en
 quin ordre sortiran totes les preguntes del contingut, i els dos botons
@@ -218,16 +231,17 @@ l'alçada tampoc —que és el que mesura el comptador de pàgines— però pass
 el ratolí ja compta com a estar sobre la pregunta. I la barra inactiva porta
 `pointer-events:none`: amb l'espai de resposta a 0 la barra fa 74 px i la
 pregunta 21, o sigui que sobresurt, i un element amb `opacity:0` segueix rebent
-clics. `tools/prova.js` comprova els 114 botons amb l'espai més atapeït.
+clics. `tools/prova.js` comprova tots els botons amb l'espai més atapeït.
 
-En pantalla estreta el full es dibuixa a escala reduïda i uns botons de 19 px en
-quedarien 10, o sigui que allà les icones passen al panell d'ajustos. És el
-mateix joc de botons: canvia on són, no què fan.
+En pantalla estreta el full es dibuixa a escala reduïda i uns botons de 17 px en
+quedarien 9, o sigui que allà les icones del marge s'amaguen i les accions es
+fan des del panell d'ajustos, obrint la pregunta.
 
-**El «+» i el «−» de cada contingut** afegeixen o treuen una pregunta d'aquell
-contingut, igual que la casella però d'una en una. És el que cal quan la recuperació s'ha de
+**El «− 2 +» de cada contingut marcat** diu quantes preguntes en té la prova
+i n'afegeix o en treu d'una en una. És el que cal quan la recuperació s'ha de
 construir sobre els criteris concrets que l'alumne no va assolir, i no sobre un
-total global. Al costat hi surt quantes n'hi ha triades.
+total global. Als continguts no marcats no surt: marcar la casella ja hi posa
+una pregunta.
 
 **El nombre de pàgines** surt al costat del botó d'imprimir, amb un «≈»
 que no és decoratiu: es calcula simulant la paginació —cada pregunta és un
