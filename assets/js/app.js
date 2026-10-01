@@ -950,7 +950,7 @@
   var oberta = -1;
 
   function obre(i, desdeFull) {
-    oberta = oberta === i && !desdeFull ? -1 : i;
+    oberta = oberta === i ? -1 : i;
     pintaLlista();
     var fila = $('#llista [data-fila="' + oberta + '"]');
     if (fila) fila.scrollIntoView({ block: 'nearest' });
@@ -1026,7 +1026,10 @@
             (q.nivell ? ' <span class="q-fix" title="Nivell fixat">niv. ' + q.nivell + '</span>' : '') +
           '</span>' +
         '</button>' +
-        '<span class="q-p' + (q.fix != null ? ' fixat' : '') + '">' + n(q.punts) + ' p</span>';
+        (obert
+          ? '<button type="button" class="q-tanca" data-obre="' + i + '" ' +
+              'title="Plega-la (Esc)" aria-label="Plega la pregunta ' + (i + 1) + '">\u25b4</button>'
+          : '<span class="q-p' + (q.fix != null ? ' fixat' : '') + '">' + n(q.punts) + ' p</span>');
 
       if (obert) {
         h += '<div class="q-detall">' +
@@ -1160,6 +1163,9 @@
       try {
         window.renderMathInElement(full, {
           delimiters: [{ left: '$', right: '$', display: false }],
+          // Els textos que s'editen damunt del full: si KaTeX hi entrés,
+          // el que s'escriu deixaria de ser el que es desa.
+          ignoredClasses: ['ed'],
           throwOnError: false
         });
       } catch (e) { /* si KaTeX falla es veu el LaTeX en cru: ja és prou avís */ }
@@ -1287,7 +1293,7 @@
         ce: estat.cfg.centre, ti: estat.cfg.titol, in: estat.cfg.instruccions,
         al: estat.cfg.alumne, gr: estat.cfg.grup, da: estat.cfg.data,
         pr: estat.cfg.practica, ps: estat.cfg.solucionsPla ? 1 : 0,
-        ag: estat.cfg.agrupa ? 1 : 0, du: estat.spec.durada
+        ag: estat.cfg.agrupa ? 1 : 0, du: estat.spec.durada, su: estat.cfg.subtitol
       };
       /* La llista de preguntes es desa SEMPRE, no només quan s'ha editat.
          L'especificació sola no la reprodueix: les preguntes fixades i les
@@ -1356,6 +1362,7 @@
       if (d.ec != null) estat.cfg.encapcalaments = !!d.ec;
       if (text(d.ce, 200)) estat.cfg.centre = d.ce;
       if (text(d.ti, 200)) estat.cfg.titol = d.ti;
+      if (text(d.su, 200)) estat.cfg.subtitol = d.su;
       if (text(d.in, 2000)) estat.cfg.instruccions = d.in;
       if (text(d.al, 200)) estat.cfg.alumne = d.al;
       if (text(d.gr, 60)) estat.cfg.grup = d.gr;
@@ -1488,6 +1495,27 @@
     }, 2000);
   }
 
+  /**
+   * Torna a obrir una prova desada amb «Desa la prova». El fitxer és un
+   * HTML que només porta l'adreça de la prova; d'aquí se'n treu la part
+   * de després del «#», que és la prova sencera, i es carrega en aquesta
+   * mateixa finestra. Així funciona encara que l'adreça desada apunti a
+   * una carpeta que ja no existeix.
+   */
+  function obreFitxer(f) {
+    var r = new FileReader();
+    r.onload = function () {
+      var m = String(r.result).match(/href="[^"#]*#([A-Za-z0-9+\/=%]+)"/);
+      if (!m) {
+        alert('Aquest fitxer no és una prova desada amb «Desa la prova».');
+        return;
+      }
+      location.hash = m[1];
+      location.reload();
+    };
+    r.readAsText(f);
+  }
+
   /** Canvia el document que es veu al centre: prova, clau o pla. */
   function mostraVista(vista) {
     estat.vista = vista;
@@ -1524,14 +1552,8 @@
     $('#espai-valor').textContent = estat.cfg.espai + ' mm';
     $('#paper').value = estat.cfg.paper;
     $('#ordre').value = estat.spec.ordre;
-    $('#centre').value = estat.cfg.centre;
-    $('#titol').value = estat.cfg.titol;
-    $('#alumne').value = estat.cfg.alumne;
-    $('#grup').value = estat.cfg.grup;
-    $('#data').value = estat.cfg.data;
     $('#model').value = estat.cfg.model;
     $('#baseUrl').value = estat.cfg.baseUrl;
-    $('#instruccions').value = estat.cfg.instruccions;
     $('#figures').checked = estat.cfg.figures;
     $('#encapcalaments').checked = estat.cfg.encapcalaments;
     $('#mostraPunts').checked = estat.cfg.mostraPunts;
@@ -1563,8 +1585,6 @@
     $('#resum-punts').textContent =
       n(sp.punts) + ' p · ' + sp.durada + ' min · ' + NOM_ORDRE[sp.ordre];
     $('#resum-full').textContent = c.espai + ' mm · ' + NOM_PAPER[c.paper];
-    $('#resum-capcalera').textContent =
-      [c.alumne, c.grup, c.model && 'model ' + c.model].filter(Boolean).join(' · ');
     $('#resum-pla').textContent = c.practica
       ? c.practica + ' exercici' + (c.practica === 1 ? '' : 's') +
         (c.solucionsPla ? ' · amb solucions' : '')
@@ -1629,6 +1649,54 @@
 
     $('#cerca').addEventListener('input', pintaRail);
 
+    /* ----- la capçalera, editada damunt del full
+       Mentre s'escriu no es repinta el full (el cursor saltaria a l'inici):
+       només es desa l'estat i es torna a comptar pàgines. Es repinta quan
+       el focus surt de la capçalera, que és quan s'arregla el format. */
+    var UNA_LINIA = { centre: 200, titol: 200, subtitol: 200, alumne: 200, grup: 60 };
+    $('#full').addEventListener('input', function (ev) {
+      var el = ev.target.closest && ev.target.closest('[data-camp]');
+      if (el) {
+        var k = el.dataset.camp, v = el.innerText.replace(/\u00a0/g, ' ');
+        estat.cfg[k] = UNA_LINIA[k]
+          ? v.replace(/\s*\n\s*/g, ' ').trim().slice(0, UNA_LINIA[k])
+          : v.replace(/\n{2,}/g, '\n').trim().slice(0, 2000);
+        clearTimeout(lliga.pag);
+        lliga.pag = setTimeout(comptaPagines, 300);
+        desaAlHash();
+        return;
+      }
+      if (ev.target.classList.contains('tria-data')) {
+        if (/^\d{4}-\d{2}-\d{2}$/.test(ev.target.value)) estat.cfg.data = ev.target.value;
+        pintaFull();
+        desaAlHash();
+      }
+    });
+    $('#full').addEventListener('keydown', function (ev) {
+      var el = ev.target.closest && ev.target.closest('[data-camp]');
+      // Retorn acaba un camp d'una línia; a les instruccions, fa línia nova.
+      if (el && ev.key === 'Enter' && UNA_LINIA[el.dataset.camp]) {
+        ev.preventDefault();
+        el.blur();
+      }
+      if (ev.target.dataset && ev.target.dataset.triaData != null &&
+          (ev.key === 'Enter' || ev.key === ' ')) {
+        ev.preventDefault();
+        triaData(ev.target);
+      }
+    });
+    $('#full').addEventListener('focusout', function (ev) {
+      if (!ev.target.closest || !ev.target.closest('[data-camp]')) return;
+      setTimeout(function () {
+        var a = document.activeElement;
+        if (!a || !a.closest || !a.closest('#full [data-camp]')) pintaFull();
+      }, 0);
+    });
+    function triaData(span) {
+      var inp = span.parentNode.querySelector('.tria-data');
+      try { inp.showPicker(); } catch (e) { inp.focus(); inp.click(); }
+    }
+
     $('#llista').addEventListener('change', function (ev) {
       var niv = ev.target.dataset && ev.target.dataset.nivell;
       if (niv != null) { fixaNivell(+niv, +ev.target.value || 0); return; }
@@ -1657,6 +1725,8 @@
         desaAlHash();
         return;
       }
+      if (ev.target.closest('[data-tria-data]')) { triaData(ev.target.closest('[data-tria-data]')); return; }
+      if (ev.target.closest('[data-camp]')) return;   // s'està editant la capçalera
       var b = ev.target.closest('button');
       if (!b) {
         // Clicar una pregunta del full l'obre al panell.
@@ -1775,7 +1845,7 @@
       });
     });
     // Tot el que surt imprès va a l'adreça; `baseUrl` no, és de l'eina.
-    ['centre', 'titol', 'alumne', 'grup', 'data', 'model', 'instruccions', 'baseUrl']
+    ['model', 'baseUrl']
       .forEach(function (k) {
         $('#' + k).addEventListener('input', function () {
           estat.cfg[k] = this.value;
@@ -1795,6 +1865,21 @@
 
     $('#imprimeix').addEventListener('click', function () { window.print(); });
     $('#desa-fitxer').addEventListener('click', desaFitxer);
+    $('#obre-fitxer').addEventListener('click', function () { $('#fitxer').click(); });
+    $('#fitxer').addEventListener('change', function () {
+      if (this.files[0]) obreFitxer(this.files[0]);
+      this.value = '';
+    });
+    // També s'hi pot deixar anar el fitxer a sobre, arrossegant-lo.
+    document.addEventListener('dragover', function (ev) {
+      if (ev.dataTransfer && [].indexOf.call(ev.dataTransfer.types, 'Files') >= 0) ev.preventDefault();
+    });
+    document.addEventListener('drop', function (ev) {
+      var f = ev.dataTransfer && ev.dataTransfer.files[0];
+      if (!f) return;
+      ev.preventDefault();
+      obreFitxer(f);
+    });
     $('#desa-inicials').addEventListener('click', desaInicials);
     $('#oblida-inicials').addEventListener('click', oblidaInicials);
 
@@ -1829,8 +1914,13 @@
       });
     });
 
-    /* Ctrl/Cmd+G: una altra tria de preguntes. */
+    /* Ctrl/Cmd+G: una altra tria de preguntes. Esc: plega la pregunta. */
     document.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape' && oberta >= 0 &&
+          !(ev.target.closest && ev.target.closest('#full [data-camp]'))) {
+        obre(oberta);
+        return;
+      }
       if ((ev.ctrlKey || ev.metaKey) && ev.key === 'g') {
         ev.preventDefault();
         altraTria();

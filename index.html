@@ -25,7 +25,9 @@
     <button type="button" class="aparenca" id="aparenca" data-aparenca-cicle
       title="Aparença" aria-label="Aparença">◐</button>
     <div class="barra-accions">
-      <button class="btn" id="desa-fitxer" title="Baixa un fitxer que torna a obrir aquesta prova exacta">Desa la prova</button>
+      <button class="btn" id="obre-fitxer" title="Torna a obrir una prova desada amb «Desa la prova» (també pots arrossegar el fitxer damunt de la pàgina)">Obre…</button>
+      <input type="file" id="fitxer" accept=".html,.htm,text/html" hidden>
+      <button class="btn" id="desa-fitxer" title="Baixa un fitxer amb aquesta prova exacta. Per recuperar-la: doble clic al fitxer, o el botó «Obre…»">Desa la prova</button>
       <button class="btn principal" id="imprimeix">Imprimeix la prova<small id="pagines"></small></button>
     </div>
   </header>
@@ -46,7 +48,9 @@
     <div id="rail-cos"></div>
   </aside>
 
-  <!-- ---------------------------------------------------- taula: el full -->
+  <!-- ---------------------------------------------------- taula: el full
+       La capçalera (centre, títol, alumne, grup, data, instruccions)
+       s'edita clicant-la directament damunt del full. -->
   <main class="taula">
     <div class="taula-eines">
       <div class="pestanyes" role="tablist">
@@ -106,7 +110,11 @@
       <div class="tria">
         <button class="btn petit" id="altra"
           title="Refà la prova amb unes altres preguntes (Ctrl+G). Es conserven les marcades amb ★ i les pròpies.">↻ Altres preguntes</button>
+        <span class="tria-dades">
         <span class="codi" title="Mateix codi, mateixa prova">Codi <b id="llavor"></b></span>
+        <label class="model" title="Surt al peu del full. Per fer el model B: «Altres preguntes» i canvia la lletra">Model
+          <input type="text" id="model" placeholder="—" maxlength="40"></label>
+        </span>
       </div>
     </div>
 
@@ -189,26 +197,6 @@
         <label class="check"><input type="checkbox" id="encapcalaments" checked> Enunciats generals</label>
         <label class="check"><input type="checkbox" id="mostraPunts"> Punts de cada pregunta</label>
         <label class="check"><input type="checkbox" id="agrupa" checked> Agrupa apartats (6a, 6b)</label>
-      </div>
-    </details>
-
-    <details class="sec" data-sec="capcalera">
-      <summary>Capçalera <span class="resum" id="resum-capcalera"></span></summary>
-      <div class="sec-cos">
-        <div class="fila">
-          <label class="camp"><span>Alumne/a</span><input type="text" id="alumne" placeholder="(en blanc)"></label>
-          <label class="camp"><span>Grup</span><input type="text" id="grup" placeholder="3r A"></label>
-        </div>
-        <div class="fila">
-          <label class="camp"><span>Data</span><input type="date" id="data"></label>
-          <label class="camp"><span>Model</span><input type="text" id="model" placeholder="A"></label>
-        </div>
-        <label class="camp"><span>Centre o departament</span><input type="text" id="centre"></label>
-        <label class="camp"><span>Títol</span><input type="text" id="titol"></label>
-        <label class="camp">
-          <span>Instruccions</span>
-          <textarea id="instruccions" rows="4"></textarea>
-        </label>
       </div>
     </details>
 
