@@ -19,6 +19,11 @@
   var CLAU = 'recuperacio-eso:aparenca';
   var ATRIBUT = { clar: 'light', fosc: 'dark', sistema: null };
   var mode = 'sistema';
+  /* Un sol botó que va passant pels tres modes: tres botons per a una
+     preferència que es toca un cop a la vida omplien la barra. */
+  var CICLE = ['sistema', 'clar', 'fosc'];
+  var ICONA = { sistema: '\u25d0', clar: '\u2600', fosc: '\u263e' };
+  var NOM = { sistema: 'la del sistema', clar: 'clara', fosc: 'fosca' };
 
   try {
     var m = localStorage.getItem(CLAU);
@@ -32,15 +37,28 @@
     Array.prototype.forEach.call(document.querySelectorAll('[data-aparenca]'), function (b) {
       b.setAttribute('aria-pressed', String(b.dataset.aparenca === mode));
     });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-aparenca-cicle]'), function (b) {
+      b.textContent = ICONA[mode];
+      var seguent = CICLE[(CICLE.indexOf(mode) + 1) % CICLE.length];
+      b.title = 'Aparença: ' + NOM[mode] + '. Clica per passar a ' + NOM[seguent] + '.';
+      b.setAttribute('aria-label', b.title);
+    });
+  }
+
+  function tria(m) {
+    mode = m;
+    try { localStorage.setItem(CLAU, mode); } catch (e) { /* res */ }
+    aplica();
   }
   aplica();
 
   document.addEventListener('DOMContentLoaded', function () {
     Array.prototype.forEach.call(document.querySelectorAll('[data-aparenca]'), function (b) {
+      b.addEventListener('click', function () { tria(b.dataset.aparenca); });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-aparenca-cicle]'), function (b) {
       b.addEventListener('click', function () {
-        mode = b.dataset.aparenca;
-        try { localStorage.setItem(CLAU, mode); } catch (e) { /* res */ }
-        aplica();
+        tria(CICLE[(CICLE.indexOf(mode) + 1) % CICLE.length]);
       });
     });
     aplica();

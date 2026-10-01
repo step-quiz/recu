@@ -39,6 +39,11 @@ function comprova(nom, cond, extra) {
    6b). Cadascuna té les seves eines i el seu espai. */
 const PREGUNTES = '.pregunta:not(.pregunta-grup), .apartat';
 
+/* Les seccions de baix del panell surten plegades; per fer-les servir com
+   un professor, primer s'obren. */
+const obreSeccions = p => p.evaluate(() =>
+  document.querySelectorAll('.panell details').forEach(d => { d.open = true; }));
+
 /** Pàgines d'un PDF: es compten els objectes /Type /Page. */
 const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) || []).length;
 
@@ -52,6 +57,7 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
 
   await pag.goto(URL_EINA);
   await pag.waitForTimeout(800);
+  await obreSeccions(pag);
 
   console.log('Arrencada');
   const inici = await pag.evaluate(() => ({
@@ -111,6 +117,38 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
   await pag.waitForTimeout(300);
   const despres = await pag.evaluate(() => document.querySelectorAll('.q').length);
   comprova('✕ treu una pregunta i només una', despres === abans - 1, `${abans} -> ${despres}`);
+
+  /* El panell mostra les preguntes plegades: clicar-ne una l'obre (nivell,
+     punts i accions), la ressalta al full, i tornar-la a clicar la tanca.
+     Clicar la pregunta al full també l'obre al panell. */
+  await pag.click('[data-obre="2"]');
+  await pag.waitForTimeout(150);
+  const oberta = await pag.evaluate(() => ({
+    detalls: document.querySelectorAll('#llista .q-detall').length,
+    nivell: !!document.querySelector('.q-detall [data-punts="2"]'),
+    activa: document.querySelectorAll('#full .activa').length
+  }));
+  comprova('clicar una pregunta del panell l\'obre i la ressalta al full',
+    oberta.detalls === 1 && oberta.nivell && oberta.activa === 1, JSON.stringify(oberta));
+  await pag.click('[data-obre="2"]');
+  await pag.waitForTimeout(150);
+  comprova('tornar-la a clicar la tanca',
+    await pag.evaluate(() => !document.querySelector('.q-detall') &&
+                             !document.querySelector('#full .activa')));
+  await pag.locator(PREGUNTES).nth(4).locator('.pregunta-cos').first().click();
+  await pag.waitForTimeout(150);
+  comprova('clicar una pregunta del full l\'obre al panell',
+    await pag.evaluate(() => !!document.querySelector('.q.oberta [data-punts="4"]')));
+  await pag.click('[data-obre="4"]');
+
+  /* Aparença: un sol botó que passa per sistema → clar → fosc → sistema. */
+  const temes = [];
+  for (let k = 0; k < 3; k++) {
+    await pag.click('#aparenca');
+    temes.push(await pag.evaluate(() => document.documentElement.dataset.theme || 'sistema'));
+  }
+  comprova('el botó d\'aparença fa clar → fosc → sistema', temes.join(',') === 'light,dark,sistema',
+    temes.join(','));
 
   /* Un <label> passa el clic al primer control que conté: amb els grups de
      botons dins d'un <label>, clicar el text «Nivell de les preguntes»
@@ -318,6 +356,7 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
   pa.on('pageerror', e => errors.push('PAGEERROR (apartats) ' + e.message));
   await pa.goto(URL_EINA + ambApartats);
   await pa.waitForTimeout(600);
+  await obreSeccions(pa);
   const ap = await pa.evaluate(() => ({
     nums: [...document.querySelectorAll('.pregunta-num')].map(x => x.textContent).join(' '),
     lletres: [...document.querySelectorAll('.apartat-lletra')].map(x => x.textContent).join(' '),
@@ -369,7 +408,7 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
   const mida = await petita.evaluate(() => {
     const f = document.querySelector('#full'), t = document.querySelector('.taula');
     return { ample: f.offsetWidth, sobresurt: t.scrollWidth > t.clientWidth,
-             zoom: document.querySelector('#zoom-valor').textContent };
+             zoom: document.querySelector('#zoom option:checked').textContent };
   });
   comprova('a 1280 px el full fa 210 mm (794 px) de maquetació', Math.abs(mida.ample - 794) <= 1,
     mida.ample);

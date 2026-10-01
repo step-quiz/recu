@@ -82,18 +82,18 @@
        full trepitjava l'enunciat. */
     return '<div class="pregunta-eines" contenteditable="false" ' +
            'title="' + esc(saber ? saber.titol : 'Pregunta pròpia') + '">' +
-      b('fixa', (cfg.fixades && cfg.fixades[q.itemId]) ? '\u2605' : '\u2606',
-        'Conserva-la en tornar a generar') +
-      /* ⟲ i ⟳ recorren TOTES les preguntes del contingut en un ordre fix,
-         endarrere i endavant: abans de repetir-ne cap les hauràs vistes
-         totes. ↻ és un altre eix i només surt quan la pregunta ve d'un
-         generador propi: uns altres nombres sense sortir del tipus. */
-      b('anterior', '\u27f2', 'La pregunta anterior d\'aquest contingut', !saber) +
-      b('seguent', '\u27f3', 'La pregunta següent d\'aquest contingut', !saber) +
+      /* Només les tres accions que es fan mirant la pregunta: canviar-la,
+         canviar-ne els nombres i treure-la. Fixar-la, el nivell, els punts
+         i l'ordre són al panell de la dreta, clicant la pregunta: set
+         botons a cada marge eren més soroll que ajuda.
+
+         ⟳ recorre TOTES les preguntes del contingut en un ordre fix: abans
+         de repetir-ne cap les hauràs vistes totes. ↻ és un altre eix i
+         només surt quan la pregunta ve d'un generador propi: uns altres
+         nombres sense sortir del tipus. */
+      b('seguent', '\u27f3', 'Una altra pregunta d\'aquest contingut', !saber) +
       (it && it.gen
         ? b('nombres', '\u21bb', 'Uns altres nombres, la mateixa pregunta') : '') +
-      b('amunt', '\u2191', 'Amunt', i === 0) +
-      b('avall', '\u2193', 'Avall', i === total - 1) +
       b('treu', '\u2715', 'Treu-la de la prova') +
     '</div>';
   }

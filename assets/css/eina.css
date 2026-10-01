@@ -119,14 +119,11 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 /* Aparença: clar, fosc o el del sistema (la mateixa idea que el banc de
    2n de batxillerat). Només icones: la barra ja va plena. */
-.aparenca{display:inline-flex;border:1px solid var(--vora-forta);border-radius:7px;overflow:hidden}
-.aparenca button{
-  border:0;background:var(--card);color:var(--apagat);cursor:pointer;
-  width:2rem;height:1.9rem;font-size:.95rem;line-height:1;padding:0;
+.aparenca{
+  border:0;background:none;color:var(--apagat);cursor:pointer;
+  width:2rem;height:2rem;font-size:1rem;line-height:1;padding:0;border-radius:7px;
 }
-.aparenca button + button{border-left:1px solid var(--vora)}
-.aparenca button:hover{background:var(--hover);color:var(--tinta)}
-.aparenca button[aria-pressed=true]{background:var(--blau-suau);color:var(--blau)}
+.aparenca:hover{background:var(--hover);color:var(--tinta)}
 
 /* ------------------------------------------------------------------ botons */
 .btn{
@@ -153,8 +150,7 @@ button,input,select,textarea{font:inherit;color:inherit}
   position:sticky;top:0;z-index:2;background:var(--card);
   padding:.85rem 1rem .6rem;border-bottom:1px solid var(--vora);
 }
-.rail-cap h2{margin:0 0 .15rem;font-size:.9rem;font-weight:650}
-.rail-cap p{margin:0;font-size:.78rem;color:var(--apagat)}
+.rail-cap h2{margin:0;font-size:.9rem;font-weight:650}
 .cerca{
   width:100%;margin-top:.6rem;padding:.38rem .55rem;
   border:1px solid var(--vora-forta);border-radius:7px;background:var(--camp);font-size:.85rem;
@@ -189,6 +185,12 @@ button,input,select,textarea{font:inherit;color:inherit}
   color:var(--apagat);letter-spacing:.01em;
 }
 .sentit-tit span{flex:1}
+/* «tots» / «cap» d'un sentit: text, no botó. */
+.enllac{
+  border:0;background:none;padding:.1rem .3rem;border-radius:4px;cursor:pointer;
+  font-size:.72rem;font-weight:500;color:var(--apagat);
+}
+.enllac:hover{color:var(--blau);background:var(--blau-suau)}
 
 /* Botó de selecció en bloc: un a cada sentit i un a cada curs. */
 .mini{
@@ -215,7 +217,11 @@ button,input,select,textarea{font:inherit;color:inherit}
 }
 /* "+" per demanar una pregunta més d'aquest contingut concret. Va fora del
    <label>, o el clic marcaria també la casella. */
-.quants{flex:none;display:flex;gap:.15rem;margin-top:.15rem}
+.quants{flex:none;display:flex;align-items:center;gap:.1rem;margin-top:.15rem}
+.quantes{
+  min-width:1.1rem;text-align:center;font-size:.8rem;font-weight:650;
+  color:var(--verd);font-variant-numeric:tabular-nums;
+}
 .mes,.menys{
   border:1px solid var(--vora-forta);background:var(--card);
   color:var(--apagat);width:1.35rem;height:1.35rem;border-radius:5px;
@@ -225,7 +231,6 @@ button,input,select,textarea{font:inherit;color:inherit}
   border-color:var(--blau);color:var(--blau);background:var(--blau-suau);
 }
 .mes:disabled,.menys:disabled{opacity:.3;cursor:default}
-.a-prova{color:var(--verd);font-weight:600}
 .saber input{margin:.28rem 0 0;accent-color:var(--blau);width:1.05rem;height:1.05rem}
 .saber-cos{min-width:0}
 .saber-tit{font-size:.855rem;line-height:1.35}
@@ -242,7 +247,33 @@ button,input,select,textarea{font:inherit;color:inherit}
   position:sticky;top:0;z-index:2;background:var(--card);
   padding:.85rem 1rem .6rem;border-bottom:1px solid var(--vora);
 }
-.panell-cap h2{margin:0;font-size:.9rem;font-weight:650}
+.panell-cap{display:flex;align-items:baseline;gap:.5rem}
+.panell-cap h2{margin:0;font-size:.9rem;font-weight:650;flex:1}
+.temps-caixa{font-size:.78rem;color:var(--apagat);font-variant-numeric:tabular-nums}
+.grup > h3 small{font-weight:400}
+/* «Altres preguntes» i el codi de la tria, a la mateixa línia. */
+.tria{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+
+/* Seccions plegades: el que es toca de tant en tant. El títol porta un
+   resum del que hi ha triat. */
+.sec{border-bottom:1px solid var(--vora)}
+.sec > summary{
+  display:flex;align-items:baseline;gap:.5rem;cursor:pointer;list-style:none;
+  padding:.7rem 1rem;font-size:.84rem;font-weight:600;
+}
+.sec > summary::-webkit-details-marker{display:none}
+.sec > summary::before{
+  content:"";flex:none;align-self:center;width:.4rem;height:.4rem;
+  border-right:1.5px solid var(--apagat);border-bottom:1.5px solid var(--apagat);
+  transform:rotate(-45deg);transition:transform .15s;margin-right:.15rem;
+}
+.sec[open] > summary::before{transform:rotate(45deg)}
+.sec > summary:hover{background:var(--hover)}
+.resum{
+  flex:1;min-width:0;text-align:right;font-size:.74rem;font-weight:400;color:var(--apagat);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.sec-cos{padding:.1rem 1rem .9rem}
 .grup{padding:.85rem 1rem;border-bottom:1px solid var(--vora)}
 .grup > h3{
   margin:0 0 .55rem;font-size:.78rem;font-weight:650;color:var(--apagat);
@@ -281,7 +312,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 }
 .codi{margin:.1rem 0 0;font-size:.75rem;color:var(--apagat)}
 /* Temps estimat: verd si hi cap, ambre si probablement no. */
-.temps{display:block;padding:.35rem 0;font-size:.9rem;font-weight:650;font-variant-numeric:tabular-nums}
+.temps{font-size:.85rem;font-weight:650;font-variant-numeric:tabular-nums}
 .temps.dins{color:var(--verd)}
 .temps.fora{color:var(--ambre)}
 /* Al panell, l'etiqueta que la pregunta té al full quan és un apartat. */
@@ -290,73 +321,75 @@ button,input,select,textarea{font:inherit;color:inherit}
   background:var(--blau-suau);color:var(--blau);font-weight:650;
 }
 .codi b{font-family:var(--mono)}
-#obre-propia{margin-top:.5rem}
+#obre-propia{margin-top:.6rem}
 #propia{margin-top:.6rem}
 
 /* llista de preguntes triades */
 .llista{padding:0}
 .buida{padding:1.6rem 1rem;color:var(--apagat);font-size:.85rem;line-height:1.5}
 .q{
-  position:relative;
-  display:grid;grid-template-columns:2.5rem 1fr auto;gap:.4rem;align-items:start;
-  padding:.4rem .35rem;border-radius:7px;font-size:.8rem;
+  display:grid;grid-template-columns:2.2rem minmax(0,1fr) auto;gap:.15rem .3rem;align-items:start;
+  padding:.3rem .3rem;border-radius:7px;font-size:.8rem;
 }
 .q:hover{background:var(--hover)}
 .q.marcada{background:var(--blau-suau)}
+.q.oberta{background:var(--hover);box-shadow:inset 0 0 0 1px var(--vora-forta)}
 /* La posició és editable: escriure-hi un número mou la pregunta allà. */
 .q-num{
-  width:2.5rem;padding:.1rem .2rem;border:1px solid transparent;border-radius:5px;
+  width:2.2rem;padding:.1rem .15rem;border:1px solid transparent;border-radius:5px;
   background:transparent;color:var(--apagat);font-size:.78rem;text-align:center;
-  font-variant-numeric:tabular-nums;
+  font-variant-numeric:tabular-nums;-moz-appearance:textfield;
 }
+.q-num::-webkit-inner-spin-button,.q-num::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .q-num:hover,.q-num:focus{border-color:var(--vora-forta);background:var(--camp);color:var(--tinta)}
-.q-cos{min-width:0}
+/* Tota la fila (títol i contingut) és el botó que l'obre. */
+.q-cos{
+  min-width:0;border:0;background:none;padding:.05rem 0;text-align:left;cursor:pointer;
+}
 .q-tit{
   display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   font-size:.79rem;line-height:1.3;
 }
+.q-cos:hover .q-tit{color:var(--blau)}
+.estrella{color:var(--blau)}
 .q-saber{
   display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   color:var(--apagat);font-size:.72rem;
 }
-/* El nivell de cada pregunta, en una línia pròpia sota el contingut. Sense
-   caixa fins que s'hi passa per sobre, perquè el panell no sembli un
-   formulari. */
-.q-nivell{
-  border:1px solid transparent;background:transparent;color:var(--apagat);
-  font:inherit;font-size:.72rem;border-radius:4px;padding:0 .1rem;
-  display:block;max-width:100%;margin:.05rem 0 0 -.1rem;cursor:pointer;
-}
-.q-nivell:hover,.q-nivell:focus{border-color:var(--vora-forta);background:var(--camp)}
-.q-nivell.fixat{color:var(--blau);font-weight:600;border-color:var(--blau-suau);background:var(--blau-suau)}
-/* Sempre visibles. Amagades fins al `:hover` eren inabastables en tàctil i
-   invisibles en escriptori, i són la funció més útil del panell. */
-/* Un sol joc de botons visible a cada mida: a l'ample, els del full (hi ha
-   lloc i veus la pregunta); a l'estret, els del panell, perquè el full es
-   dibuixa a escala reduïda i allà no s'hi pot tocar amb el dit. L'intercanvi
-   es fa al bloc responsiu del final: aquí encara no s'ha declarat
-   `.pregunta-eines` i la regla no guanyaria. */
-.q-eines{grid-column:2;display:none;gap:.1rem;margin-top:.2rem}
-
-/* Punts editables per pregunta: un valor escrit a mà es queda fix i la
-   resta es reparteixen el que sobra. */
-.q-punts{display:flex;align-items:center;gap:.15rem;font-size:.75rem;color:var(--apagat)}
-.q-punts input{
-  width:3.1rem;padding:.12rem .25rem;border:1px solid var(--vora);
-  border-radius:5px;background:var(--camp);font-size:.76rem;text-align:right;
+.q-fix{color:var(--blau);font-weight:600}
+.q-p{
+  padding-top:.1rem;font-size:.75rem;color:var(--apagat);white-space:nowrap;
   font-variant-numeric:tabular-nums;
 }
-.q-punts input.fixat{border-color:var(--blau);background:var(--blau-suau);font-weight:600}
-.q-eines button{
-  border:0;background:transparent;cursor:pointer;color:var(--apagat);
-  padding:.12rem .28rem;border-radius:5px;font-size:.8rem;line-height:1;
+.q-p.fixat{color:var(--blau);font-weight:600}
+
+/* El que s'hi pot fer, només a la fila oberta. */
+.q-detall{grid-column:2/-1;padding:.35rem 0 .2rem}
+.q-detall .camp{margin-bottom:.45rem}
+.q-detall .camp > span{font-size:.72rem;margin-bottom:.1rem}
+.q-detall .q-punts{flex:0 0 4.5rem}
+/* Amb `.q-detall` davant: si no, `.camp select` (més específica) els
+   tornava a la mida dels camps grans. */
+.q-detall .q-nivell,.q-detall .q-punts input{
+  width:100%;padding:.2rem .3rem;border:1px solid var(--vora-forta);
+  border-radius:6px;background:var(--camp);font-size:.78rem;
 }
-.q-eines button:hover:not(:disabled){background:var(--hover-fort);color:var(--tinta)}
+.q-punts input{text-align:right;font-variant-numeric:tabular-nums}
+.q-detall .q-nivell.fixat,.q-detall .q-punts input.fixat{border-color:var(--blau);background:var(--blau-suau);font-weight:600}
+.q-eines{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.3rem}
+.q-eines button{
+  border:1px solid var(--vora-forta);background:var(--card);cursor:pointer;color:var(--tinta);
+  padding:.2rem .45rem;border-radius:6px;font-size:.76rem;line-height:1.2;
+}
+.q-eines button:hover:not(:disabled){border-color:var(--blau);color:var(--blau)}
 .q-eines button:disabled{opacity:.3;cursor:default}
+.q-eines button[aria-pressed=true]{background:var(--blau-suau);border-color:var(--blau);color:var(--blau)}
+.q-eines .perill{margin-left:auto}
+.q-eines .perill:hover:not(:disabled){border-color:var(--vermell);color:var(--vermell)}
 
 .avis .mini{margin-left:.3rem}
 .avis{
-  margin:.55rem 0 0;padding:.5rem .6rem;border-radius:7px;
+  margin:0 0 .55rem;padding:.5rem .6rem;border-radius:7px;
   background:var(--ambre-suau);color:var(--ambre-text);font-size:.78rem;line-height:1.45;
 }
 
@@ -376,9 +409,11 @@ button,input,select,textarea{font:inherit;color:inherit}
   font-size:.85rem;cursor:pointer;color:var(--apagat);
 }
 .pestanyes button[aria-selected=true]{background:var(--card);color:var(--tinta);font-weight:600;box-shadow:0 1px 2px rgba(22,32,46,.08)}
-.zoom{display:flex;align-items:center;gap:.3rem;font-size:.78rem;color:var(--apagat)}
-.zoom input{width:90px;accent-color:var(--blau)}
-#zoom-valor{min-width:2.8rem;text-align:right;font-variant-numeric:tabular-nums}
+.zoom{display:flex;align-items:center;gap:.35rem;font-size:.78rem;color:var(--apagat)}
+.zoom select{
+  border:1px solid var(--vora-forta);border-radius:6px;background:var(--card);
+  padding:.2rem .35rem;font-size:.78rem;
+}
 
 .escena{
   padding:1.4rem 1rem 5rem;display:flex;
@@ -477,7 +512,7 @@ button,input,select,textarea{font:inherit;color:inherit}
   position:absolute;left:0;top:0;
   /* Dues columnes: en una sola fila vertical, set botons feien 38 mm i
      envaïen la pregunta de sota quan l'espai de resposta era petit. */
-  display:grid;grid-template-columns:repeat(2,17px);gap:2px;
+  display:grid;grid-template-columns:17px;gap:2px;
   align-content:start;
   /* Visibles sempre, encara que apagades: amagar-les fins al `hover` és el
      que feia que la funció més útil de l'eina fos la que no es trobava. Al
@@ -505,6 +540,10 @@ button,input,select,textarea{font:inherit;color:inherit}
   border-color:var(--blau);color:var(--blau);background:var(--blau-suau);
 }
 .pregunta-eines button:disabled{opacity:.28;cursor:default}
+/* La pregunta oberta al panell. Un `outline` no ocupa lloc, o sigui que no
+   mou res ni toca el comptador de pàgines; i no s'imprimeix. */
+.pregunta.activa,.apartat.activa{outline:2px solid #BFD1EE;outline-offset:1.5mm;border-radius:1mm}
+.pregunta.activa > .pregunta-eines,.apartat.activa > .pregunta-eines{opacity:1;pointer-events:auto}
 .figura-cont{margin:2mm 0 0;text-align:center}
 /* Taules de dades dels ítems propis (llegir una taula és el saber que
    s'avalua, o sigui que ha de sortir com una taula de debò). */
@@ -620,9 +659,8 @@ button,input,select,textarea{font:inherit;color:inherit}
   .app[data-vista=composicio] .rail,.app[data-vista=composicio] .taula{display:none}
   .escena{overflow:auto}
   .marca span{display:none}
-  /* Aquí es fa l'intercanvi de botons: el full es dibuixa a escala reduïda
-     i uns botons de 19 px en quedarien 10. */
-  .q-eines{display:flex}
+  /* El full es dibuixa a escala reduïda i uns botons de 17 px en quedarien
+     9: aquí les eines són només les del panell, obrint la pregunta. */
   .pregunta-eines{display:none}
 }
 
