@@ -29,8 +29,8 @@ Genera tres documents des d'una sola selecció de continguts:
    saber. Clicant el títol del curs es marquen o desmarquen tots de cop.
 2. **Ajusta la prova** a la dreta. A dalt hi ha el que es toca a cada prova:
    quantes preguntes, quin nivell i la llista de preguntes. A sota, plegat,
-   el que es toca de tant en tant: *Punts, temps i ordre*, *Format del full*,
-   *Pla de repàs* i *Preferències*. Cada secció plegada diu al
+   el que es toca de tant en tant: *Format del full*, *Pla de repàs*,
+   *Preferències* i, al final de tot, *Punts, temps i ordre*. Cada secció plegada diu al
    títol què hi tens triat (per exemple «38 mm · quadrícula»), o sigui que
    no cal obrir-la per saber-ho; el navegador recorda quines tens obertes.
 3. **Revisa el full** al centre. El que hi veus és exactament el que sortirà per
@@ -72,6 +72,19 @@ recuperar l'examen mesos després. Per fer models A i B del mateix examen: prem
 a dalt del panell) i torna a imprimir.
 
 ### Els controls que no són obvis
+
+**Valors per defecte de *Punts, temps i ordre*.** Gairebé sempre es fan
+servir tal com venen, i per això la secció és l'última del panell:
+
+| Paràmetre | Per defecte | Què vol dir | Altres opcions |
+|---|---|---|---|
+| *Els punts es reparteixen* | **Igual** | totes les preguntes valen el mateix | *Per nivell* (les de nivell 2 i 3 valen més), *Per hores* (valen més les dels continguts amb més hores) |
+| *Ordre de les preguntes* | **De fàcil a difícil** | per nivell; a igual nivell, en l'ordre del currículum (mai a l'atzar) | *Del currículum*, *Barrejat* |
+| *Reparteix les preguntes segons* | **Igual** | el mateix nombre de preguntes per a cada contingut marcat | *Hores* (més preguntes als continguts amb més hores), *Banc* (més als que tenen més preguntes al banc) |
+
+Si escrius a mà els punts d'una pregunta, es queden fixos i la resta es
+reparteix el que sobra. Canviar l'ordre només reordena; canviar el criteri de
+repartiment refà la prova (conservant les ★ i les pròpies).
 
 **El zoom del full.** El full fa sempre 210 mm d'ample, també en un portàtil on
 no hi cap: és l'única manera que la pantalla parteixi les línies igual que el

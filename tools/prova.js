@@ -65,6 +65,17 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
     llavor: (document.querySelector('#llavor') || {}).textContent
   }));
   comprova('es llisten els continguts', inici.sabers >= 50, inici.sabers);
+  const perDefecte = await pag.evaluate(() => ({
+    punts: document.querySelector('[data-criteri][aria-pressed=true]').dataset.criteri,
+    pes: document.querySelector('[data-pes][aria-pressed=true]').dataset.pes,
+    ordre: document.querySelector('#ordre').value,
+    ultima: [...document.querySelectorAll('.panell details')].pop().dataset.sec
+  }));
+  comprova('per defecte: punts iguals, mateix nombre per contingut, de fàcil a difícil',
+    perDefecte.punts === 'igual' && perDefecte.pes === 'igual' && perDefecte.ordre === 'dificultat',
+    JSON.stringify(perDefecte));
+  comprova('«Punts, temps i ordre» és la darrera secció del panell', perDefecte.ultima === 'punts',
+    perDefecte.ultima);
   comprova('hi ha un codi de tria de cinc caràcters', /^[0-9A-Z]{5}$/.test(inici.llavor), inici.llavor);
 
   /* Cada curs es plega i es desplega clicant-ne la barra. */

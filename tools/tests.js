@@ -407,6 +407,13 @@ comprova('l\'avís nomena els continguts sense pregunta',
   const niv = r.preguntes.map(q => banc[q.itemId].nivell);
   comprova('«De fàcil a difícil» ordena pel nivell',
     niv.every((n, i) => !i || niv[i - 1] <= n), niv.join(''));
+  /* A igual nivell, l'ordre del currículum, sempre: mai l'atzar. */
+  const pos = q => tots.indexOf(q.saberId);
+  const p = r.preguntes;
+  comprova('a igual nivell, l\'ordre del currículum',
+    p.every((q, i) => !i || banc[p[i - 1].itemId].nivell !== banc[q.itemId].nivell ||
+                            pos(p[i - 1]) <= pos(q)),
+    p.map(q => banc[q.itemId].nivell + ':' + pos(q)).join(' '));
 }
 
 /* ------------------------------------------------------ pla de repàs */

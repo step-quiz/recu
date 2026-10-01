@@ -116,10 +116,13 @@
     spec: {
       nombre: 10,
       perfil: 'minims',
-      pes: 'hores',
-      ordre: 'curriculum',
+      // Per defecte, el més senzill d'explicar a l'alumne: el mateix nombre
+      // de preguntes per contingut, totes valen el mateix i van de fàcil a
+      // difícil.
+      pes: 'igual',
+      ordre: 'dificultat',
       punts: 10,
-      criteriPunts: 'nivell',
+      criteriPunts: 'igual',
       durada: 55,            // minuts que té l'alumne: una hora de classe
       llavor: window.Atzar.novaLlavor()
     },
@@ -429,12 +432,26 @@
     desaAlHash();
   }
 
+  /**
+   * «De fàcil a difícil»: per nivell i, a igual nivell, per l'ordre del
+   * currículum (les pròpies, al final del seu nivell). Mai a l'atzar: abans
+   * l'empat el decidia l'ordre que la llista tingués en aquell moment, i
+   * dues proves amb les mateixes preguntes podien sortir diferents.
+   */
+  function posCurriculum(q) {
+    var i = ordreSabers.indexOf(q.saberId);
+    return i < 0 ? 1e6 : i;
+  }
+  function perDificultat(a, b) {
+    return ((banc[a.itemId] && banc[a.itemId].nivell) || 2) -
+           ((banc[b.itemId] && banc[b.itemId].nivell) || 2) ||
+           posCurriculum(a) - posCurriculum(b);
+  }
+
   /** Reordena sense canviar cap pregunta. */
   function reordena() {
     if (estat.spec.ordre === 'dificultat') {
-      estat.preguntes.sort(function (a, b) {
-        return (banc[a.itemId].nivell || 2) - (banc[b.itemId].nivell || 2);
-      });
+      estat.preguntes.sort(perDificultat);
     } else if (estat.spec.ordre === 'barrejat') {
       estat.preguntes = new window.Atzar(estat.spec.llavor + '|ordre|' + Date.now())
         .barreja(estat.preguntes);
@@ -481,6 +498,8 @@
     conserva.forEach(function (q) { ja[q.itemId] = true; });
     estat.preguntes = conserva.concat(
       r.preguntes.filter(function (q) { return !ja[q.itemId]; }));
+    // Les conservades (★ i pròpies) també van al seu lloc.
+    if (estat.spec.ordre === 'dificultat') estat.preguntes.sort(perDificultat);
     estat.avisos = r.avisos;
     estat.editat = false;
     estat.cfg.llavor = estat.spec.llavor;
@@ -667,6 +686,13 @@
    * la tercera: moure-la amunt onze vegades era una feina absurda.
    */
   function inserisc(q) {
+    if (estat.spec.ordre === 'dificultat') {
+      // Davant de la primera que li hauria d'anar darrere.
+      var k = 0;
+      while (k < estat.preguntes.length && perDificultat(estat.preguntes[k], q) <= 0) k++;
+      estat.preguntes.splice(k, 0, q);
+      return;
+    }
     if (estat.spec.ordre !== 'curriculum' || !q.saberId) {
       estat.preguntes.push(q);
       return;
