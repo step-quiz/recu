@@ -128,7 +128,7 @@ mesurats, els tres nivells en tenen de mitjana gairebé els mateixos (1,8, 2,0 i
 que mesura el nivell. És una estimació: si amb els teus grups les proves surten
 sistemàticament curtes o llargues, els tres valors són a `MINUTS_NIVELL`, a
 `assets/js/composa.js`. Una prova de mínims de 10 preguntes surt a uns 40
-minuts. La durada es desa amb *Els meus valors inicials* i a l'adreça.
+minuts. La durada es desa amb *Desa com a valors inicials* i a l'adreça.
 
 **Exercicis de pràctica.** A la secció *Pla de repàs* del panell tries quants
 exercicis per contingut (cap, 1, 2 o 3) porta el pla, i si hi van les solucions
@@ -439,7 +439,6 @@ la regla de tres, l'àrea i el volum.
     tools/prova.js              prova amb navegador (necessita Playwright)
     tools/prova_compilacio.py   banc.js i mapa.js al dia, compilació determinista
 
-    .github/workflows/proves.yml        les proves, a cada push
     .github/workflows/unzip-upload.yml  descomprimeix els ZIP de _uploads/
 
 ### Per què fitxers `.js` i no `.json`
@@ -521,10 +520,10 @@ La compilació s'atura si el nivell que declara un generador no és el que mesur
 ## Comprovar que tot funciona
 
 ```sh
-node tools/tests.js               # 166 comprovacions de la lògica, cap dependència
+node tools/tests.js               # 169 comprovacions de la lògica, cap dependència
 node tools/genera.js --comprova   # els 60 generadors sobre 12 000 variants
 python3 tools/prova_compilacio.py # banc.js i mapa.js al dia, compilació determinista
-node tools/prova.js               # 45 comprovacions en un navegador de debò
+node tools/prova.js               # unes 50 comprovacions en un navegador de debò
 ```
 
 Totes quatre acaben amb codi 1 si alguna cosa falla. `prova.js` abans només
@@ -549,18 +548,16 @@ mentre en quedin d'altres), i que el mateix codi doni sempre el mateix examen.
 
 ---
 
-## GitHub: proves automàtiques i pujades per ZIP
+## GitHub: pujades per ZIP
 
-- **`.github/workflows/proves.yml`** executa les quatre proves a cada push i a
-  cada pull request. No escriu res al repositori (no fa cap commit), o sigui
-  que no afecta Cloudflare Pages. Es veu a la pestanya **Actions**: verd, tot
-  bé; vermell, clica-hi i surt quina comprovació ha fallat.
-- **`.github/workflows/unzip-upload.yml`** és el mateix que el del banc de 2n
-  de batxillerat: un ZIP pujat a `_uploads/` es descomprimeix a l'arrel, s'hi
-  esborra i se'n fa un commit. En acabar, es llancen les proves soles.
-  El commit **no** porta «[skip ci]», perquè Cloudflare no el publicaria.
-- Els fitxers de `.github/workflows/` no poden arribar dins d'un ZIP: el bot no
-  hi té permís. Es creen i s'editen des de la web de GitHub.
+- **`.github/workflows/unzip-upload.yml`**: un ZIP pujat a `_uploads/` es descomprimeix a
+  l'arrel, s'esborra i se'n fa un commit. El commit **no** porta «[skip ci]», perquè
+  Cloudflare no el publicaria.
+- Les proves **no** s'executen soles a GitHub: no hi ha cap workflow de proves. Cal llançar
+  les quatre ordres de l'apartat anterior a mà (per exemple, des d'un Codespace) abans de
+  pujar canvis al codi o al catàleg.
+- Els fitxers de `.github/workflows/` no poden arribar dins d'un ZIP: el bot no hi té permís.
+  Es creen i s'editen des de la web de GitHub.
 
 ---
 
