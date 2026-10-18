@@ -439,6 +439,7 @@ la regla de tres, l'àrea i el volum.
     tools/prova.js              prova amb navegador (necessita Playwright)
     tools/prova_compilacio.py   banc.js i mapa.js al dia, compilació determinista
 
+    .github/workflows/tests.yml         les quatre proves, a cada push i PR
     .github/workflows/unzip-upload.yml  descomprimeix els ZIP de _uploads/
 
 ### Per què fitxers `.js` i no `.json`
@@ -553,9 +554,10 @@ mentre en quedin d'altres), i que el mateix codi doni sempre el mateix examen.
 - **`.github/workflows/unzip-upload.yml`**: un ZIP pujat a `_uploads/` es descomprimeix a
   l'arrel, s'esborra i se'n fa un commit. El commit **no** porta «[skip ci]», perquè
   Cloudflare no el publicaria.
-- Les proves **no** s'executen soles a GitHub: no hi ha cap workflow de proves. Cal llançar
-  les quatre ordres de l'apartat anterior a mà (per exemple, des d'un Codespace) abans de
-  pujar canvis al codi o al catàleg.
+- **`.github/workflows/tests.yml`** executa les quatre proves (la del navegador, amb Playwright)
+  a cada canvi a `main` i a cada pull request, i també després de cada ZIP (el llança
+  `unzip-upload.yml`). No escriu res al repositori. Pestanya **Actions**: verd, tot bé;
+  vermell, clica-hi i surt quina comprovació ha fallat.
 - Els fitxers de `.github/workflows/` no poden arribar dins d'un ZIP: el bot no hi té permís.
   Es creen i s'editen des de la web de GitHub.
 

@@ -1,0 +1,49 @@
+# Les quatre proves del projecte: lògica (tools/tests.js), els 60 generadors
+# (tools/genera.js --comprova), compilació (tools/prova_compilacio.py) i un
+# navegador de debò (tools/prova.js).
+# S'executa a cada canvi a main, a cada pull request i a mà (Actions → Tests →
+# Run workflow). No escriu res al repositori.
+# Els commits del bot dels ZIP no el disparen per si sols (regla de GitHub):
+# per això unzip-upload.yml el llança després de desar.
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  proves:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Lògica
+        run: node tools/tests.js
+
+      - name: Generadors
+        run: node tools/genera.js --comprova
+
+      - name: banc.js i mapa.js al dia, compilació determinista
+        run: python3 tools/prova_compilacio.py
+
+      - name: Instal·la Playwright i Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright
+          npx playwright install --with-deps chromium
+
+      - name: Navegador
+        run: node tools/prova.js
