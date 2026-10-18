@@ -585,3 +585,12 @@ pugui obrir, igual que ja fas amb els `REVISIO-fullN.html` de `repas`.
 El mateix val per al repositori de GitHub: si és **públic**, `banc.js` hi és a
 la vista de tothom. Les preguntes del pla de repàs, en canvi, no són cap
 secret: estan fetes per donar-les a l'alumne.
+
+<!-- atribucio-centre:inici -->
+
+---
+
+Material desenvolupat per **David Arso Civil** per al Departament de Matemàtiques de l'INS Miquel Tarradell.
+Contingut sota CC BY-NC-SA 4.0, codi sota llicència MIT. Vegeu [`LLICENCIA.md`](LLICENCIA.md).
+
+<!-- atribucio-centre:final -->
