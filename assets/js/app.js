@@ -856,6 +856,11 @@
   /* ------------------------------------------------------- arbre curricular */
   function marca(ids, activa) {
     ids.forEach(function (id) {
+      // Marcar un contingut torna a desplegar el seu curs (vegeu `cursObert`).
+      if (activa && obertAMa[id.slice(0, 4)] === false) {
+        delete obertAMa[id.slice(0, 4)];
+        desaCursos();
+      }
       var i = estat.sabers.indexOf(id);
       if (activa && i < 0) estat.sabers.push(id);
       if (!activa && i >= 0) estat.sabers.splice(i, 1);
@@ -866,22 +871,38 @@
   }
 
   /* Cursos plegats a la columna de l'esquerra. Qui recupera 2n no ha de
-     passar per damunt dels divuit continguts de 1r cada vegada. És una
-     preferència de qui fa les proves, no part de la prova: va a la memòria
-     del navegador (si la hi deixa) i no a l'adreça. Mateixa idea que les
-     unitats plegables del banc de 2n de batxillerat. */
-  var PLEGATS = 'recuperacio-eso:plegats';
-  var plegats = buit();
+     passar per damunt dels divuit continguts de 1r cada vegada.
+
+     Per defecte, un curs està desplegat si té algun contingut marcat i
+     plegat si no en té cap: en obrir l'eina tots surten plegats, i marcar-ne
+     un (o «Tot el curs») el desplega sol. Si el professor el plega o el
+     desplega a mà, mana el que ha fet ell, fins que hi torni a marcar un
+     contingut. És una preferència de qui fa les proves, no part de la
+     prova: va a la memòria del navegador (si la hi deixa) i no a l'adreça. */
+  var CURSOS_OBERTS = 'recuperacio-eso:cursos';
+  var obertAMa = buit();       // id del curs -> true (obert) / false (plegat)
   try {
-    JSON.parse(localStorage.getItem(PLEGATS) || '[]').forEach(function (c) {
-      if (typeof c === 'string') plegats[c] = true;
+    var desats = JSON.parse(localStorage.getItem(CURSOS_OBERTS) || '{}');
+    Object.keys(desats).forEach(function (c) {
+      if (typeof desats[c] === 'boolean') obertAMa[c] = desats[c];
     });
-  } catch (e) { /* sense memòria del navegador: tot desplegat */ }
+  } catch (e) { /* sense memòria del navegador: el comportament per defecte */ }
+
+  function desaCursos() {
+    try { localStorage.setItem(CURSOS_OBERTS, JSON.stringify(obertAMa)); }
+    catch (e) { /* res */ }
+  }
+
+  function cursObert(curs) {
+    if (obertAMa[curs.id] !== undefined) return obertAMa[curs.id];
+    return curs.sabers.some(function (s) { return estat.sabers.indexOf(s.id) >= 0; });
+  }
 
   function commutaPlegat(cursId) {
-    if (plegats[cursId]) delete plegats[cursId]; else plegats[cursId] = true;
-    try { localStorage.setItem(PLEGATS, JSON.stringify(Object.keys(plegats))); }
-    catch (e) { /* res */ }
+    var curs = MAPA.cursos.filter(function (c) { return c.id === cursId; })[0];
+    if (!curs) return;
+    obertAMa[cursId] = !cursObert(curs);
+    desaCursos();
     pintaRail();
   }
 
@@ -969,7 +990,7 @@
 
       var buits = curs.sabers.length - totalAmbBanc;
       // Una cerca desplega el que troba: si no, no es veuria el resultat.
-      var plegat = plegats[curs.id] && !filtre;
+      var plegat = !cursObert(curs) && !filtre;
       html += '<section class="curs">' +
         '<div class="curs-cap">' +
           '<button type="button" class="plega" data-plega="' + esc(curs.id) + '" ' +
@@ -1030,7 +1051,7 @@
    */
   function selectorNivell(i, q, it, saber) {
     var disp = nivellsDisponibles(saber.id);
-    var opcions = '<option value="">General (ara ' + it.nivell + ')</option>';
+    var opcions = '<option value="">General (' + it.nivell + ')</option>';
     for (var n = 1; n <= 3; n++) {
       opcions += '<option value="' + n + '"' +
         (q.nivell === n ? ' selected' : '') +
@@ -1272,6 +1293,7 @@
     /* Les llistes i el que porta `.partible` (un grup d'apartats) es poden
        partir entre pàgines: es baixa als fills. */
     function recorre(el) {
+      if (el.classList.contains('no-imprimeix')) return;
       if (el.tagName === 'OL' || el.tagName === 'UL' || el.classList.contains('partible')) {
         Array.prototype.forEach.call(el.children, recorre);
       } else {
@@ -1332,6 +1354,9 @@
     pintaLlista();
     pintaFull();
     $('#imprimeix').disabled = !estat.preguntes.length;
+    // El nombre de pàgines només es diu per a la prova (és la que es
+    // reparteix) i quan hi ha preguntes: buida, «≈ 1 pàgina» no diu res.
+    $('#pagines').hidden = estat.vista === 'clau' || !estat.preguntes.length;
   }
 
   /* ------------------------------------------------- estat a l'adreça (hash) */
@@ -1471,10 +1496,7 @@
     });
     $('#imprimeix').firstChild.textContent =
       vista === 'clau' ? 'Imprimeix la correcció' : 'Imprimeix la prova';
-    // El nombre de pàgines només es diu per a la prova: és la que es
-    // reparteix i la que es decideix si cap en un full.
-    $('#pagines').hidden = vista === 'clau';
-    pintaFull();
+    pinta();          // i no només el full: el comptador de pàgines depèn de la vista
   }
 
   /** Ctrl+G: un codi nou i una tria nova (ja no hi ha botó al panell). */

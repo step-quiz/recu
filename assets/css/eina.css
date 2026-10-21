@@ -98,11 +98,13 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* ------------------------------------------------------------------- barra */
 .barra{
   display:flex;align-items:center;gap:1rem;
-  padding:.55rem 1rem;
+  padding:.45rem 1rem;
   background:var(--card);
   border-bottom:1px solid var(--vora);
 }
-.marca{display:flex;align-items:baseline;gap:.55rem;min-width:0}
+/* El títol ocupa l'amplada de la columna esquerra: així les pestanyes
+   Prova | Correcció comencen just a sobre del full. */
+.marca{display:flex;align-items:baseline;gap:.55rem;min-width:0;flex:0 0 calc(var(--rail) - 2rem)}
 .marca strong{font-size:1rem;font-weight:650;letter-spacing:-.012em;white-space:nowrap}
 .barra .buit{flex:1}
 .barra-accions{display:flex;gap:.4rem;align-items:center}
@@ -241,10 +243,15 @@ button,input,select,textarea{font:inherit;color:inherit}
 }
 .sec[open] > summary::before{transform:rotate(45deg)}
 .sec > summary:hover{background:var(--hover)}
+.sec > summary{flex-wrap:wrap;row-gap:.1rem}
+/* El resum, en una línia a sota del títol: al costat, en una columna
+   estreta, sortia tallat amb «…» o partit en tres línies. */
 .resum{
-  flex:1;min-width:0;text-align:right;font-size:.74rem;font-weight:400;color:var(--apagat);
+  flex:1 0 100%;min-width:0;padding-left:1.1rem;font-size:.74rem;font-weight:400;
+  color:var(--apagat);line-height:1.3;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
+.resum:empty{display:none}
 .sec-cos{padding:.1rem 1rem .9rem}
 .grup{padding:.85rem 1rem;border-bottom:1px solid var(--vora)}
 .grup > h3{
@@ -343,7 +350,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .q-detall{grid-column:2/-1;padding:.35rem 0 .2rem}
 .q-detall .camp{margin-bottom:.45rem}
 .q-detall .camp > span{font-size:.72rem;margin-bottom:.1rem}
-.q-detall .q-punts{flex:0 0 4.5rem}
+.q-detall .q-punts{flex:0 0 3.6rem}
 /* Amb `.q-detall` davant: si no, `.camp select` (més específica) els
    tornava a la mida dels camps grans. */
 .q-detall .q-nivell,.q-detall .q-punts input{
@@ -373,13 +380,6 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* ------------------------------------------------- taula: el full A4 viu
    Aquesta és l'única superfície amb ombra de tota l'eina: és un objecte
    físic, la resta són panells. */
-.taula-eines{
-  position:sticky;top:0;z-index:3;
-  display:flex;align-items:center;gap:.5rem;
-  padding:.45rem .9rem;background:var(--vidre);
-  backdrop-filter:blur(6px);border-bottom:1px solid var(--vora);
-}
-.taula-eines .buit{flex:1}
 /* Prova i Correcció: sempre amb vora, perquè es vegi que són botons; la
    triada, en blau; amb el ratolí a sobre, vora i text blaus i fons blau
    clar. */
@@ -629,6 +629,7 @@ button,input,select,textarea{font:inherit;color:inherit}
      estira la columna de la graella i se'n va la barra fora de pantalla. */
   .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr)}
   .barra{flex-wrap:wrap;row-gap:.4rem}
+  .marca{flex:0 1 auto}
   .barra-accions{flex:1;justify-content:flex-end}
   .mobil-pestanyes{
     display:flex;grid-column:1;gap:.15rem;padding:.4rem .8rem;

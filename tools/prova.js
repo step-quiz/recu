@@ -71,6 +71,22 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
     net.sobrers.join(', '));
   comprova('la llista de preguntes surt plegada', net.plegada);
   comprova('el zoom diu «Ajustat» sense percentatge', net.ajustat === 'Ajustat', net.ajustat);
+  /* Una sola barra a dalt; els cursos, plegats en obrir l'eina; amb la
+     prova buida, el botó d'imprimir no diu pàgines; «Instruccions:» sense
+     res més es veu però no s'imprimeix. */
+  const dalt = await pag.evaluate(() => ({
+    barra: !!document.querySelector('.barra .pestanyes') && !!document.querySelector('.barra #zoom') &&
+           !document.querySelector('.taula-eines'),
+    sabers: document.querySelectorAll('.saber').length,
+    pagines: document.querySelector('#pagines').hidden,
+    instr: document.querySelector('.doc-instruccions').classList.contains('no-imprimeix')
+  }));
+  comprova('una sola barra a dalt (títol, Prova | Correcció, zoom, imprimir)', dalt.barra);
+  comprova('en obrir l\'eina, els cursos surten plegats', dalt.sabers === 0, dalt.sabers);
+  comprova('amb la prova buida, no diu quantes pàgines', dalt.pagines);
+  comprova('«Instruccions:» sense res més no s\'imprimeix', dalt.instr);
+  for (const c of ['1eso', '2eso', '3eso']) await pag.click(`[data-plega="${c}"]`);
+
   /* Comprensió lectora, l'últim sentit de cada curs; cap botó «Altres preguntes». */
   const rail = await pag.evaluate(() => ({
     altra: !!document.querySelector('#altra'),
@@ -116,6 +132,20 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
     if (!(obert > 0 && plegat === 0 && await sabersDe(c) === obert)) plegables = false;
   }
   comprova('els tres cursos es pleguen i es despleguen', plegables);
+
+  /* Marcar un curs plegat el desplega sol; els altres, plegats. */
+  {
+    const pc = await nav.newPage({ viewport: { width: 1560, height: 1000 } });
+    await pc.goto(URL_EINA);
+    await pc.waitForTimeout(500);
+    await pc.click('[data-curs="2eso"]');
+    await pc.waitForTimeout(400);
+    const vis = await pc.evaluate(() => ['1eso', '2eso', '3eso'].map(c =>
+      document.querySelectorAll(`[data-saber^="${c}-"]`).length));
+    comprova('«Tot el curs» desplega el curs i deixa els altres plegats',
+      vis[0] === 0 && vis[1] > 0 && vis[2] === 0, vis.join(','));
+    await pc.close();
+  }
 
   console.log('Composició');
   await pag.click('[data-curs="1eso"]');
