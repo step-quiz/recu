@@ -9,7 +9,7 @@ Genera dos documents des d'una sola selecció de continguts:
 | Document | Per a qui | Què porta |
 |---|---|---|
 | **Prova** | l'alumne | enunciats numerats, punts, i espai quadriculat per respondre |
-| **Full de correcció** | el professor | taula amb la solució i els passos (a, b, c…) de cada pregunta i, en una pàgina a part, la graella de puntuació |
+| **Full de correcció** | el professor | taula amb l'enunciat (numerat com a la prova), la solució i els passos (a, b, c…) de cada pregunta i, en una pàgina a part, la graella de puntuació |
 
 ---
 
@@ -54,15 +54,17 @@ present abans de passar l'enllaç a ningú).
 
 **Desa com a valors inicials** (a *Preferències*) desa al navegador com vols trobar l'eina cada
 vegada: continguts marcats, nivell, criteri de punts, format del full i
-capçalera. No s'hi desen el nom de l'alumne, el grup, la data, el model ni el
+capçalera. No s'hi desen el nom de l'alumne, el grup, la data ni el
 codi de la tria, perquè aquests han de començar de zero cada cop.
 
-Cada prova té un **codi de cinc caràcters**, que surt a dalt del panell i al peu del
-full de correcció (la prova de l'alumne no porta peu). Mateix codi, mateixa
-prova, sempre. L'adreça de la pàgina el guarda, així que pots desar l'enllaç i
-recuperar l'examen mesos després. Per fer models A i B del mateix examen: prem
-**Altres preguntes** (o `Ctrl+G`), canvia el camp *Model* (al costat del codi,
-a dalt del panell) i torna a imprimir.
+Cada prova té un **codi de cinc caràcters**, que no surt enlloc a la vista (ni
+al panell ni al peu dels fulls, que no en porten): el guarda l'adreça de la
+pàgina. Mateix codi, mateixa prova, sempre, així que pots desar l'enllaç i
+recuperar l'examen mesos després. Per fer un altre model del mateix examen:
+prem **Altres preguntes** (o `Ctrl+G`) i torna a imprimir.
+
+Les instruccions per a l'alumne comencen amb només «Instruccions: »: clica-hi
+damunt del full i escriu-hi les teves.
 
 ### Els controls que no són obvis
 

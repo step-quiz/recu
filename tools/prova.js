@@ -75,7 +75,8 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
 
   const inici = await pag.evaluate(() => ({
     sabers: document.querySelectorAll('.saber').length,
-    llavor: (document.querySelector('#llavor') || {}).textContent
+    llavor: JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(1))))).l,
+    tria: !!document.querySelector('#llavor, #model')
   }));
   comprova('es llisten els continguts', inici.sabers >= 50, inici.sabers);
   const perDefecte = await pag.evaluate(() => ({
@@ -89,7 +90,9 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
     JSON.stringify(perDefecte));
   comprova('«Punts, temps i ordre» és la darrera secció del panell', perDefecte.ultima === 'punts',
     perDefecte.ultima);
-  comprova('hi ha un codi de tria de cinc caràcters', /^[0-9A-Z]{5}$/.test(inici.llavor), inici.llavor);
+  comprova('hi ha un codi de tria de cinc caràcters (a l\'adreça)', /^[0-9A-Z]{5}$/.test(inici.llavor),
+    inici.llavor);
+  comprova('el panell no mostra ni el codi ni el model', !inici.tria);
 
   /* Cada curs es plega i es desplega clicant-ne la barra. */
   const sabersDe = c => pag.evaluate(id =>
@@ -116,6 +119,12 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
   comprova('«Tot el curs» dona una pregunta per contingut de 1r', desp.preguntes === 18, desp.preguntes);
   comprova('el subtítol diu el curs', desp.subtitol === 'Continguts de 1r d\'ESO', desp.subtitol);
   comprova('KaTeX compon les fórmules', desp.katex > 0, desp.katex);
+  /* Tot el full, Times New Roman a 12 pt (16 px). */
+  const lletra = await pag.evaluate(() => ['.doc-cap h1', '.doc-dades', '.doc-instruccions', '.pregunta-cos']
+    .map(sel => getComputedStyle(document.querySelector(sel)))
+    .filter(cs => !/^"?Times New Roman/.test(cs.fontFamily) || cs.fontSize !== '16px')
+    .map(cs => cs.fontFamily + ' ' + cs.fontSize));
+  comprova('la prova va en Times New Roman 12', !lletra.length, lletra.join(' | '));
 
   /* La volta ha d'oferir preguntes noves i no repetir-ne cap fins haver-les
      mostrat totes. És el bug de A, B, B, A, C. */
@@ -267,15 +276,25 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
   await pag.click('[data-doc="clau"]');
   await pag.waitForTimeout(400);
   const correccio = await pag.evaluate(() => ({
-    files: document.querySelectorAll('.clau-taula tbody tr').length,
+    files: document.querySelectorAll('.clau-taula tbody tr:not(.clau-grup)').length,
+    enunciat: document.querySelector('.clau-enunciat').textContent.replace(/\s+/g, ' ').trim(),
+    peu: !!document.querySelector('.doc-peu'),
     boto: document.querySelector('#imprimeix').firstChild.textContent,
     pagines: document.querySelector('#pagines').hidden,
     subtitol: document.querySelector('.doc-cap .subtitol').textContent,
     columnes: [...document.querySelectorAll('.clau-taula thead th')].map(x => x.textContent).join(','),
     marcador: getComputedStyle(document.querySelector('.clau-passos li'), '::before').content
   }));
-  comprova('la clau té les columnes #, Solució i Passos', correccio.columnes === '#,Solució,Passos',
-    correccio.columnes);
+  comprova('la clau té les columnes Enunciat, Solució i Passos',
+    correccio.columnes === 'Enunciat,Solució,Passos', correccio.columnes);
+  comprova('la clau copia l\'enunciat amb el número', /^1\.\S/.test(correccio.enunciat) &&
+    correccio.enunciat.length > 8, correccio.enunciat);
+  comprova('la correcció no porta peu', !correccio.peu);
+  comprova('la correcció va en Times New Roman 12', await pag.evaluate(() =>
+    ['.clau-taula th', '.clau-enunciat', '.clau-passos li', '.graella td'].every(sel => {
+      const cs = getComputedStyle(document.querySelector(sel));
+      return /^"?Times New Roman/.test(cs.fontFamily) && cs.fontSize === '16px';
+    })));
   comprova('els passos van amb a), b), c)', /lower-alpha/.test(correccio.marcador), correccio.marcador);
   /* La graella, sempre en una pàgina nova: és la darrera pàgina i no hi
      ha res més de la taula. */
@@ -386,10 +405,11 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
   await pa.click('[data-doc="clau"]');
   await pa.waitForTimeout(300);
   const clauAp = await pa.evaluate(() => ({
-    files: [...document.querySelectorAll('.clau-taula td.n')].map(x => x.textContent).join(','),
+    files: [...document.querySelectorAll('.clau-num > b')].map(x => x.textContent).join(','),
     graella: [...document.querySelectorAll('.graella thead th')].map(x => x.textContent).join(',')
   }));
-  comprova('la clau numera els apartats 2a, 2b, 2c', clauAp.files === '1,2a,2b,2c,3', clauAp.files);
+  comprova('la clau numera com la prova: 1., 2. a) b) c), 3.', clauAp.files === '1.,2.,a),b),c),3.',
+    clauAp.files);
   comprova('la graella també', clauAp.graella === 'Pregunta,1,2a,2b,2c,3,Total', clauAp.graella);
   await pa.click('[data-doc="prova"]');
   await pa.waitForTimeout(200);
