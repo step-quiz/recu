@@ -19,13 +19,15 @@ Genera dos documents des d'una sola selecció de continguts:
 > **afegeix** una pregunta; desmarcar-lo en treu les seves; moure el nombre de
 > preguntes n'afegeix o en treu; canviar l'ordre només reordena. Res d'això
 > toca les preguntes que ja has triat. L'única cosa que refà la prova de zero
-> és el que ho demana explícitament: **Altres preguntes**, canviar el **nivell**
+> és el que ho demana explícitament: la drecera `Ctrl+G`, canviar el **nivell**
 > i canviar el **criteri de repartiment**. I fins i tot allà se salven les
 > preguntes pròpies i les marcades amb ☆.
 
 1. **Marca els continguts** a la columna de l'esquerra. És el *Repartiment de
    continguts ESO 2025-26* del departament, tal com està escrit: curs → sentit →
-   saber. Clicant el títol del curs es marquen o desmarquen tots de cop.
+   saber, amb una excepció: *Millora de la comprensió lectora*, que al document
+   és el primer sentit de cada curs, a la columna surt l'últim. Clicant el
+   títol del curs es marquen o desmarquen tots de cop.
 2. **Ajusta la prova** a la dreta. A dalt hi ha el que es toca a cada prova:
    quantes preguntes i quin nivell. A sota, plegat: la llista de *Preguntes*,
    *Format del full*, *Preferències* i, al final de tot, *Punts, temps i
@@ -61,7 +63,7 @@ Cada prova té un **codi de cinc caràcters**, que no surt enlloc a la vista (ni
 al panell ni al peu dels fulls, que no en porten): el guarda l'adreça de la
 pàgina. Mateix codi, mateixa prova, sempre, així que pots desar l'enllaç i
 recuperar l'examen mesos després. Per fer un altre model del mateix examen:
-prem **Altres preguntes** (o `Ctrl+G`) i torna a imprimir.
+prem `Ctrl+G` (ja no hi ha botó «Altres preguntes» al panell) i torna a imprimir.
 
 Les instruccions per a l'alumne comencen amb només «Instruccions: »: clica-hi
 damunt del full i escriu-hi les teves.
@@ -198,7 +200,7 @@ el botó `▴` de la fila, tornar-la a clicar o la tecla `Esc`.
 | `‹` `⇄` | la pregunta anterior i la següent d'aquest contingut (dues fletxes que es creuen: canvia-la) | `⇄` sí |
 | dau | uns altres nombres, **la mateixa pregunta** (material propi) | sí |
 | `+` | **un apartat més**, a sota (a, b, c…): amb material propi, la mateixa pregunta amb uns altres nombres; amb el banc de `repas`, el següent apartat del mateix exercici | sí |
-| `☆` | la fixa perquè sobrevisqui a *Altres preguntes* | no |
+| `☆` | la fixa perquè sobrevisqui a `Ctrl+G` i als canvis de nivell o de repartiment | no |
 | `↑ ↓` | la mou una posició | no |
 | `✕` | la treu de la prova | sí |
 
