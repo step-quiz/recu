@@ -242,7 +242,7 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
   }
 
   /* Cap botó de la barra d'una pregunta pot quedar tapat. Amb l'espai de
-     resposta a 0, la barra fa 97 px i la pregunta 21: sobresurt per sota i
+     resposta a 0, la barra fa 133 px i la pregunta 21: sobresurt per sota i
      se superposa a la barra de la següent. */
   await pag.evaluate(() => {
     const s = document.querySelector('#espai');
@@ -471,6 +471,23 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
     await pr.evaluate(() => [...document.querySelectorAll('.apartat-lletra')]
       .map(x => x.textContent).join(' ')) === 'a) b) c)');
   await pr.close();
+
+  /* Una adreça d'abans amb les instruccions llargues de sèrie: surten les
+     d'ara. Unes de retocades a mà es conserven. */
+  const antigues = 'Resol cada exercici a l\'espai que hi ha a sota de l\'enunciat.\n' +
+    'Cal escriure tot el procés: un resultat sense els passos no puntua.\n' +
+    'Pots fer servir calculadora, però no el mòbil.';
+  const instr = async t => {
+    const pi = await nav.newPage();
+    await pi.goto(URL_EINA + '#' + b64({ l: 'INSTR', in: t, q7: [['f1-24a', null]] }));
+    await pi.waitForTimeout(400);
+    const r = await pi.evaluate(() => document.querySelector('.doc-instruccions').innerText.trim());
+    await pi.close();
+    return r;
+  };
+  comprova('les instruccions llargues d\'abans passen a «Instruccions:»',
+    await instr(antigues) === 'Instruccions:');
+  comprova('unes instruccions retocades es conserven', await instr('Sense calculadora.') === 'Sense calculadora.');
 
   console.log('Pantalla de portàtil');
   /* A 1280 px el full s'encongia fins a 592 px i ja no era el paper: ara

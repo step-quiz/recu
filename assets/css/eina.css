@@ -512,8 +512,8 @@ button,input,select,textarea{font:inherit;color:inherit}
   position:absolute;left:0;top:0;
   /* Dues columnes: en una sola fila vertical, set botons feien 38 mm i
      envaïen la pregunta de sota quan l'espai de resposta era petit. */
-  /* 9 px entre icones: a 3 px semblaven una sola peça. */
-  display:grid;grid-template-columns:22px;gap:9px;
+  /* 15 px entre icones: més juntes semblaven una sola peça. */
+  display:grid;grid-template-columns:22px;gap:15px;
   align-content:start;
   /* Visibles sempre, encara que apagades: amagar-les fins al `hover` és el
      que feia que la funció més útil de l'eina fos la que no es trobava. Al
@@ -541,9 +541,10 @@ button,input,select,textarea{font:inherit;color:inherit}
   border-radius:6px;font-size:14px;font-family:var(--ui);cursor:pointer;
   transition:transform .1s,color .1s,border-color .1s,background-color .1s;
 }
-/* Amb el ratolí a sobre, inconfusible: creix un 10 % i passa a negre. */
+/* Amb el ratolí a sobre, inconfusible: creix un 20 %, vora blau fosc i
+   fons blau clar. */
 .pregunta-eines button:hover:not(:disabled){
-  transform:scale(1.1);color:#000;border-color:#000;background:#E4E4E4;
+  transform:scale(1.2);color:#000;border-color:#1C3F80;background:#DCE8FA;
 }
 .pregunta-eines .icona{display:block;width:14px;height:14px;margin:auto}
 /* Al panell, les mateixes icones, a la mida del text del botó. */

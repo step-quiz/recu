@@ -186,6 +186,18 @@
     avisaInicials.t = setTimeout(function () { n.textContent = ''; }, 4000);
   }
 
+  /* Les instruccions que l'eina posava abans per defecte. Les adreces i
+     els valors inicials desats d'aleshores les porten escrites, i
+     «Oblida'ls» no toca l'adreça: obrint un enllaç antic tornaven a
+     sortir. Si arriben tal qual, es canvien per les d'ara. */
+  var INSTRUCCIONS_ANTIGUES = 'Resol cada exercici a l\'espai que hi ha a sota de l\'enunciat.\n' +
+    'Cal escriure tot el procés: un resultat sense els passos no puntua.\n' +
+    'Pots fer servir calculadora, però no el mòbil.';
+  function instruccions(v) {
+    var pla = function (x) { return String(x).replace(/\s+/g, ' ').trim(); };
+    return pla(v) === pla(INSTRUCCIONS_ANTIGUES) ? 'Instruccions: ' : v;
+  }
+
   function recuperaInicials() {
     try {
       var d = JSON.parse(localStorage.getItem(CAPCALERA_DESADA) || 'null');
@@ -195,6 +207,7 @@
       CAMPS_INICIALS.forEach(function (k) {
         if (cfg[k] !== undefined) estat.cfg[k] = cfg[k];
       });
+      estat.cfg.instruccions = instruccions(estat.cfg.instruccions);
       SPEC_INICIALS.forEach(function (k) {
         if (spec[k] !== undefined) estat.spec[k] = spec[k];
       });
@@ -1401,7 +1414,7 @@
       if (text(d.ce, 200)) estat.cfg.centre = d.ce;
       if (text(d.ti, 200)) estat.cfg.titol = d.ti;
       if (text(d.su, 200)) estat.cfg.subtitol = d.su;
-      if (text(d.in, 2000)) estat.cfg.instruccions = d.in;
+      if (text(d.in, 2000)) estat.cfg.instruccions = instruccions(d.in);
       if (text(d.al, 200)) estat.cfg.alumne = d.al;
       if (text(d.gr, 60)) estat.cfg.grup = d.gr;
       if (text(d.da, 10) && /^\d{4}-\d{2}-\d{2}$/.test(d.da)) estat.cfg.data = d.da;
