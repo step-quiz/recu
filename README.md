@@ -9,7 +9,7 @@ Genera dos documents des d'una sola selecció de continguts:
 | Document | Per a qui | Què porta |
 |---|---|---|
 | **Prova** | l'alumne | enunciats numerats, punts, i espai quadriculat per respondre |
-| **Full de correcció** | el professor | solució, resolució pas a pas, contingut avaluat i graella de puntuació |
+| **Full de correcció** | el professor | taula amb la solució i els passos (a, b, c…) de cada pregunta i, en una pàgina a part, la graella de puntuació |
 
 ---
 
@@ -57,7 +57,8 @@ vegada: continguts marcats, nivell, criteri de punts, format del full i
 capçalera. No s'hi desen el nom de l'alumne, el grup, la data, el model ni el
 codi de la tria, perquè aquests han de començar de zero cada cop.
 
-Cada prova porta un **codi de cinc caràcters** al peu. Mateix codi, mateixa
+Cada prova té un **codi de cinc caràcters**, que surt a dalt del panell i al peu del
+full de correcció (la prova de l'alumne no porta peu). Mateix codi, mateixa
 prova, sempre. L'adreça de la pàgina el guarda, així que pots desar l'enllaç i
 recuperar l'examen mesos després. Per fer models A i B del mateix examen: prem
 **Altres preguntes** (o `Ctrl+G`), canvia el camp *Model* (al costat del codi,

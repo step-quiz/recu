@@ -218,7 +218,7 @@
     if (!p.length) {
       h += '<p class="doc-buit">Encara no hi ha cap ' +
            'pregunta. Marca continguts a l\'esquerra.</p>';
-      return h + peu(cfg, 'prova');
+      return h;
     }
 
     var espai = cfg.espai > 0
@@ -289,7 +289,10 @@
     if (cfg.mostraPunts) {
       h += '<p class="doc-total">Total: ' + num(total) + ' punts</p>';
     }
-    return h + peu(cfg, 'prova');
+    /* Sense peu: el que rep l'alumne no porta ni el títol repetit ni el
+       codi. El codi (i el model) surten al peu de la correcció, que és on
+       el professor els necessita per saber quina prova corregeix. */
+    return h;
   }
 
   /* ----------------------------------------------------------------- clau */
@@ -300,35 +303,33 @@
 
     if (!p.length) return h + peu(cfg, 'correcció');
 
+    /* Tres columnes: el número, la solució i els passos, a), b), c)…
+       Els punts ja són a la graella i el contingut no cal per corregir. */
     h += '<table class="clau-taula"><thead><tr>' +
-           '<th class="n">#</th><th>Solució i passos</th>' +
-           '<th class="contingut">Contingut avaluat</th><th class="p">Punts</th>' +
+           '<th class="n">#</th><th class="sol">Solució</th><th>Passos</th>' +
          '</tr></thead><tbody>';
 
     p.forEach(function (q, i) {
       var it = banc[q.itemId];
       if (!it) return;
       var s = solucio(it);
-      var saber = sabersPerId[q.saberId];
       h += '<tr>' +
              '<td class="n">' + etiquetaDe(estat, i) + '</td>' +
+             '<td class="clau-resposta">' + s.r + '</td>' +
              '<td>' +
-               '<div class="clau-resposta">' + s.r + '</div>' +
                (s.p && s.p.length
                  ? '<ol class="clau-passos">' + s.p.map(function (x) {
                      return '<li>' + x + '</li>'; }).join('') + '</ol>'
                  : '') +
              '</td>' +
-             '<td>' + esc(saber ? saber.titol : '') +
-               '<div class="clau-origen">' + esc(it.blocTitol) +
-               ' · ' + esc(it.id) + ' · nivell ' + it.nivell + '</div></td>' +
-             '<td class="p">' + num(q.punts) + '</td>' +
            '</tr>';
     });
     h += '</tbody></table>';
 
     /* Graella de correcció: una fila per posar la puntuació de cada
-       pregunta mentre es corregeix, sense haver de buscar-la a la taula. */
+       pregunta mentre es corregeix, sense haver de buscar-la a la taula.
+       Sempre en una pàgina nova (`break-before`, a imprimir.css): així es
+       pot tenir al costat de les solucions mentre es corregeix. */
     h += '<h2 class="graella-tit">Graella de correcció</h2>' +
          '<table class="graella"><thead><tr><th>Pregunta</th>';
     p.forEach(function (_, i) { h += '<th>' + etiquetaDe(estat, i) + '</th>'; });
