@@ -296,15 +296,13 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
       return /^"?Times New Roman/.test(cs.fontFamily) && cs.fontSize === '16px';
     })));
   comprova('els passos van amb a), b), c)', /lower-alpha/.test(correccio.marcador), correccio.marcador);
-  /* La graella, sempre en una pàgina nova: és la darrera pàgina i no hi
-     ha res més de la taula. */
-  const pdfClau = await pag.pdf({ format: 'A4', printBackground: true });
-  const fullsClau = paginesPdf(pdfClau);
-  await pag.evaluate(() => document.querySelector('.graella-tit').remove());
-  await pag.evaluate(() => document.querySelector('.graella').remove());
-  const senseGraella = paginesPdf(await pag.pdf({ format: 'A4', printBackground: true }));
-  comprova('la graella de correcció comença en una pàgina nova', fullsClau === senseGraella + 1,
-    `${fullsClau} amb graella, ${senseGraella} sense`);
+  /* La graella, sempre en una pàgina nova. Es mira la regla d'impressió i
+     no el nombre de pàgines del PDF: comparar el PDF amb graella i sense
+     depenia de les preguntes que sortien a l'atzar i fallava algun cop. */
+  await pag.emulateMedia({ media: 'print' });
+  const salt = await pag.evaluate(() => getComputedStyle(document.querySelector('.graella-tit')).breakBefore);
+  await pag.emulateMedia({ media: 'screen' });
+  comprova('la graella de correcció comença en una pàgina nova', salt === 'page', salt);
   comprova('la clau té una fila per pregunta', correccio.files === despres,
     `${correccio.files} files, ${despres} preguntes`);
   comprova('el botó diu «Imprimeix la correcció», sense pàgines',
