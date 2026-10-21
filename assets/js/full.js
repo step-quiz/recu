@@ -104,14 +104,6 @@
       '</div>';
   }
 
-  function peu(cfg, quin) {
-    return '<footer class="doc-peu">' +
-      '<span>' + esc(cfg.titol) + (quin ? ' · ' + esc(quin) : '') + '</span>' +
-      '<span>Codi ' + esc(cfg.llavor) +
-        (cfg.model ? ' · model ' + esc(cfg.model) : '') + '</span>' +
-    '</footer>';
-  }
-
   /* Icones de les accions d'una pregunta, en SVG i no en caràcters: les
      fletxes circulars (⟳ ↻) no deien què feien i cada tipografia les
      dibuixa diferent. `currentColor`: agafen el color del botó.
@@ -289,9 +281,8 @@
     if (cfg.mostraPunts) {
       h += '<p class="doc-total">Total: ' + num(total) + ' punts</p>';
     }
-    /* Sense peu: el que rep l'alumne no porta ni el títol repetit ni el
-       codi. El codi (i el model) surten al peu de la correcció, que és on
-       el professor els necessita per saber quina prova corregeix. */
+    /* Sense peu: ni el títol repetit ni el codi. La prova queda desada a
+       l'adreça de la pàgina. */
     return h;
   }
 
@@ -301,28 +292,53 @@
 
     var h = capcalera(cfg, 'Full de correcció');
 
-    if (!p.length) return h + peu(cfg, 'correcció');
+    if (!p.length) return h;
 
-    /* Tres columnes: el número, la solució i els passos, a), b), c)…
-       Els punts ja són a la graella i el contingut no cal per corregir. */
+    /* Tres columnes: l'enunciat, copiat i numerat igual que a la prova
+       (1., 2. a), b)…), la solució i els passos, a), b), c)… Els punts ja
+       són a la graella i el contingut no cal per corregir. */
     h += '<table class="clau-taula"><thead><tr>' +
-           '<th class="n">#</th><th class="sol">Solució</th><th>Passos</th>' +
+           '<th class="enun">Enunciat</th><th class="sol">Solució</th><th>Passos</th>' +
          '</tr></thead><tbody>';
 
-    p.forEach(function (q, i) {
-      var it = banc[q.itemId];
-      if (!it) return;
-      var s = solucio(it);
-      h += '<tr>' +
-             '<td class="n">' + etiquetaDe(estat, i) + '</td>' +
-             '<td class="clau-resposta">' + s.r + '</td>' +
-             '<td>' +
-               (s.p && s.p.length
-                 ? '<ol class="clau-passos">' + s.p.map(function (x) {
-                     return '<li>' + x + '</li>'; }).join('') + '</ol>'
-                 : '') +
-             '</td>' +
-           '</tr>';
+    var fila = function (i, enunciat) {
+      var s = solucio(banc[p[i].itemId]);
+      return '<tr>' +
+               '<td class="clau-enunciat">' + enunciat + '</td>' +
+               '<td class="clau-resposta">' + s.r + '</td>' +
+               '<td>' +
+                 (s.p && s.p.length
+                   ? '<ol class="clau-passos">' + s.p.map(function (x) {
+                       return '<li>' + x + '</li>'; }).join('') + '</ol>'
+                   : '') +
+               '</td>' +
+             '</tr>';
+    };
+    var numero = function (n, cos) {
+      return '<div class="clau-num"><b>' + n + '</b><div>' + cos + '</div></div>';
+    };
+
+    grupsDe(estat).forEach(function (g, n) {
+      g = g.filter(function (i) { return banc[p[i].itemId]; });
+      if (!g.length) return;
+      if (g.length === 1) {
+        h += fila(g[0], numero((n + 1) + '.', cosItem(banc[p[g[0]].itemId], cfg)));
+        return;
+      }
+      /* Un grup d'apartats: la consigna en una fila sencera i, a sota, un
+         apartat per fila, com a la prova. */
+      var primer = banc[p[g[0]].itemId];
+      var ambCap = cfg.encapcalaments ||
+        g.some(function (i) { return banc[p[i].itemId].capCal; });
+      h += '<tr class="clau-grup"><td colspan="3">' +
+             numero((n + 1) + '.', ambCap ? textMates(primer.cap) : '') + '</td></tr>';
+      g.forEach(function (i, k) {
+        var it = banc[p[i].itemId];
+        h += fila(i, numero('abcdefghijklmnopqrstuvwxyz'.charAt(k) + ')',
+          textMates(it.enunciat) +
+          (it.figura && (cfg.figures || it.figuraCal)
+            ? '<div class="figura-cont">' + it.figura + '</div>' : '')));
+      });
     });
     h += '</tbody></table>';
 
@@ -340,7 +356,7 @@
     p.forEach(function () { h += '<td class="buida"></td>'; });
     h += '<td class="buida"></td></tr></tbody></table>';
 
-    return h + peu(cfg, 'correcció');
+    return h;
   }
 
   glob.Full = { prova: prova, clau: clau, solucio: solucio,

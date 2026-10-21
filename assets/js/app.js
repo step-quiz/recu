@@ -134,12 +134,7 @@
       alumne: '',
       grup: '',
       data: avui(),
-      model: '',
-      llavor: '',
-      instruccions:
-        'Resol cada exercici a l\'espai que hi ha a sota de l\'enunciat.\n' +
-        'Cal escriure tot el procés: un resultat sense els passos no puntua.\n' +
-        'Pots fer servir calculadora, però no el mòbil.',
+      instruccions: 'Instruccions: ',
       espai: 38,
       paper: 'quadricula',
       figures: true,
@@ -152,8 +147,7 @@
 
   /* Els valors inicials: com vols trobar l'eina cada vegada que l'obris en
      aquest navegador. Es desa tota la configuració menys el que és d'una
-     prova concreta —l'alumne, el grup, la data, el model i el codi de la
-     tria—, perquè aquests han de tornar a començar de zero cada cop.
+     prova concreta —l'alumne, el grup, la data i el codi de la tria—, perquè aquests han de tornar a començar de zero cada cop.
 
      Els continguts marcats sí que s'hi desen: qui recupera 2n d'ESO ho fa
      moltes vegades seguides i tornar-los a marcar cada cop és feina inútil. */
@@ -495,7 +489,6 @@
     if (estat.spec.ordre === 'dificultat') estat.preguntes.sort(perDificultat);
     estat.avisos = r.avisos;
     estat.editat = false;
-    estat.cfg.llavor = estat.spec.llavor;
     reparteixPunts();
     pinta();
     desaAlHash();
@@ -1196,10 +1189,7 @@
   function comptaPagines() {
     var full = $('#full'), aMm = 25.4 / 96;
 
-    /* A4 menys els marges de la regla @page. El peu NO es resta: com que
-       està fixat, se superposa al flux en comptes de reservar-hi lloc
-       (comprovat contra 126 PDF reals; restant-lo, el comptador es passava
-       de llarg en els casos frontera). */
+    /* A4 menys els marges de la regla @page (els fulls no porten peu). */
     var util = 297 - 18 - 16;
 
     /* No es divideix l'alçada total per l'alçada de pàgina: `break-inside:
@@ -1221,7 +1211,6 @@
     /* Les llistes i el que porta `.partible` (un grup d'apartats) es poden
        partir entre pàgines: es baixa als fills. */
     function recorre(el) {
-      if (el.classList.contains('doc-peu')) return;
       if (el.tagName === 'OL' || el.tagName === 'UL' || el.classList.contains('partible')) {
         Array.prototype.forEach.call(el.children, recorre);
       } else {
@@ -1292,7 +1281,7 @@
         s: estat.sabers, n: estat.spec.nombre, p: estat.spec.perfil,
         w: estat.spec.pes, o: estat.spec.ordre, t: estat.spec.punts,
         l: estat.spec.llavor, e: estat.cfg.espai, q: estat.cfg.paper,
-        m: estat.cfg.model, pt: estat.cfg.mostraPunts ? 1 : 0,
+        pt: estat.cfg.mostraPunts ? 1 : 0,
         cp: estat.spec.criteriPunts,
         /* Tot el que canvia el paper. Sense les dues caselles, apagar les
            figures no sobrevivia a l'enllaç; sense la capçalera, l'enllaç
@@ -1362,7 +1351,6 @@
       if (text(d.l, 24) && d.l) estat.spec.llavor = d.l;
       if (nombre(d.e, 0, 90)) estat.cfg.espai = d.e;
       if (bo('q')) estat.cfg.paper = d.q;
-      if (text(d.m, 40)) estat.cfg.model = d.m;
       if (d.pt != null) estat.cfg.mostraPunts = !!d.pt;
       if (bo('cp')) estat.spec.criteriPunts = d.cp;
       // Les adreces d'abans no els porten: llavors manen els valors inicials.
@@ -1387,7 +1375,6 @@
           if (typeof id === 'string' && banc[id]) estat.fixades[id] = true;
         });
         estat.editat = true;
-        estat.cfg.llavor = estat.spec.llavor;
         reparteixPunts();
       }
       return true;
@@ -1439,23 +1426,19 @@
   /* ---------------------------------------------------------------- lligams */
   function sincronitzaControls() {
     /* El control té un rang [3, 30] i `estat.spec.nombre` se'n pot sortir
-       traient o afegint preguntes una a una. Mana l'estat, i el marcador
-       ha de dir el que hi ha de debò encara que la barra estigui al topall. */
+       traient o afegint preguntes una a una. Mana l'estat: el marcador diu
+       el que hi ha de debò encara que la barra estigui al topall. */
     var n = $('#nombre');
     n.value = Math.max(+n.min, Math.min(+n.max, estat.spec.nombre));
-    $('#nombre-valor').textContent = estat.spec.nombre +
-      (estat.spec.nombre > +n.max ? ' (per sobre del màxim del control)' :
-       estat.spec.nombre < +n.min ? ' (per sota del mínim del control)' : '');
+    $('#nombre-valor').textContent = estat.spec.nombre;
     $('#punts').value = estat.spec.punts;
     $('#espai').value = estat.cfg.espai;
     $('#espai-valor').textContent = estat.cfg.espai + ' mm';
     $('#paper').value = estat.cfg.paper;
     $('#ordre').value = estat.spec.ordre;
-    $('#model').value = estat.cfg.model;
     $('#figures').checked = estat.cfg.figures;
     $('#encapcalaments').checked = estat.cfg.encapcalaments;
     $('#mostraPunts').checked = estat.cfg.mostraPunts;
-    $('#llavor').textContent = estat.spec.llavor;
     document.querySelectorAll('[data-perfil]').forEach(function (b) {
       b.setAttribute('aria-pressed', b.dataset.perfil === estat.spec.perfil);
     });
@@ -1719,11 +1702,6 @@
       $('#' + k).addEventListener('change', function () {
         estat.cfg[k] = this.checked; pintaFull(); desaAlHash();
       });
-    });
-    $('#model').addEventListener('input', function () {
-      estat.cfg.model = this.value;
-      pintaFull();
-      desaAlHash();
     });
 
     document.querySelectorAll('[data-doc]').forEach(function (b) {

@@ -65,13 +65,6 @@
   .graella-tit{break-before:page;page-break-before:always;border-top:0;padding-top:0;margin-top:0}
   .graella-tit{break-after:avoid;page-break-after:avoid}
 
-  /* Peu repetit a cada pàgina: Chrome i Edge repeteixen els elements
-     fixats. A Firefox només surt a la primera; és degradació acceptable. */
-  .doc-peu{
-    position:fixed;bottom:0;left:0;right:0;
-    margin:0;padding-top:1.5mm;background:#fff;
-  }
-  .full{padding-bottom:10mm}
 
   a[href]::after{content:none}
 }
