@@ -66,7 +66,11 @@ recuperar l'examen mesos després. Per fer un altre model del mateix examen:
 prem `Ctrl+G` (ja no hi ha botó «Altres preguntes» al panell) i torna a imprimir.
 
 Les instruccions per a l'alumne comencen amb només «Instruccions: »: clica-hi
-damunt del full i escriu-hi les teves.
+damunt del full i escriu-hi les teves. Si no hi escrius res més, la caixa es veu
+a la pantalla però no s'imprimeix.
+
+**Ctrl + G** refà la prova amb unes altres preguntes (conserva les ☆ i les
+pròpies). No té botó; ho recorda una línia a *Preferències*.
 
 ### Els controls que no són obvis
 
@@ -95,10 +99,16 @@ Fins ara no era així: a les pantalles de 1280–1440 px el full s'encongia
 (fins a 592 px en lloc de 794), el text es partia en més línies que en paper i
 el que es veia deixava de ser el que s'imprimia.
 
-**Els cursos es pleguen.** Clicant el nom del curs a la columna de l'esquerra
-(«▾ 1r d'ESO») se n'amaguen els continguts; el comptador «3 / 18» continua dient
-quants n'hi ha de marcats. Una cerca desplega el que troba. El navegador recorda
-quins cursos tens plegats.
+**Els cursos es pleguen.** En obrir l'eina tots surten plegats, i un curs es
+desplega sol quan hi marques un contingut (o «Tot el curs»): qui recupera 2n no
+ha de passar per damunt dels divuit continguts de 1r. Clicant el nom del curs
+(«▸ 1r d'ESO») el plegues o el desplegues a mà, i el navegador ho recorda fins
+que hi tornis a marcar un contingut. El comptador «3 / 18» diu quants n'hi ha de
+marcats encara que estigui plegat. Una cerca desplega el que troba.
+
+**Una sola barra a dalt**: el títol, les pestanyes *Prova | Correcció*, el
+*Zoom* i el botó d'imprimir. En un portàtil de 14" el que falta és alçada, i les
+dues franges d'abans se'n menjaven 100 px.
 
 **Aparença.** La interfície segueix el mode clar o fosc del sistema operatiu;
 no hi ha cap botó per canviar-lo. El full no canvia mai de color: és paper.
@@ -127,7 +137,7 @@ sistemàticament curtes o llargues, els tres valors són a `MINUTS_NIVELL`, a
 minuts. La durada es desa amb *Desa com a valors inicials* i a l'adreça.
 
 **El nivell d'una pregunta concreta.** Al panell de la dreta, clicant una
-pregunta, s'obre amb un selector de nivell. Per defecte diu «General (ara 1)»:
+pregunta, s'obre amb un selector de nivell. Per defecte diu «General (1)»:
 segueix la barreja del control de dalt. Si hi tries 1, 2 o 3, la
 clava a aquell nivell i s'hi queda —«‹» i «⇄ Una altra» només oferiran preguntes
 d'aquell nivell— fins que la tornis a posar a «general».
@@ -274,7 +284,8 @@ construir sobre els criteris concrets que l'alumne no va assolir, i no sobre un
 total global. Als continguts no marcats no surt: marcar la casella ja hi posa
 una pregunta.
 
-**El nombre de pàgines** surt al costat del botó d'imprimir (només a la prova), amb un «≈»
+**El nombre de pàgines** surt al costat del botó d'imprimir (només a la prova, i
+només si té preguntes), amb un «≈»
 que no és decoratiu: es calcula simulant la paginació —cada pregunta és un
 bloc que no es parteix— i, contrastat contra 126 PDF reals, encerta el
 96-98 % de les vegades. Quan falla és sempre una pàgina de menys. Afinar-ho

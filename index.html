@@ -13,12 +13,28 @@
 
 <div class="app" id="app" data-vista="full">
 
-  <!-- ------------------------------------------------------------- barra -->
+  <!-- ------------------------------------------------------------- barra
+       Una sola barra: en un portàtil de 14" el que falta és alçada, i dues
+       franges (títol i imprimir; pestanyes i zoom) en menjaven 100 px. -->
   <header class="barra">
     <div class="marca">
       <strong>Prova de recuperació</strong>
     </div>
+    <div class="pestanyes" role="tablist">
+      <button role="tab" data-doc="prova" aria-selected="true">Prova</button>
+      <button role="tab" data-doc="clau" aria-selected="false">Correcció</button>
+    </div>
     <div class="buit"></div>
+    <label class="zoom">
+      <span>Zoom</span>
+      <select id="zoom" aria-label="Zoom del full">
+        <option value="auto">Ajustat</option>
+        <option value="0.5">50 %</option>
+        <option value="0.75">75 %</option>
+        <option value="1">100 %</option>
+        <option value="1.25">125 %</option>
+      </select>
+    </label>
     <div class="barra-accions">
       <button class="btn principal" id="imprimeix">Imprimeix la prova<small id="pagines"></small></button>
     </div>
@@ -43,23 +59,6 @@
        La capçalera (centre, títol, alumne, grup, data, instruccions)
        s'edita clicant-la directament damunt del full. -->
   <main class="taula">
-    <div class="taula-eines">
-      <div class="pestanyes" role="tablist">
-        <button role="tab" data-doc="prova" aria-selected="true">Prova</button>
-        <button role="tab" data-doc="clau" aria-selected="false">Correcció</button>
-      </div>
-      <div class="buit"></div>
-      <label class="zoom">
-        <span>Zoom</span>
-        <select id="zoom" aria-label="Zoom del full">
-          <option value="auto">Ajustat</option>
-          <option value="0.5">50 %</option>
-          <option value="0.75">75 %</option>
-          <option value="1">100 %</option>
-          <option value="1.25">125 %</option>
-        </select>
-      </label>
-    </div>
     <div class="escena">
       <article class="full" id="full"></article>
     </div>
@@ -161,6 +160,8 @@
           <button class="btn petit" id="oblida-inicials">Oblida'ls</button>
         </div>
         <p class="ajuda" id="inicials-avis" role="status" aria-live="polite"></p>
+        <p class="ajuda"><b>Ctrl + G</b> refà la prova amb unes altres preguntes
+          (es conserven les marcades amb ☆ i les pròpies).</p>
       </div>
     </details>
     <!-- Al final de tot: gairebé sempre es fan servir els valors per

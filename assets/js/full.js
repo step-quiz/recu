@@ -200,8 +200,12 @@
        així es pot editar damunt del full com un text qualsevol. Buit, només
        hi és a pantalla (per poder-hi escriure) i no s'imprimeix. */
     var instr = (cfg.instruccions || '').replace(/\n{2,}/g, '\n').trim();
+    /* Només «Instruccions:», sense res més: es veu a pantalla (per poder-hi
+       escriure) però no s'imprimeix, perquè una caixa buida no diu res. */
+    var nomesTitol = /^instruccions\s*:?$/i.test(instr);
     if (instr) {
-      h += '<div class="doc-instruccions' + (cfg.editable ? ' ed' : '') + '"' +
+      h += '<div class="doc-instruccions' + (cfg.editable ? ' ed' : '') +
+           (nomesTitol ? ' no-imprimeix' : '') + '"' +
            (cfg.editable ? ' contenteditable="plaintext-only" spellcheck="false" ' +
              'data-camp="instruccions" data-pista="Instruccions" title="Clica per editar"' : '') +
            '>' + esc(instr) + '</div>';

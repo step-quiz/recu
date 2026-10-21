@@ -28,7 +28,7 @@
      i sense la caixa d'instruccions buida. */
   .ed{outline:none!important;background:none!important}
   .ed:empty::before{content:none!important}
-  .tria-data,.doc-instruccions.buit{display:none!important}
+  .tria-data,.doc-instruccions.buit,.no-imprimeix{display:none!important}
   /* I el carril que les allotja tampoc: a pantalla cau dins del marge de
      `.full`, però en imprimir `.full` no en té i sobresortiria de la pàgina. */
   .pregunta,.apartat{padding-left:0;margin-left:0}
