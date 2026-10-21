@@ -1,10 +1,9 @@
 /* ===========================================================================
    Construcció dels documents imprimibles.
 
-   Tres sortides, un sol full A4 a pantalla:
+   Dues sortides, un sol full A4 a pantalla:
      - prova:  el que rep l'alumne
      - clau:   el que es queda el professor per corregir
-     - pla:    què ha de repassar l'alumne, amb el material del centre
 
    El que es veu a pantalla és exactament el que surt per la impressora,
    perquè no hi ha una segona maquetació: `imprimir.css` apaga la interfície
@@ -59,7 +58,7 @@
      A la vista «Prova», la capçalera s'edita directament damunt del full:
      cada text és un `contenteditable` amb `data-camp`, i app.js en recull
      el valor. Un camp buit mostra una pista en gris que no s'imprimeix
-     (vegeu `.ed:empty::before` i imprimir.css). A la clau i al pla, text. */
+     (vegeu `.ed:empty::before` i imprimir.css). A la clau, text. */
   function ed(cfg, camp, valor, pista) {
     if (!cfg.editable) return esc(valor);
     return '<span class="ed" contenteditable="plaintext-only" spellcheck="false" ' +
@@ -148,8 +147,7 @@
    * interruptor buidi una pregunta: l'encapçalament es conserva quan
    * l'enunciat és una dada solta ("$3850$"), i la figura quan la pregunta
    * ÉS el dibuix. Els declara el generador; per als ítems de `repas` els
-   * dedueix el compilador. La prova i els exercicis de pràctica del pla
-   * passen tots dos per aquí.
+   * dedueix el compilador.
    */
   function cosItem(it, cfg) {
     return (it.cap && (cfg.encapcalaments || it.capCal)
@@ -274,7 +272,7 @@
   function clau(estat, banc, sabersPerId) {
     var cfg = estat.cfg, p = estat.preguntes;
 
-    var h = capcalera(cfg, 'Full de correcció · no s\'ha de repartir a l\'alumnat');
+    var h = capcalera(cfg, 'Full de correcció');
 
     if (!p.length) return h + peu(cfg, 'correcció');
 
@@ -320,117 +318,6 @@
     return h + peu(cfg, 'correcció');
   }
 
-  /**
-   * «Llibre de 2n d'ESO, UD5 «Geometria»: activitats 2, 6». Si el llibre
-   * d'aquell curs no és al mapa (el de 3r, ara mateix) o no en té la
-   * unitat, se'n diu el número igualment: una referència sense títol val
-   * més que cap, que és el que sortia abans. Una unitat sencera diu «totes
-   * les activitats» en comptes d'enumerar-ne catorze.
-   */
-  function referenciaLlibre(r, llibre, nomCurs) {
-    var u = llibre && llibre.units.filter(function (x) { return x.num === r.ud; })[0];
-    return 'Llibre de ' + nomCurs + ', UD' + r.ud + (u ? ' «' + u.title + '»' : '') +
-      ': ' + (r.act && r.act.length ? 'activitats ' + r.act.join(', ') : 'totes les activitats');
-  }
-
-  /* ------------------------------------------------------------- pla de repàs
-     El mateix conjunt de sabers que ha generat la prova genera el que
-     l'alumne ha d'estudiar. És l'única manera que el full de repàs i
-     l'examen no se separin amb el temps. */
-  function pla(estat, banc, sabersPerId, mapa) {
-    var cfg = estat.cfg;
-    var ids = estat.sabers.filter(function (id) { return sabersPerId[id]; });
-    var practica = estat.practica || {};
-
-    var h = capcalera(cfg, 'Què has de repassar per a la prova') +
-            '<div class="doc-dades"><div><span class="etq">Nom i cognoms</span>' +
-            '<div class="linia">' + esc(cfg.alumne || '') + '</div></div>' +
-            '<div class="ample"><span class="etq">Dia de la prova</span>' +
-            '<div class="linia">' + esc(dataLlarga(cfg.data)) + '</div></div></div>';
-
-    if (!ids.length) {
-      return h + '<p class="doc-buit">Marca continguts a ' +
-             'l\'esquerra per generar el pla.</p>' + peu(cfg, 'pla de repàs');
-    }
-
-    var ambPractica = ids.some(function (id) { return (practica[id] || []).length; });
-    h += '<div class="doc-instruccions pla-intro"><p>' +
-         (ambPractica
-           ? 'Per a cada contingut: repassa\'l al llibre i fes els exercicis de ' +
-             'pràctica a la llibreta, amb tot el procés. ' +
-             (cfg.solucionsPla
-               ? 'Les solucions són al final: mira-les quan hagis acabat ' +
-                 'l\'exercici, no abans.'
-               : 'Porta\'ls fets el dia de la prova.')
-           : 'Repassa cada contingut al llibre i fes-ne les activitats indicades.') +
-         '</p><p>Marca la casella de cada contingut quan el tinguis repassat.</p></div>';
-
-    var perCurs = {};
-    ids.forEach(function (id) {
-      var s = sabersPerId[id];
-      var curs = id.slice(0, 4);
-      (perCurs[curs] = perCurs[curs] || []).push(s);
-    });
-
-    /* El nom del curs surt del currículum i no del llibre: el llibre de 3r
-       no és al mapa compilat, i el títol sortia com a «Matemàtiques de
-       3eso». */
-    var titolCurs = {};
-    mapa.cursos.forEach(function (c) { titolCurs[c.id] = c.titol; });
-
-    /* Els exercicis es numeren seguits de dalt a baix del document: les
-       solucions del final hi fan referència pel número. */
-    var numero = 0, solucions = [];
-
-    Object.keys(perCurs).sort().forEach(function (curs) {
-      h += '<section class="pla-sec partible"><h2>Matemàtiques de ' +
-           esc(titolCurs[curs] || curs) + '</h2><ul class="partible">';
-
-      perCurs[curs].forEach(function (s) {
-        var refs = [];
-        s.llibre.forEach(function (r) {
-          refs.push(referenciaLlibre(r, mapa.llibre[r.curs], titolCurs[r.curs] || r.curs));
-        });
-        s.bogdan.forEach(function (b) {
-          refs.push('Apunts «' + b.titol + '» (Mates amb Bogdan) — ampliació');
-        });
-
-        var exercicis = (practica[s.id] || []).filter(function (id) { return banc[id]; });
-        h += '<li class="pla-saber' + (exercicis.length ? ' partible' : '') + '">' +
-             '<div class="pla-cap">' +
-               '<span class="casella" aria-hidden="true"></span>' +
-               '<strong>' + esc(s.titol) + '.</strong> ' + esc(s.detall) +
-               (refs.length ? '<div class="font">' + refs.map(esc).join(' · ') + '</div>' : '') +
-             '</div>';
-
-        if (exercicis.length) {
-          h += '<div class="practica partible">';
-          exercicis.forEach(function (id) {
-            var it = banc[id];
-            numero++;
-            solucions.push({ n: numero, r: solucio(it).r });
-            h += '<div class="exercici"><span class="exercici-num">' + numero + '.</span>' +
-                 '<div class="exercici-cos">' + cosItem(it, cfg) + '</div></div>';
-          });
-          h += '</div>';
-        }
-        h += '</li>';
-      });
-      h += '</ul></section>';
-    });
-
-    if (cfg.solucionsPla && solucions.length) {
-      h += '<section class="pla-sec solucions partible"><h2>Solucions dels exercicis</h2>' +
-           '<ol class="solucions-llista">' +
-           solucions.map(function (x) {
-             return '<li value="' + x.n + '">' + x.r + '</li>';
-           }).join('') +
-           '</ol></section>';
-    }
-
-    return h + peu(cfg, 'pla de repàs');
-  }
-
-  glob.Full = { prova: prova, clau: clau, pla: pla, solucio: solucio,
+  glob.Full = { prova: prova, clau: clau, solucio: solucio,
                 esc: esc, num: num, textMates: textMates };
 })(window);

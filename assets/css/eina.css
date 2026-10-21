@@ -37,19 +37,20 @@
   --doc:Georgia,"Iowan Old Style","Times New Roman",serif;
   --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
 
-  --rail:20.5rem;
-  --panell:20.5rem;
+  /* Les dues columnes, estretes a posta (esquerra −10 %, dreta −15 %): l'espai
+     és per al full del centre, que és el que s'ha de llegir bé. */
+  --rail:18.45rem;
+  --panell:17.4rem;
   --zoom:1;
   color-scheme:light;
 }
 
 /* ------------------------------------------------------------ tema fosc
-   El del sistema (sense `data-theme`) o triat a mà (`data-theme="dark"`);
-   «Clar» triat a mà (`data-theme="light"`) mana sobre el sistema. Ho posa
-   aparenca.js. El full NO canvia: és paper, i el que s'hi veu ha de ser el
-   que surt per la impressora. */
+   El del sistema operatiu, sense cap botó: la barra de dalt només porta el
+   que es fa servir a cada prova. El full NO canvia: és paper, i el que s'hi
+   veu ha de ser el que surt per la impressora. */
 @media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
+  :root{
     --paper:#0E131A; --tinta:#E3E8EF; --apagat:#97A3B4;
     --vora:#252E3B; --vora-forta:#364154; --card:#161C25;
     --blau:#7AA5EB; --blau-suau:#1D2B42; --verd:#55C49C; --verd-suau:#143027;
@@ -60,17 +61,6 @@
     --sobre-blau:#0B1220;
     color-scheme:dark;
   }
-}
-:root[data-theme="dark"]{
-  --paper:#0E131A; --tinta:#E3E8EF; --apagat:#97A3B4;
-  --vora:#252E3B; --vora-forta:#364154; --card:#161C25;
-  --blau:#7AA5EB; --blau-suau:#1D2B42; --verd:#55C49C; --verd-suau:#143027;
-  --ambre:#E3AA4C; --ambre-suau:#2F2511; --vermell:#E47F75;
-  --camp:#10151D; --suau:#1A212C; --hover:#1C2430; --hover-fort:#28323F;
-  --vidre:rgba(14,19,26,.9); --ambre-text:#F1CD8E;
-  --principal:#7AA5EB; --principal-hover:#94B7F0; --sobre-principal:#0B1220;
-  --sobre-blau:#0B1220;
-  color-scheme:dark;
 }
 
 *,*::before,*::after{box-sizing:border-box}
@@ -113,17 +103,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 }
 .marca{display:flex;align-items:baseline;gap:.55rem;min-width:0}
 .marca strong{font-size:1rem;font-weight:650;letter-spacing:-.012em;white-space:nowrap}
-.marca span{color:var(--apagat);font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .barra .buit{flex:1}
 .barra-accions{display:flex;gap:.4rem;align-items:center}
-
-/* Aparença: clar, fosc o el del sistema (la mateixa idea que el banc de
-   2n de batxillerat). Només icones: la barra ja va plena. */
-.aparenca{
-  border:0;background:none;color:var(--apagat);cursor:pointer;
-  width:2rem;height:2rem;font-size:1rem;line-height:1;padding:0;border-radius:7px;
-}
-.aparenca:hover{background:var(--hover);color:var(--tinta)}
 
 /* ------------------------------------------------------------------ botons */
 .btn{
@@ -145,14 +126,13 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 /* ------------------------------------------------------- rail: el currículum
    L'estructura de l'esquerra és el document del departament, no un menú:
-   curs -> sentit -> saber, amb les hores com a quantitat real. */
+   curs -> sentit -> saber. */
 .rail-cap{
   position:sticky;top:0;z-index:2;background:var(--card);
   padding:.85rem 1rem .6rem;border-bottom:1px solid var(--vora);
 }
-.rail-cap h2{margin:0;font-size:.9rem;font-weight:650}
 .cerca{
-  width:100%;margin-top:.6rem;padding:.38rem .55rem;
+  width:100%;padding:.38rem .55rem;
   border:1px solid var(--vora-forta);border-radius:7px;background:var(--camp);font-size:.85rem;
 }
 
@@ -234,13 +214,6 @@ button,input,select,textarea{font:inherit;color:inherit}
 .saber input{margin:.28rem 0 0;accent-color:var(--blau);width:1.05rem;height:1.05rem}
 .saber-cos{min-width:0}
 .saber-tit{font-size:.855rem;line-height:1.35}
-.saber-meta{
-  display:flex;align-items:center;flex-wrap:wrap;gap:.1rem .4rem;margin-top:.12rem;
-  font-size:.74rem;color:var(--apagat);font-variant-numeric:tabular-nums;
-}
-/* Les hores, com a barra: és el que pondera l'examen per defecte. */
-.hores{display:inline-block;height:3px;background:var(--vora-forta);border-radius:2px;min-width:2px}
-.saber input:checked ~ .saber-cos .hores{background:var(--blau)}
 
 /* --------------------------------------------------- panell de composició */
 .panell-cap{
@@ -401,6 +374,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .q-eines .perill{margin-left:auto}
 .q-eines .perill:hover:not(:disabled){border-color:var(--vermell);color:var(--vermell)}
 
+.avisos:not(:empty){padding:.7rem 1rem .15rem;border-bottom:1px solid var(--vora)}
 .avis .mini{margin-left:.3rem}
 .avis{
   margin:0 0 .55rem;padding:.5rem .6rem;border-radius:7px;
@@ -540,12 +514,12 @@ button,input,select,textarea{font:inherit;color:inherit}
   position:absolute;left:0;top:0;
   /* Dues columnes: en una sola fila vertical, set botons feien 38 mm i
      envaïen la pregunta de sota quan l'espai de resposta era petit. */
-  display:grid;grid-template-columns:17px;gap:2px;
+  display:grid;grid-template-columns:22px;gap:3px;
   align-content:start;
   /* Visibles sempre, encara que apagades: amagar-les fins al `hover` és el
      que feia que la funció més útil de l'eina fos la que no es trobava. Al
      marge esquerre no molesten la lectura del full. */
-  opacity:.4;transition:opacity .12s;
+  opacity:.85;transition:opacity .12s;
   /* Amb l'espai de resposta a 0 la barra fa 74 px i la pregunta 21: la
      barra sobresurt per sota i se superposa a la de la pregunta següent.
      Un element amb `opacity:0` SEGUEIX rebent clics, i com que la de sota
@@ -560,12 +534,17 @@ button,input,select,textarea{font:inherit;color:inherit}
 .apartat:hover > .pregunta-eines,
 .pregunta-eines:focus-within{opacity:1;pointer-events:auto;z-index:2}
 .pregunta-eines button{
-  width:17px;height:17px;padding:0;line-height:1;
-  border:1px solid var(--vora-forta);background:#fff;color:var(--apagat);
-  border-radius:5px;font-size:11px;font-family:var(--ui);cursor:pointer;
+  /* Gris fosc i no l'apagat de la interfície: amb aquell to i a 17 px, al
+     marge del full no es veien. Són sobre el full, o sigui que no canvien
+     amb el tema fosc: el full és paper. */
+  width:22px;height:22px;padding:0;line-height:1;
+  border:1px solid #6B6B6B;background:#fff;color:#4A4A4A;
+  border-radius:6px;font-size:14px;font-family:var(--ui);cursor:pointer;
+  transition:transform .1s,color .1s,border-color .1s;
 }
+/* Amb el ratolí a sobre, inconfusible: creix un 10 % i passa a negre. */
 .pregunta-eines button:hover:not(:disabled){
-  border-color:var(--blau);color:var(--blau);background:var(--blau-suau);
+  transform:scale(1.1);color:#000;border-color:#000;
 }
 .pregunta-eines button:disabled{opacity:.28;cursor:default}
 /* La pregunta oberta al panell. Un `outline` no ocupa lloc, o sigui que no
@@ -624,32 +603,6 @@ button,input,select,textarea{font:inherit;color:inherit}
 .graella th{background:#F2F2F2;font-weight:650}
 .graella td.buida{height:9mm}
 
-/* --------------------------------------------------------- pla de repàs */
-.pla-intro p{margin:0 0 1mm}
-.pla-sec{margin-bottom:6mm}
-.pla-sec h2{font-size:11pt;margin:0 0 1.5mm;padding-bottom:1mm;border-bottom:.8px solid #000}
-.pla-sec ul{list-style:none;margin:0;padding:0;font-size:10pt;line-height:1.5}
-.pla-saber{margin-bottom:2mm}
-/* Una casella per contingut, per marcar-lo quan està repassat. */
-.pla-cap{position:relative;padding-left:6mm}
-.casella{
-  position:absolute;left:0;top:1.2mm;width:3.2mm;height:3.2mm;
-  border:.7px solid #333;border-radius:.6mm;
-}
-.pla-sec .font{font-family:var(--ui);font-size:8.5pt;color:#555}
-/* Exercicis de pràctica: sense espai per respondre, que es fan a la
-   llibreta. Numerats seguits en tot el document. */
-.practica{margin:1.5mm 0 0 6mm}
-.exercici{display:flex;gap:2mm;align-items:baseline;margin-bottom:2mm}
-.exercici-num{font-weight:700;min-width:6mm;font-variant-numeric:tabular-nums}
-.exercici-cos{flex:1;min-width:0}
-.exercici-cos .encap{display:block;margin-bottom:.6mm;color:#222}
-.solucions-llista{
-  margin:0;padding-left:7mm;font-size:9.5pt;line-height:1.45;
-  columns:2;column-gap:8mm;
-}
-.solucions-llista li{break-inside:avoid;margin-bottom:1mm}
-
 /* ------------------------------------------------------------- responsiu */
 .mobil-pestanyes{display:none}
 /* `screen and`, no només `max-width`: en imprimir, les media queries es
@@ -661,10 +614,10 @@ button,input,select,textarea{font:inherit;color:inherit}
    càpiga més gran. L'escala del full ja no es fixa aquí: la calcula app.js
    segons l'espai que queda (vegeu `aplicaZoom`). */
 @media screen and (max-width:1440px){
-  :root{--rail:18.5rem;--panell:18.5rem}
+  :root{--rail:16.65rem;--panell:15.7rem}
 }
 @media screen and (max-width:1180px){
-  :root{--rail:17rem;--panell:16.5rem}
+  :root{--rail:15.3rem;--panell:14rem}
 }
 @media screen and (max-width:900px){
   /* minmax(0,1fr) i no 1fr: el full fa 210 mm i, sense el mínim a zero,
@@ -686,9 +639,8 @@ button,input,select,textarea{font:inherit;color:inherit}
   .app[data-vista=full] .rail,.app[data-vista=full] .panell,
   .app[data-vista=composicio] .rail,.app[data-vista=composicio] .taula{display:none}
   .escena{overflow:auto}
-  .marca span{display:none}
-  /* El full es dibuixa a escala reduïda i uns botons de 17 px en quedarien
-     9: aquí les eines són només les del panell, obrint la pregunta. */
+  /* El full es dibuixa a escala reduïda i uns botons de 22 px en quedarien
+     12: aquí les eines són només les del panell, obrint la pregunta. */
   .pregunta-eines{display:none}
 }
 

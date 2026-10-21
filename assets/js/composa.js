@@ -279,62 +279,6 @@
   }
 
   /**
-   * Exercicis de pràctica per al pla de repàs: `n` per contingut, triats
-   * amb el mateix perfil de nivell que la prova.
-   *
-   * La regla que importa: cap pregunta de la prova hi pot sortir. I, mentre
-   * n'hi hagi d'altres, tampoc cap apartat del mateix exercici pare que una
-   * pregunta de la prova (21a a la prova i 21b a la pràctica és, a efectes
-   * pràctics, donar-li l'examen). Si el contingut no té res més, s'admet un
-   * altre apartat o una altra variant del mateix generador: practicar el
-   * mateix tipus d'exercici amb uns altres nombres és legítim; repetir la
-   * pregunta, no.
-   *
-   * Funció pura i determinista: surt de la llavor de la prova, o sigui que
-   * la mateixa adreça torna el mateix pla.
-   *
-   * spec = { sabers:[id], n:int, perfil, llavor, prova:[itemId] }
-   * Retorna { idSaber: [itemId] }.
-   */
-  function practica(spec, banc, sabersPerId) {
-    var pare = function (it) { return it.full + '-' + it.ex; };
-    var pes = PERFILS[spec.perfil] || PERFILS.minims;
-    var usats = {}, paresProva = {}, out = {};
-    spec.prova.forEach(function (id) {
-      usats[id] = true;
-      if (banc[id]) paresProva[pare(banc[id])] = true;
-    });
-
-    spec.sabers.forEach(function (sid) {
-      var s = sabersPerId[sid];
-      if (!s || !spec.n) return;
-      var atzar = new glob.Atzar('practica|' + spec.llavor + '|' + sid);
-      var candidats = s.items.map(function (id) { return banc[id]; })
-                             .filter(function (it) { return it && !usats[it.id]; });
-      var tria = [], pares = {};
-      var lliure = function (it) { return !usats[it.id]; };
-      while (tria.length < spec.n) {
-        // De més a menys exigent: pare nou; pare que no sigui de la prova;
-        // qualsevol ítem que no s'hagi fet servir.
-        var lliures = candidats.filter(function (it) {
-          return lliure(it) && !pares[pare(it)] && !paresProva[pare(it)];
-        });
-        if (!lliures.length) {
-          lliures = candidats.filter(function (it) { return lliure(it) && !paresProva[pare(it)]; });
-        }
-        if (!lliures.length) lliures = candidats.filter(lliure);
-        if (!lliures.length) break;
-        var t = atzar.triaPonderada(lliures, function (it) { return pes[it.nivell] || 0.02; });
-        usats[t.id] = true;
-        pares[pare(t)] = true;
-        tria.push(t.id);
-      }
-      out[sid] = tria;
-    });
-    return out;
-  }
-
-  /**
    * Apartats d'un mateix exercici: preguntes CONSECUTIVES amb el mateix
    * exercici pare i la mateixa consigna surten com una sola pregunta amb
    * apartats (6a, 6b), que és com s'escriu un examen a mà. La consigna
@@ -383,7 +327,6 @@
 
   glob.Composa = {
     composa: composa,
-    practica: practica,
     agrupa: agrupa,
     minuts: minuts,
     MINUTS_NIVELL: MINUTS_NIVELL,
