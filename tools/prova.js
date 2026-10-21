@@ -270,8 +270,22 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
     files: document.querySelectorAll('.clau-taula tbody tr').length,
     boto: document.querySelector('#imprimeix').firstChild.textContent,
     pagines: document.querySelector('#pagines').hidden,
-    subtitol: document.querySelector('.doc-cap .subtitol').textContent
+    subtitol: document.querySelector('.doc-cap .subtitol').textContent,
+    columnes: [...document.querySelectorAll('.clau-taula thead th')].map(x => x.textContent).join(','),
+    marcador: getComputedStyle(document.querySelector('.clau-passos li'), '::before').content
   }));
+  comprova('la clau té les columnes #, Solució i Passos', correccio.columnes === '#,Solució,Passos',
+    correccio.columnes);
+  comprova('els passos van amb a), b), c)', /lower-alpha/.test(correccio.marcador), correccio.marcador);
+  /* La graella, sempre en una pàgina nova: és la darrera pàgina i no hi
+     ha res més de la taula. */
+  const pdfClau = await pag.pdf({ format: 'A4', printBackground: true });
+  const fullsClau = paginesPdf(pdfClau);
+  await pag.evaluate(() => document.querySelector('.graella-tit').remove());
+  await pag.evaluate(() => document.querySelector('.graella').remove());
+  const senseGraella = paginesPdf(await pag.pdf({ format: 'A4', printBackground: true }));
+  comprova('la graella de correcció comença en una pàgina nova', fullsClau === senseGraella + 1,
+    `${fullsClau} amb graella, ${senseGraella} sense`);
   comprova('la clau té una fila per pregunta', correccio.files === despres,
     `${correccio.files} files, ${despres} preguntes`);
   comprova('el botó diu «Imprimeix la correcció», sense pàgines',
@@ -299,12 +313,12 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
   const cap = await pag.evaluate(() => ({
     alumne: document.querySelector('#full [data-camp="alumne"]').textContent,
     titol: document.querySelector('.doc-cap h1').textContent,
-    peu: document.querySelector('.doc-peu').textContent,
+    peu: !!document.querySelector('.doc-peu'),
     instr: document.querySelector('.doc-instruccions').innerText
   }));
-  comprova('la capçalera s\'edita damunt del full (nom, títol i peu)',
-    cap.alumne === 'Pau Serra' && cap.titol === 'Recuperació de 1r i 3r' &&
-    cap.peu.includes('Recuperació de 1r i 3r'), JSON.stringify(cap));
+  comprova('la capçalera s\'edita damunt del full (nom i títol)',
+    cap.alumne === 'Pau Serra' && cap.titol === 'Recuperació de 1r i 3r', JSON.stringify(cap));
+  comprova('la prova no porta peu (ni títol repetit ni codi)', !cap.peu);
   comprova('les instruccions conserven els salts de línia',
     cap.instr.trim() === 'Primera línia.\nSegona línia.', JSON.stringify(cap.instr));
   await pag.evaluate(() => {

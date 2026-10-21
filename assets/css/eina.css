@@ -391,12 +391,20 @@ button,input,select,textarea{font:inherit;color:inherit}
   backdrop-filter:blur(6px);border-bottom:1px solid var(--vora);
 }
 .taula-eines .buit{flex:1}
-.pestanyes{display:flex;gap:.15rem}
+/* Prova i Correcció: sempre amb vora, perquè es vegi que són botons; la
+   triada, en blau; amb el ratolí a sobre, vora i text blaus i fons blau
+   clar. */
+.pestanyes{display:flex;gap:.4rem}
 .pestanyes button{
-  border:0;background:transparent;padding:.3rem .7rem;border-radius:7px;
-  font-size:.85rem;cursor:pointer;color:var(--apagat);
+  border:1px solid var(--vora-forta);background:var(--card);padding:.3rem .8rem;border-radius:7px;
+  font-size:.85rem;cursor:pointer;color:var(--tinta);
+  transition:background-color .1s,border-color .1s,color .1s;
 }
-.pestanyes button[aria-selected=true]{background:var(--card);color:var(--tinta);font-weight:600;box-shadow:0 1px 2px rgba(22,32,46,.08)}
+.pestanyes button:hover{border-color:var(--blau);color:var(--blau);background:var(--blau-suau)}
+.pestanyes button[aria-selected=true]{
+  background:var(--blau);border-color:var(--blau);color:var(--sobre-blau);font-weight:600;
+}
+.pestanyes button[aria-selected=true]:hover{background:var(--principal-hover);color:var(--sobre-blau)}
 .zoom{display:flex;align-items:center;gap:.35rem;font-size:.78rem;color:var(--apagat)}
 .zoom select{
   border:1px solid var(--vora-forta);border-radius:6px;background:var(--card);
@@ -514,7 +522,8 @@ button,input,select,textarea{font:inherit;color:inherit}
   position:absolute;left:0;top:0;
   /* Dues columnes: en una sola fila vertical, set botons feien 38 mm i
      envaïen la pregunta de sota quan l'espai de resposta era petit. */
-  display:grid;grid-template-columns:22px;gap:3px;
+  /* 9 px entre icones: a 3 px semblaven una sola peça. */
+  display:grid;grid-template-columns:22px;gap:9px;
   align-content:start;
   /* Visibles sempre, encara que apagades: amagar-les fins al `hover` és el
      que feia que la funció més útil de l'eina fos la que no es trobava. Al
@@ -593,13 +602,14 @@ button,input,select,textarea{font:inherit;color:inherit}
 .clau-taula th,.clau-taula td{border:.5px solid #AAA;padding:1.6mm 2mm;text-align:left;vertical-align:top}
 .clau-taula th{background:#EFEFEF;font-family:var(--ui);font-size:8.5pt;font-weight:650}
 .clau-taula td.n{width:8mm;text-align:center;font-weight:700}
-.clau-taula td.p{width:12mm;text-align:center;font-variant-numeric:tabular-nums}
-.clau-taula th.contingut{width:38mm}
-.graella-tit{font-size:10.5pt;margin:6mm 0 0}
-.clau-passos{margin:1mm 0 0;padding-left:4mm;color:#222}
-.clau-passos li{margin-bottom:.5mm}
+.clau-taula th.sol{width:38%}
+/* Pàgina nova a paper (imprimir.css); a pantalla, una ratlla de tall. */
+.graella-tit{font-size:10.5pt;margin:8mm 0 0;padding-top:5mm;border-top:1px dashed #AAA}
+/* Els passos, a), b), c)… */
+.clau-passos{margin:0;padding:0;list-style:none;counter-reset:pas;color:#222}
+.clau-passos li{margin-bottom:.5mm;padding-left:5mm;text-indent:-5mm}
+.clau-passos li::before{counter-increment:pas;content:counter(pas,lower-alpha) ") ";font-weight:600}
 .clau-resposta{font-weight:700}
-.clau-origen{font-family:var(--mono);font-size:8pt;color:#666}
 
 .graella{width:100%;border-collapse:collapse;font-family:var(--ui);font-size:9pt;margin-top:4mm}
 .graella th,.graella td{border:.5px solid #888;padding:1.6mm 1mm;text-align:center}

@@ -61,6 +61,9 @@
   }
   .doc-cap{break-after:avoid;page-break-after:avoid}
   .clau-taula thead{display:table-header-group}
+  /* La graella de correcció, sempre en una pàgina a part. */
+  .graella-tit{break-before:page;page-break-before:always;border-top:0;padding-top:0;margin-top:0}
+  .graella-tit{break-after:avoid;page-break-after:avoid}
 
   /* Peu repetit a cada pàgina: Chrome i Edge repeteixen els elements
      fixats. A Firefox només surt a la primera; és degradació acceptable. */
