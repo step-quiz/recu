@@ -225,7 +225,6 @@ button,input,select,textarea{font:inherit;color:inherit}
 .panell-cap h2{margin:0;font-size:.9rem;font-weight:650;flex:1}
 .temps-caixa{font-size:.78rem;color:var(--apagat);font-variant-numeric:tabular-nums}
 .grup > h3 small{font-weight:400}
-.tria{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem}
 
 /* Seccions plegades: el que es toca de tant en tant. El títol porta un
    resum del que hi ha triat. */

@@ -885,11 +885,17 @@
     pintaRail();
   }
 
+  /* «Millora de la comprensió lectora» és el primer sentit de cada curs al
+     document del departament, però a la columna surt l'últim: és el que
+     menys es marca. Només canvia on es veu; l'ordre del currículum (el de
+     les preguntes) és el del document. */
   function visibles(curs, filtre) {
-    return ambBanc(curs.sabers).filter(function (s) {
+    var tots = ambBanc(curs.sabers).filter(function (s) {
       if (!filtre) return true;
       return plana(s.titol + ' ' + s.detall + ' ' + s.sentitTitol).indexOf(filtre) >= 0;
     });
+    return tots.filter(function (s) { return s.sentit !== 'lectora'; })
+      .concat(tots.filter(function (s) { return s.sentit === 'lectora'; }));
   }
 
   function pintaRail() {
@@ -1164,7 +1170,7 @@
           '</div>' +
           '<div class="q-eines">' +
             '<button data-fixa="' + i + '" aria-pressed="' + fixada + '" ' +
-              'title="Que «Altres preguntes» no la canviï">' +
+              'title="Que Ctrl+G, el nivell o el criteri de repartiment no la canviïn">' +
               (fixada ? '★ Fixada' : '☆ Fixa-la') + '</button>' +
             '<button data-treu="' + i + '" class="perill" title="Treu-la de la prova">✕ Treu-la</button>' +
           '</div>' +
@@ -1471,7 +1477,7 @@
     pintaFull();
   }
 
-  /** «Altres preguntes» i Ctrl+G: un codi nou i una tria nova. */
+  /** Ctrl+G: un codi nou i una tria nova (ja no hi ha botó al panell). */
   function altraTria() {
     estat.spec.llavor = window.Atzar.novaLlavor();
     sincronitzaControls();
@@ -1742,7 +1748,6 @@
       reordena();          // canviar l'ordre no ha de canviar les preguntes
     });
 
-    $('#altra').addEventListener('click', altraTria);
 
     $('#espai').addEventListener('input', function () {
       estat.cfg.espai = +this.value;

@@ -71,6 +71,16 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
     net.sobrers.join(', '));
   comprova('la llista de preguntes surt plegada', net.plegada);
   comprova('el zoom diu «Ajustat» sense percentatge', net.ajustat === 'Ajustat', net.ajustat);
+  /* Comprensió lectora, l'últim sentit de cada curs; cap botó «Altres preguntes». */
+  const rail = await pag.evaluate(() => ({
+    altra: !!document.querySelector('#altra'),
+    darrers: [...document.querySelectorAll('.curs')].map(c =>
+      [...c.querySelectorAll('.sentit-tit > span')].pop().textContent)
+  }));
+  comprova('«Millora de la comprensió lectora» surt l\'última de cada curs',
+    rail.darrers.length === 3 && rail.darrers.every(t => t === 'Millora de la comprensió lectora'),
+    rail.darrers.join(' / '));
+  comprova('no hi ha el botó «Altres preguntes»', !rail.altra);
   await obreSeccions(pag);
 
   const inici = await pag.evaluate(() => ({
