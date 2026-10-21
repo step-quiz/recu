@@ -112,6 +112,26 @@
     '</footer>';
   }
 
+  /* Icones de les accions d'una pregunta, en SVG i no en caràcters: les
+     fletxes circulars (⟳ ↻) no deien què feien i cada tipografia les
+     dibuixa diferent. `currentColor`: agafen el color del botó.
+       seguent  dues fletxes que es creuen: canvia-la per una altra
+       nombres  un dau: uns altres nombres a l'atzar
+       apartat  un «+»: un apartat més, b), c)… */
+  function svg(cos) {
+    return '<svg class="icona" viewBox="0 0 16 16" aria-hidden="true" fill="none" ' +
+           'stroke="currentColor" stroke-width="1.6" stroke-linecap="round" ' +
+           'stroke-linejoin="round">' + cos + '</svg>';
+  }
+  var ICONA = {
+    seguent: svg('<path d="M2.5 5.5h10M10 3l2.5 2.5L10 8M13.5 10.5h-10M6 8l-2.5 2.5L6 13"/>'),
+    nombres: svg('<rect x="2.5" y="2.5" width="11" height="11" rx="2.5"/>' +
+                 '<g fill="currentColor" stroke="none"><circle cx="5.6" cy="5.6" r="1.15"/>' +
+                 '<circle cx="8" cy="8" r="1.15"/><circle cx="10.4" cy="10.4" r="1.15"/></g>'),
+    apartat: svg('<path d="M8 3v10M3 8h10"/>'),
+    treu: svg('<path d="M4 4l8 8M12 4l-8 8"/>')
+  };
+
   /* ------------------------------------------------ eines sobre el full
      Els `data-*` són els mateixos que fa servir la llista del panell, de
      manera que el controlador té un sol gestor de clics per als dos llocs. */
@@ -130,14 +150,18 @@
          i l'ordre són al panell de la dreta, clicant la pregunta: set
          botons a cada marge eren més soroll que ajuda.
 
-         ⟳ recorre TOTES les preguntes del contingut en un ordre fix: abans
-         de repetir-ne cap les hauràs vistes totes. ↻ és un altre eix i
-         només surt quan la pregunta ve d'un generador propi: uns altres
-         nombres sense sortir del tipus. */
-      b('seguent', '\u27f3', 'Una altra pregunta d\'aquest contingut', !saber) +
+         «Una altra» recorre TOTES les preguntes del contingut en un ordre
+         fix: abans de repetir-ne cap les hauràs vistes totes. El dau és un
+         altre eix i només surt quan la pregunta ve d'un generador propi:
+         uns altres nombres sense sortir del tipus. El «+» hi afegeix un
+         apartat (la mateixa pregunta amb uns altres nombres); cal que el
+         generador tingui consigna, que és el que uneix els apartats. */
+      b('seguent', ICONA.seguent, 'Una altra pregunta d\'aquest contingut', !saber) +
       (it && it.gen
-        ? b('nombres', '\u21bb', 'Uns altres nombres, la mateixa pregunta') : '') +
-      b('treu', '\u2715', 'Treu-la de la prova') +
+        ? b('nombres', ICONA.nombres, 'Uns altres nombres, la mateixa pregunta') : '') +
+      (it && it.gen && it.cap
+        ? b('apartat', ICONA.apartat, 'Un apartat més: la mateixa pregunta amb uns altres nombres') : '') +
+      b('treu', ICONA.treu, 'Treu-la de la prova') +
     '</div>';
   }
 
@@ -319,5 +343,5 @@
   }
 
   glob.Full = { prova: prova, clau: clau, solucio: solucio,
-                esc: esc, num: num, textMates: textMates };
+                esc: esc, num: num, textMates: textMates, ICONA: ICONA };
 })(window);

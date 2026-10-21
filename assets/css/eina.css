@@ -540,12 +540,15 @@ button,input,select,textarea{font:inherit;color:inherit}
   width:22px;height:22px;padding:0;line-height:1;
   border:1px solid #6B6B6B;background:#fff;color:#4A4A4A;
   border-radius:6px;font-size:14px;font-family:var(--ui);cursor:pointer;
-  transition:transform .1s,color .1s,border-color .1s;
+  transition:transform .1s,color .1s,border-color .1s,background-color .1s;
 }
 /* Amb el ratolí a sobre, inconfusible: creix un 10 % i passa a negre. */
 .pregunta-eines button:hover:not(:disabled){
-  transform:scale(1.1);color:#000;border-color:#000;
+  transform:scale(1.1);color:#000;border-color:#000;background:#E4E4E4;
 }
+.pregunta-eines .icona{display:block;width:14px;height:14px;margin:auto}
+/* Al panell, les mateixes icones, a la mida del text del botó. */
+.q-eines .icona{display:inline-block;width:.95em;height:.95em;vertical-align:-.12em}
 .pregunta-eines button:disabled{opacity:.28;cursor:default}
 /* La pregunta oberta al panell. Un `outline` no ocupa lloc, o sigui que no
    mou res ni toca el comptador de pàgines; i no s'imprimeix. */
