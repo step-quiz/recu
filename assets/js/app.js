@@ -634,16 +634,49 @@
     desaAlHash();
   }
 
+  /* Els apartats del banc de `repas`: ítems del mateix exercici amb la
+     mateixa consigna (f1-24a, f1-24b…). Són els que el «+» pot afegir a
+     una pregunta de `repas`, que és text fix i no pot canviar de nombres. */
+  var germans = buit();
+  var clauGerma = function (it) { return it.full + '-' + it.ex + '|' + it.cap; };
+  BANC.items.forEach(function (it) {
+    if (it.gen || !it.cap) return;
+    (germans[clauGerma(it)] = germans[clauGerma(it)] || []).push(it.id);
+  });
+
+  /** Un apartat del mateix exercici de `repas` que encara no sigui a la
+      prova, del mateix nivell si n'hi ha; o `null`. */
+  function germaLliure(it) {
+    var usats = {};
+    estat.preguntes.forEach(function (x) { usats[x.itemId] = true; });
+    var lliures = (germans[clauGerma(it)] || []).filter(function (id) { return !usats[id]; });
+    var igual = lliures.filter(function (id) { return banc[id].nivell === it.nivell; });
+    return igual[0] || lliures[0] || null;
+  }
+
+  /** Hi ha manera d'afegir un apartat a la pregunta `i`? */
+  function potApartat(i) {
+    var q = estat.preguntes[i], it = q && banc[q.itemId];
+    if (!it || !it.cap) return false;
+    return it.gen ? true : !!germaLliure(it);
+  }
+
   /**
-   * Un apartat més: la mateixa pregunta amb uns altres nombres, que va a
-   * sota de la pregunta (o del seu últim apartat) i no la substitueix. El
-   * full els agrupa sols (vegeu `Composa.agrupa`): mateix exercici i mateixa
-   * consigna, seguides. Per això la variant nova ha de tenir la mateixa
-   * consigna, i només es pot fer amb els generadors que en tenen.
+   * Un apartat més, que va a sota de la pregunta (o del seu últim apartat)
+   * i no la substitueix. El full els agrupa sols (vegeu `Composa.agrupa`):
+   * mateix exercici i mateixa consigna, seguides. Per això cal consigna.
+   *   - Material propi: la mateixa pregunta amb uns altres nombres.
+   *   - Banc de `repas`: el següent apartat del mateix exercici que no
+   *     sigui a la prova (f1-24a → f1-24b), si n'hi ha.
    */
   function afegeixApartat(i) {
     var q = estat.preguntes[i], it = banc[q.itemId];
-    if (!it || !it.gen || !it.cap) return;
+    if (!it || !it.cap) return;
+    if (!it.gen) {
+      var g = germaLliure(it);
+      if (g) posaApartat(i, banc[g]);
+      return;
+    }
 
     var fora = {};
     estat.preguntes.forEach(function (x) {
@@ -660,13 +693,19 @@
       pintaLlista();
       return;
     }
+    posaApartat(i, nou);
+  }
 
+  function posaApartat(i, nou) {
+    var q = estat.preguntes[i];
     // Després de l'últim apartat del grup on és la pregunta.
+    // El nivell fixat de la pregunta passa a l'apartat només si l'ítem el té.
     var grups = window.Composa.agrupa(estat.preguntes, banc, estat.cfg.agrupa).grups;
     var grup = grups.filter(function (g) { return g.indexOf(i) >= 0; })[0] || [i];
     var on = grup[grup.length - 1] + 1;
     estat.preguntes.splice(on, 0,
-      { itemId: nou.id, saberId: q.saberId, punts: 0, nivell: q.nivell });
+      { itemId: nou.id, saberId: q.saberId, punts: 0,
+        nivell: q.nivell === nou.nivell ? q.nivell : undefined });
     if (oberta >= on) oberta++;
     acabaCanvi();
   }
@@ -1101,9 +1140,11 @@
             (it.gen
               ? '<button data-nombres="' + i + '" title="Uns altres nombres, ' +
                 'la mateixa pregunta">' + ICONA.nombres + ' Nombres</button>' : '') +
-            (it.gen && it.cap
-              ? '<button data-apartat="' + i + '" title="Un apartat més: la mateixa ' +
-                'pregunta amb uns altres nombres">' + ICONA.apartat + ' Apartat</button>' : '') +
+            (potApartat(i)
+              ? '<button data-apartat="' + i + '" title="Un apartat més: ' +
+                (it.gen ? 'la mateixa pregunta amb uns altres nombres'
+                        : 'un altre apartat del mateix exercici') + '">' +
+                ICONA.apartat + ' Apartat</button>' : '') +
             '<button data-amunt="' + i + '" title="Amunt"' + (i ? '' : ' disabled') + '>↑</button>' +
             '<button data-avall="' + i + '" title="Avall"' +
               (i === estat.preguntes.length - 1 ? ' disabled' : '') + '>↓</button>' +
@@ -1159,6 +1200,7 @@
     cfg.subtitol = estat.cfg.subtitol || subtitolAutomatic();
     cfg.editable = estat.vista === 'prova';
     cfg.fixades = estat.fixades;
+    cfg.potApartat = potApartat;
 
     var dades = { cfg: cfg, preguntes: estat.preguntes, sabers: estat.sabers,
                   agrupacio: window.Composa.agrupa(estat.preguntes, banc, estat.cfg.agrupa) };
