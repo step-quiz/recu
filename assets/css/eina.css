@@ -583,20 +583,19 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 
 /* ------------------------------------------------------- clau de correcció */
-.clau-taula{width:100%;border-collapse:collapse;font-size:12pt;margin-top:3mm}
+.clau-taula{width:100%;border-collapse:collapse;font-size:12pt;margin:0 0 7mm}
+.doc-cap + .clau-taula{margin-top:3mm}
 .clau-taula th,.clau-taula td{border:.5px solid #AAA;padding:1.6mm 2mm;text-align:left;vertical-align:top}
 .clau-taula th{background:#EFEFEF;font-size:12pt;font-weight:700}
 .clau-taula{table-layout:fixed}
 .clau-taula col.sol{width:30%}
-/* La fila de l'enunciat, a tota l'amplada, separa les preguntes. */
-.clau-enunciat{background:#FAFAFA}
 /* El número de la pregunta (o la lletra de l'apartat), com a la prova. */
 .clau-num{display:flex;gap:2mm}
 .clau-num > b{flex:none;min-width:5mm}
 .clau-num > div{min-width:0}
 .clau-enunciat .encap{display:block;margin-bottom:.6mm}
 .clau-enunciat .figura{max-width:52mm}
-.clau-grup td{background:#F7F7F7}
+.clau-consigna{margin-bottom:1.5mm}
 /* Pàgina nova a paper (imprimir.css); a pantalla, una ratlla de tall. */
 .graella-tit{font-size:12pt;margin:8mm 0 0;padding-top:5mm;border-top:1px dashed #AAA}
 /* Els passos, a), b), c)… */

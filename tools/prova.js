@@ -276,21 +276,22 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
   await pag.click('[data-doc="clau"]');
   await pag.waitForTimeout(400);
   const correccio = await pag.evaluate(() => ({
-    files: document.querySelectorAll('.clau-taula tbody.clau-q').length,
-    dues: [...document.querySelectorAll('.clau-q')].every(tb =>
-      tb.querySelector('.clau-enunciat').colSpan === 2 &&
-      tb.querySelector('tr:last-child').children.length === 2),
+    files: document.querySelectorAll('.clau-taula').length,
+    /* Quatre files: «Enunciat», l'enunciat, «Solució | Passos» i el
+       contingut en dues columnes. */
+    files4: [...document.querySelectorAll('.clau-taula')].map(t => [...t.rows].map(r =>
+      r.cells.length === 1 ? (r.cells[0].tagName === 'TH' ? r.cells[0].textContent : 'E')
+                           : r.cells[0].tagName === 'TH' ? r.cells[0].textContent + '|' + r.cells[1].textContent
+                           : 'S|P').join(',')),
     enunciat: document.querySelector('.clau-enunciat').textContent.replace(/\s+/g, ' ').trim(),
     peu: !!document.querySelector('.doc-peu'),
     boto: document.querySelector('#imprimeix').firstChild.textContent,
     pagines: document.querySelector('#pagines').hidden,
     subtitol: document.querySelector('.doc-cap .subtitol').textContent,
-    columnes: [...document.querySelectorAll('.clau-taula thead th')].map(x => x.textContent).join(','),
     marcador: getComputedStyle(document.querySelector('.clau-passos li'), '::before').content
   }));
-  comprova('la clau té les columnes Solució i Passos', correccio.columnes === 'Solució,Passos',
-    correccio.columnes);
-  comprova('cada pregunta: l\'enunciat a tota l\'amplada i a sota solució i passos', correccio.dues);
+  comprova('cada pregunta, una taula: Enunciat / enunciat / Solució|Passos / contingut',
+    correccio.files4.every(f => f === 'Enunciat,E,Solució|Passos,S|P'), correccio.files4[0]);
   comprova('la clau copia l\'enunciat amb el número', /^1\.\S/.test(correccio.enunciat) &&
     correccio.enunciat.length > 8, correccio.enunciat);
   comprova('la correcció no porta peu', !correccio.peu);
@@ -307,8 +308,8 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
   const salt = await pag.evaluate(() => getComputedStyle(document.querySelector('.graella-tit')).breakBefore);
   await pag.emulateMedia({ media: 'screen' });
   comprova('la graella de correcció comença en una pàgina nova', salt === 'page', salt);
-  comprova('la clau té una fila per pregunta', correccio.files === despres,
-    `${correccio.files} files, ${despres} preguntes`);
+  comprova('la clau té una taula per pregunta', correccio.files === despres,
+    `${correccio.files} taules, ${despres} preguntes`);
   comprova('el botó diu «Imprimeix la correcció», sense pàgines',
     correccio.boto === 'Imprimeix la correcció' && correccio.pagines, JSON.stringify(correccio));
   comprova('el subtítol diu només «Full de correcció»', correccio.subtitol === 'Full de correcció',

@@ -56,11 +56,10 @@
      alta que una pàgina amb `break-inside:avoid` fa que el navegador la
      desplaci a la pàgina següent i la trenqui igualment, i llavors la
      capçalera es queda sola en una pàgina en blanc. */
-  .pregunta:not(.pregunta-grup),.apartat,.clau-taula tr,.clau-q,.doc-instruccions{
+  .pregunta:not(.pregunta-grup),.apartat,.clau-taula,.doc-instruccions{
     break-inside:avoid;page-break-inside:avoid;
   }
   .doc-cap{break-after:avoid;page-break-after:avoid}
-  .clau-taula thead{display:table-header-group}
   /* La graella de correcció, sempre en una pàgina a part. */
   .graella-tit{break-before:page;page-break-before:always;border-top:0;padding-top:0;margin-top:0}
   .graella-tit{break-after:avoid;page-break-after:avoid}

@@ -9,7 +9,7 @@ Genera dos documents des d'una sola selecció de continguts:
 | Document | Per a qui | Què porta |
 |---|---|---|
 | **Prova** | l'alumne | enunciats numerats, punts, i espai quadriculat per respondre |
-| **Full de correcció** | el professor | per a cada pregunta, l'enunciat a tota l'amplada (numerat com a la prova) i a sota la solució (30 %) i els passos, a), b), c)… (70 %); en una pàgina a part, la graella de puntuació |
+| **Full de correcció** | el professor | una taula per pregunta, amb un espai entre taules: «Enunciat», l'enunciat copiat i numerat com a la prova, «Solució \| Passos» i, a sota, la solució (30 %) i els passos a), b), c)… (70 %); en una pàgina a part, la graella de puntuació |
 
 ---
 
