@@ -276,7 +276,10 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
   await pag.click('[data-doc="clau"]');
   await pag.waitForTimeout(400);
   const correccio = await pag.evaluate(() => ({
-    files: document.querySelectorAll('.clau-taula tbody tr:not(.clau-grup)').length,
+    files: document.querySelectorAll('.clau-taula tbody.clau-q').length,
+    dues: [...document.querySelectorAll('.clau-q')].every(tb =>
+      tb.querySelector('.clau-enunciat').colSpan === 2 &&
+      tb.querySelector('tr:last-child').children.length === 2),
     enunciat: document.querySelector('.clau-enunciat').textContent.replace(/\s+/g, ' ').trim(),
     peu: !!document.querySelector('.doc-peu'),
     boto: document.querySelector('#imprimeix').firstChild.textContent,
@@ -285,8 +288,9 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
     columnes: [...document.querySelectorAll('.clau-taula thead th')].map(x => x.textContent).join(','),
     marcador: getComputedStyle(document.querySelector('.clau-passos li'), '::before').content
   }));
-  comprova('la clau té les columnes Enunciat, Solució i Passos',
-    correccio.columnes === 'Enunciat,Solució,Passos', correccio.columnes);
+  comprova('la clau té les columnes Solució i Passos', correccio.columnes === 'Solució,Passos',
+    correccio.columnes);
+  comprova('cada pregunta: l\'enunciat a tota l\'amplada i a sota solució i passos', correccio.dues);
   comprova('la clau copia l\'enunciat amb el número', /^1\.\S/.test(correccio.enunciat) &&
     correccio.enunciat.length > 8, correccio.enunciat);
   comprova('la correcció no porta peu', !correccio.peu);
@@ -451,6 +455,22 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
     await pa.evaluate(() => [...document.querySelectorAll('.apartat-lletra')]
       .map(x => x.textContent).join(' ')) === 'a) b) a) b) c) d)');
   await pa.close();
+
+  /* El «+» a una pregunta del banc de `repas` hi afegeix el següent apartat
+     del mateix exercici (f1-24a → f1-24b), que és text fix i no pot canviar
+     de nombres. */
+  const pr = await nav.newPage({ viewport: { width: 1560, height: 1000 } });
+  pr.on('pageerror', e => errors.push('PAGEERROR (repas) ' + e.message));
+  await pr.goto(URL_EINA + '#' + b64({ l: 'REPAS', q7: [['f1-24a', null]] }));
+  await pr.waitForTimeout(600);
+  await pr.evaluate(() => document.querySelector('.pregunta-eines [data-apartat="0"]').click());
+  await pr.waitForTimeout(300);
+  await pr.evaluate(() => document.querySelector('.pregunta-eines [data-apartat="0"]').click());
+  await pr.waitForTimeout(300);
+  comprova('el «+» d\'una pregunta de repàs afegeix els apartats del mateix exercici',
+    await pr.evaluate(() => [...document.querySelectorAll('.apartat-lletra')]
+      .map(x => x.textContent).join(' ')) === 'a) b) c)');
+  await pr.close();
 
   console.log('Pantalla de portàtil');
   /* A 1280 px el full s'encongia fins a 592 px i ja no era el paper: ara

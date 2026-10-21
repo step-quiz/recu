@@ -9,7 +9,7 @@ Genera dos documents des d'una sola selecció de continguts:
 | Document | Per a qui | Què porta |
 |---|---|---|
 | **Prova** | l'alumne | enunciats numerats, punts, i espai quadriculat per respondre |
-| **Full de correcció** | el professor | taula amb l'enunciat (numerat com a la prova), la solució i els passos (a, b, c…) de cada pregunta i, en una pàgina a part, la graella de puntuació |
+| **Full de correcció** | el professor | per a cada pregunta, l'enunciat a tota l'amplada (numerat com a la prova) i a sota la solució (30 %) i els passos, a), b), c)… (70 %); en una pàgina a part, la graella de puntuació |
 
 ---
 
@@ -197,7 +197,7 @@ el botó `▴` de la fila, tornar-la a clicar o la tecla `Esc`.
 |---|---|---|
 | `‹` `⇄` | la pregunta anterior i la següent d'aquest contingut (dues fletxes que es creuen: canvia-la) | `⇄` sí |
 | dau | uns altres nombres, **la mateixa pregunta** (material propi) | sí |
-| `+` | **un apartat més**: la mateixa pregunta amb uns altres nombres, a sota (a, b, c…) | sí |
+| `+` | **un apartat més**, a sota (a, b, c…): amb material propi, la mateixa pregunta amb uns altres nombres; amb el banc de `repas`, el següent apartat del mateix exercici | sí |
 | `☆` | la fixa perquè sobrevisqui a *Altres preguntes* | no |
 | `↑ ↓` | la mou una posició | no |
 | `✕` | la treu de la prova | sí |
@@ -211,9 +211,14 @@ no caràcters: les fletxes circulars d'abans (⟳ ↻) no deien què feien.
 just a sota (o a sota de l'últim apartat del grup), i com que és el mateix
 exercici amb la mateixa consigna, el full les agrupa soles: «2. Fes la
 descomposició en factors primers. a) 24 b) 18 c) 100». Cada apartat té el seu
-espai, els seus punts i les seves icones, i compta com una pregunta més. Només
-surt a les preguntes de material propi que tenen consigna, que és el que uneix
-els apartats (no a *Comprensió lectora*, per exemple). Amb *Agrupa apartats*
+espai, els seus punts i les seves icones, i compta com una pregunta més.
+
+Amb les preguntes del banc de `repas`, que són text fix i no poden canviar de
+nombres, el `+` afegeix el següent apartat **del mateix exercici del banc** que
+no sigui a la prova (f1-24a → f1-24b → f1-24c…), del mateix nivell si n'hi ha.
+473 de les 592 preguntes de `repas` tenen germans així. Quan s'han acabat, el
+`+` desapareix. Tampoc no surt on no hi ha consigna, que és el que uneix els
+apartats (*Comprensió lectora*, per exemple). Amb *Agrupa apartats*
 desmarcat, les variants surten com a preguntes separades.
 
 **`‹` i `⇄` no tiren un dau cada cop.** L'atzar decideix una sola vegada en
@@ -235,7 +240,7 @@ contingut de 1r d'ESO a una prova de 2n, la pregunta va on li toca segons el
 currículum. Amb l'ordre «Barrejat» o «De fàcil a difícil» s'afegeix al final,
 perquè allà la posició curricular no vol dir res.
 
-El dau i el `+` només poden existir on la pregunta ve d'un generador. Les 592 preguntes que
+El dau només pot existir on la pregunta ve d'un generador. Les 592 preguntes que
 venen del banc de `repas` són text ja escrit i no es poden reparametritzar; les
 351 pròpies sí, i el pou és infinit. Trenta-tres dels cinquanta sabers tenen
 material propi, i a aquests, a la pràctica, no se'ls acaben mai les preguntes. Per decidir si una pregunta et va bé, l'has d'estar mirant.
