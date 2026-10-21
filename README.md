@@ -124,7 +124,7 @@ minuts. La durada es desa amb *Desa com a valors inicials* i a l'adreça.
 **El nivell d'una pregunta concreta.** Al panell de la dreta, clicant una
 pregunta, s'obre amb un selector de nivell. Per defecte diu «General (ara 1)»:
 segueix la barreja del control de dalt. Si hi tries 1, 2 o 3, la
-clava a aquell nivell i s'hi queda —les fletxes `⟲ ⟳` només oferiran preguntes
+clava a aquell nivell i s'hi queda —«‹» i «⇄ Una altra» només oferiran preguntes
 d'aquell nivell— fins que la tornis a posar a «general».
 
 Serveix per al cas que ho va motivar: una prova de mínims amb un parell de
@@ -192,17 +192,28 @@ el botó `▴` de la fila, tornar-la a clicar o la tecla `Esc`.
 
 | | Què fa | Al marge del full? |
 |---|---|---|
-| `⟲ ⟳` | la pregunta anterior i la següent d'aquest contingut | `⟳` sí |
-| `↻` | uns altres nombres, **la mateixa pregunta** (material propi) | sí |
+| `‹` `⇄` | la pregunta anterior i la següent d'aquest contingut (dues fletxes que es creuen: canvia-la) | `⇄` sí |
+| dau | uns altres nombres, **la mateixa pregunta** (material propi) | sí |
+| `+` | **un apartat més**: la mateixa pregunta amb uns altres nombres, a sota (a, b, c…) | sí |
 | `☆` | la fixa perquè sobrevisqui a *Altres preguntes* | no |
 | `↑ ↓` | la mou una posició | no |
 | `✕` | la treu de la prova | sí |
 
-Al marge esquerre del full només hi ha les tres que es fan mirant la
-pregunta (`⟳ ↻ ✕`); abans n'hi havia set a cada pregunta i eren més soroll
-que ajuda.
+Al marge esquerre del full només hi ha les que es fan mirant la pregunta
+(`⇄`, dau, `+`, `✕`); abans n'hi havia set a cada pregunta i eren més soroll
+que ajuda. Són icones dibuixades en SVG (`ICONA`, a `assets/js/full.js`) i
+no caràcters: les fletxes circulars d'abans (⟳ ↻) no deien què feien.
 
-**`⟲` i `⟳` no tiren un dau cada cop.** L'atzar decideix una sola vegada en
+**El `+` fa apartats.** No substitueix la pregunta: n'afegeix una altra variant
+just a sota (o a sota de l'últim apartat del grup), i com que és el mateix
+exercici amb la mateixa consigna, el full les agrupa soles: «2. Fes la
+descomposició en factors primers. a) 24 b) 18 c) 100». Cada apartat té el seu
+espai, els seus punts i les seves icones, i compta com una pregunta més. Només
+surt a les preguntes de material propi que tenen consigna, que és el que uneix
+els apartats (no a *Comprensió lectora*, per exemple). Amb *Agrupa apartats*
+desmarcat, les variants surten com a preguntes separades.
+
+**`‹` i `⇄` no tiren un dau cada cop.** L'atzar decideix una sola vegada en
 quin ordre sortiran totes les preguntes del contingut, i els dos botons
 recorren aquesta llista endavant i endarrere. Abans de repetir-ne cap, les
 hauràs vistes totes: en un contingut de 31 preguntes calen 31 clics per
@@ -221,7 +232,7 @@ contingut de 1r d'ESO a una prova de 2n, la pregunta va on li toca segons el
 currículum. Amb l'ordre «Barrejat» o «De fàcil a difícil» s'afegeix al final,
 perquè allà la posició curricular no vol dir res.
 
-`↻` només pot existir on la pregunta ve d'un generador. Les 592 preguntes que
+El dau i el `+` només poden existir on la pregunta ve d'un generador. Les 592 preguntes que
 venen del banc de `repas` són text ja escrit i no es poden reparametritzar; les
 351 pròpies sí, i el pou és infinit. Trenta-tres dels cinquanta sabers tenen
 material propi, i a aquests, a la pràctica, no se'ls acaben mai les preguntes. Per decidir si una pregunta et va bé, l'has d'estar mirant.
@@ -230,12 +241,13 @@ El carril dels botons queda dins de la caixa de la pregunta (un `padding-left`
 amb un `margin-left` negatiu igual), de manera que el contingut no es mou i
 l'alçada tampoc —que és el que mesura el comptador de pàgines— però passar-hi
 el ratolí ja compta com a estar sobre la pregunta. I la barra inactiva porta
-`pointer-events:none`: amb l'espai de resposta a 0 la barra fa 72 px i la
+`pointer-events:none`: amb l'espai de resposta a 0 la barra fa 97 px i la
 pregunta 21, o sigui que sobresurt, i un element amb `opacity:0` segueix rebent
 clics. `tools/prova.js` comprova tots els botons amb l'espai més atapeït.
 
 Les icones fan 22 px, són gris fosc i, amb el ratolí a sobre, creixen un 10 %
-i passen a negre: a 17 px i en gris clar gairebé no es veien.
+i passen a negre sobre fons gris clar: a 17 px i en gris clar gairebé no es
+veien.
 
 En pantalla estreta el full es dibuixa a escala reduïda i uns botons de 22 px en
 quedarien 12, o sigui que allà les icones del marge s'amaguen i les accions es
@@ -326,7 +338,7 @@ proves impreses:
 - **resultats nets** — cap arrel no exacta donada com a dada.
 
 **Per què són en JavaScript i no en Python.** Perquè el navegador els ha de
-poder executar: és el que fa que `↻` pugui donar uns altres nombres sense
+poder executar: és el que fa que el dau pugui donar uns altres nombres sense
 sortir del tipus de pregunta. Si el compilador en tingués una còpia en Python,
 hi hauria dues versions de cada exercici i acabarien divergint. Per això
 `tools/compila.py` executa aquest mateix fitxer amb Node
@@ -487,7 +499,7 @@ fer és canviar quins ítems de repàs van a cada saber (la llista `repas`, els
 
 La compilació s'atura si el nivell que declara un generador no és el que mesura
 `calcula_nivell`: el navegador fa servir el declarat per a les variants noves
-(↻ i el selector de nivell de cada pregunta) i no el pot mesurar.
+(el dau, el `+` i el selector de nivell de cada pregunta) i no el pot mesurar.
 
 **Decisions del mapa que potser vols canviar**, i que són meves, no del document:
 

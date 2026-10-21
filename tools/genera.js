@@ -5,7 +5,7 @@
    `tools/compila.py`.
 
    Els generadors viuen en JavaScript perquè el navegador els ha de poder
-   executar: és el que fa que el botó ↻ pugui donar «uns altres nombres»
+   executar: és el que fa que el dau pugui donar «uns altres nombres»
    sense sortir del tipus de pregunta. Perquè no n'hi hagi dues versions,
    la compilació els executa amb Node, aquí, en comptes de tenir-ne una
    còpia en Python.
@@ -27,7 +27,7 @@
    nivell declarat per cada generador és el que de debò tenen totes.
 
    La mida del catàleg (`PER_GENERADOR`) només decideix quantes variants
-   entren a `banc.js` per triar-ne a l'atzar; el pou del botó ↻ és infinit.
+   entren a `banc.js` per triar-ne a l'atzar; el pou del dau és infinit.
    =========================================================================== */
 'use strict';
 

@@ -12,6 +12,7 @@
   var MAPA = window.MAPA, BANC = window.BANC;
   var $ = function (s, on) { return (on || document).querySelector(s); };
   var esc = window.Full.esc;
+  var ICONA = window.Full.ICONA;
 
   /* Índexs sense prototip. Les claus arriben de l'adreça, que pot ser
      qualsevol cosa: amb un `{}` normal, un id com «constructor» trobava la
@@ -501,7 +502,7 @@
   }
 
   /* ------------------------------------------------------ la volta d'un saber
-     El ⟳ triava un ítem a l'atzar cada vegada. Amb quinze ítems disponibles
+     El botó «Una altra» triava un ítem a l'atzar cada vegada. Amb quinze ítems disponibles
      això donava seqüències com A, B, B, A, C, B, C: repeticions immediates i
      només tres preguntes vistes de quinze. Ara l'atzar decideix UNA vegada en
      quin ordre sortiran, i els botons recorren aquesta llista endavant i
@@ -549,7 +550,7 @@
     if (!v.length) return;
 
     // On som ara. Si l'ítem no és a la volta (ve d'una variant demanada amb
-    // ↻), s'hi afegeix perquè la volta no perdi el fil.
+    // el dau), s'hi afegeix perquè la volta no perdi el fil.
     var pos = v.indexOf(q.itemId);
     if (pos < 0) { v.push(q.itemId); pos = v.length - 1; }
 
@@ -638,6 +639,43 @@
     estat.editat = true;
     pinta();
     desaAlHash();
+  }
+
+  /**
+   * Un apartat més: la mateixa pregunta amb uns altres nombres, que va a
+   * sota de la pregunta (o del seu últim apartat) i no la substitueix. El
+   * full els agrupa sols (vegeu `Composa.agrupa`): mateix exercici i mateixa
+   * consigna, seguides. Per això la variant nova ha de tenir la mateixa
+   * consigna, i només es pot fer amb els generadors que en tenen.
+   */
+  function afegeixApartat(i) {
+    var q = estat.preguntes[i], it = banc[q.itemId];
+    if (!it || !it.gen || !it.cap) return;
+
+    var fora = {};
+    estat.preguntes.forEach(function (x) {
+      if (banc[x.itemId]) fora[firma(banc[x.itemId])] = true;
+    });
+    var nou = null;
+    for (var t = 0; t < 80 && !nou; t++) {
+      var cand = variant(it.gen, novaLlavor(it.gen));
+      if (!cand) return;
+      if (cand.cap === it.cap && !fora[firma(cand)]) nou = cand;
+    }
+    if (!nou) {
+      estat.avisos = ['No surten més variants diferents d\'aquesta pregunta.'];
+      pintaLlista();
+      return;
+    }
+
+    // Després de l'últim apartat del grup on és la pregunta.
+    var grups = window.Composa.agrupa(estat.preguntes, banc, estat.cfg.agrupa).grups;
+    var grup = grups.filter(function (g) { return g.indexOf(i) >= 0; })[0] || [i];
+    var on = grup[grup.length - 1] + 1;
+    estat.preguntes.splice(on, 0,
+      { itemId: nou.id, saberId: q.saberId, punts: 0, nivell: q.nivell });
+    if (oberta >= on) oberta++;
+    acabaCanvi();
   }
 
   /** Porta la pregunta `i` a la posició `desti` (1..n) d'una sola passa. */
@@ -1064,12 +1102,15 @@
           '</div>' +
           '<div class="q-eines">' +
             '<button data-anterior="' + i + '" title="L\'anterior d\'aquest contingut"' +
-              (saber ? '' : ' disabled') + '>⟲</button>' +
+              (saber ? '' : ' disabled') + '>‹</button>' +
             '<button data-seguent="' + i + '" title="Una altra d\'aquest contingut"' +
-              (saber ? '' : ' disabled') + '>⟳ Una altra</button>' +
+              (saber ? '' : ' disabled') + '>' + ICONA.seguent + ' Una altra</button>' +
             (it.gen
               ? '<button data-nombres="' + i + '" title="Uns altres nombres, ' +
-                'la mateixa pregunta">↻ Nombres</button>' : '') +
+                'la mateixa pregunta">' + ICONA.nombres + ' Nombres</button>' : '') +
+            (it.gen && it.cap
+              ? '<button data-apartat="' + i + '" title="Un apartat més: la mateixa ' +
+                'pregunta amb uns altres nombres">' + ICONA.apartat + ' Apartat</button>' : '') +
             '<button data-amunt="' + i + '" title="Amunt"' + (i ? '' : ' disabled') + '>↑</button>' +
             '<button data-avall="' + i + '" title="Avall"' +
               (i === estat.preguntes.length - 1 ? ' disabled' : '') + '>↓</button>' +
@@ -1090,7 +1131,7 @@
     var focus = document.activeElement, tornar = null;
     if (focus && $('#llista').contains(focus)) {
       ['obre', 'posicio', 'punts', 'nivell', 'anterior', 'seguent', 'nombres',
-       'amunt', 'avall', 'fixa'].some(function (k) {
+       'apartat', 'amunt', 'avall', 'fixa'].some(function (k) {
         if (focus.dataset[k] == null) return false;
         tornar = '#llista [data-' + k + '="' + focus.dataset[k] + '"]';
         return true;
@@ -1590,6 +1631,7 @@
       var d = b.dataset;
       if (d.obre != null) obre(+d.obre);
       else if (d.nombres != null) altresNombres(+d.nombres);
+      else if (d.apartat != null) afegeixApartat(+d.apartat);
       else if (d.seguent != null) passa(+d.seguent, 1);
       else if (d.anterior != null) passa(+d.anterior, -1);
       else if (d.amunt != null) mou(+d.amunt, -1);

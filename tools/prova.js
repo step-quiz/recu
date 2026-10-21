@@ -132,8 +132,8 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
   }
   let seguides = 0;
   for (let k = 1; k < vistes.length; k++) if (vistes[k] === vistes[k - 1]) seguides++;
-  comprova('⟳ no repeteix mai la pregunta que hi havia', seguides === 0, seguides);
-  comprova('13 clics de ⟳ mostren almenys 10 preguntes diferents',
+  comprova('«Una altra» no repeteix mai la pregunta que hi havia', seguides === 0, seguides);
+  comprova('13 clics de «Una altra» mostren almenys 10 preguntes diferents',
     new Set(vistes).size >= 10, new Set(vistes).size);
 
   const abans = await pag.evaluate(() => document.querySelectorAll('.q').length);
@@ -233,7 +233,7 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
   }
 
   /* Cap botó de la barra d'una pregunta pot quedar tapat. Amb l'espai de
-     resposta a 0, la barra fa 72 px i la pregunta 21: sobresurt per sota i
+     resposta a 0, la barra fa 97 px i la pregunta 21: sobresurt per sota i
      se superposa a la barra de la següent. */
   await pag.evaluate(() => {
     const s = document.querySelector('#espai');
@@ -395,6 +395,29 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
   await pa.waitForTimeout(150);
   comprova('si la prova no hi cap, el temps surt en ambre',
     await pa.evaluate(() => document.querySelector('#temps').classList.contains('fora')));
+  /* El «+» d'una pregunta hi afegeix un apartat amb uns altres nombres: a
+     sota del grup, no en substitució. */
+  await pa.click('#agrupa');
+  await pa.waitForTimeout(300);
+  await pa.evaluate(() => document.querySelector('.pregunta-eines [data-apartat="2"]').click());
+  await pa.waitForTimeout(300);
+  const mes = await pa.evaluate(() => ({
+    nums: [...document.querySelectorAll('.pregunta-num')].map(x => x.textContent).join(' '),
+    lletres: [...document.querySelectorAll('.apartat-lletra')].map(x => x.textContent).join(' '),
+    textos: [...document.querySelectorAll('.apartat .pregunta-cos')].map(x => x.textContent),
+    control: document.querySelector('#nombre-valor').textContent
+  }));
+  comprova('el «+» afegeix l\'apartat d) a sota del grup',
+    mes.nums === '1. 2. 3.' && mes.lletres === 'a) b) c) d)' && mes.control === '6',
+    `${mes.nums} / ${mes.lletres} / ${mes.control}`);
+  comprova('l\'apartat nou té uns altres nombres', new Set(mes.textos).size === mes.textos.length,
+    mes.textos.join(' | '));
+  /* Un apartat nou a la primera pregunta (sola): fa 1a i 1b. */
+  await pa.evaluate(() => document.querySelector('.pregunta-eines [data-apartat="0"]').click());
+  await pa.waitForTimeout(300);
+  comprova('a una pregunta sola, el «+» en fa 1a i 1b',
+    await pa.evaluate(() => [...document.querySelectorAll('.apartat-lletra')]
+      .map(x => x.textContent).join(' ')) === 'a) b) a) b) c) d)');
   await pa.close();
 
   console.log('Pantalla de portàtil');
