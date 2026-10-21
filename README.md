@@ -4,13 +4,12 @@ Lloc estàtic per muntar l'examen global de recuperació d'un alumne que arrosse
 les matemàtiques d'un curs anterior (3r que recupera 2n, 4t que recupera 3r…). HTML, CSS i JavaScript vainilla: cap build,
 cap servidor, cap dependència externa. **Obre `index.html` amb doble clic.**
 
-Genera tres documents des d'una sola selecció de continguts:
+Genera dos documents des d'una sola selecció de continguts:
 
 | Document | Per a qui | Què porta |
 |---|---|---|
 | **Prova** | l'alumne | enunciats numerats, punts, i espai quadriculat per respondre |
 | **Full de correcció** | el professor | solució, resolució pas a pas, contingut avaluat i graella de puntuació |
-| **Pla de repàs** | l'alumne, abans | què ha d'estudiar, a quines activitats del llibre, i exercicis de pràctica amb les solucions |
 
 ---
 
@@ -28,11 +27,14 @@ Genera tres documents des d'una sola selecció de continguts:
    continguts ESO 2025-26* del departament, tal com està escrit: curs → sentit →
    saber. Clicant el títol del curs es marquen o desmarquen tots de cop.
 2. **Ajusta la prova** a la dreta. A dalt hi ha el que es toca a cada prova:
-   quantes preguntes, quin nivell i la llista de preguntes. A sota, plegat,
-   el que es toca de tant en tant: *Format del full*, *Pla de repàs*,
-   *Preferències* i, al final de tot, *Punts, temps i ordre*. Cada secció plegada diu al
-   títol què hi tens triat (per exemple «38 mm · quadrícula»), o sigui que
-   no cal obrir-la per saber-ho; el navegador recorda quines tens obertes.
+   quantes preguntes i quin nivell. A sota, plegat: la llista de *Preguntes*,
+   *Format del full*, *Preferències* i, al final de tot, *Punts, temps i
+   ordre*. Cada secció plegada diu al títol què hi tens triat (per exemple
+   «38 mm · quadrícula» o «10 preguntes»), o sigui que no cal obrir-la per
+   saber-ho. El navegador recorda quines seccions tens obertes, menys la de
+   *Preguntes*, que surt sempre plegada: el full ja ensenya les preguntes, i
+   clicant-ne una al full la llista es desplega sola. Els avisos («la prova
+   suma 11 punts i no 10»…) surten a sobre de la llista, fora del plegable.
 3. **Revisa el full** al centre. El que hi veus és exactament el que sortirà per
    la impressora; no hi ha una segona maquetació. **La capçalera s'escriu
    damunt del mateix full**: clica el centre, el títol, el subtítol, el nom,
@@ -40,25 +42,15 @@ Genera tres documents des d'una sola selecció de continguts:
    instruccions fa línia nova). Clicant la data s'obre el calendari. Els camps
    buits mostren una pista en gris que no s'imprimeix. El subtítol, si el
    deixes en blanc, torna a ser l'automàtic («Continguts de 2n d'ESO»).
-4. **Imprimeix.** Al diàleg del navegador, desmarca *Capçaleres i peus de pàgina*
-   i deixa els marges *Per defecte*: els marges reals els posa `@page`.
+4. **Imprimeix.** El botó de dalt diu *Imprimeix la prova* o *Imprimeix la
+   correcció*, segons la pestanya que tinguis oberta. Al diàleg del navegador,
+   desmarca *Capçaleres i peus de pàgina* i deixa els marges *Per defecte*: els marges reals els posa `@page`.
    «Desa com a PDF» dona el PDF.
 
-**Desa la prova** baixa un fitxer HTML petit que només conté l'adreça d'aquesta
-prova exacta, amb el codi i el model ben visibles. Per recuperar-la, fes doble
-clic al fitxer, o bé prem **Obre…** a la barra de dalt i tria'l (també el pots
-arrossegar damunt de la pàgina). Tens la prova tal com la vas deixar: les preguntes, els punts, el format del full
-(espai, fons, figures, enunciats generals) i la capçalera sencera, **nom de
-l'alumne inclòs**. Va bé per guardar-la a la carpeta del curs o per passar-la a
-un company. (Si hi ha escrit el nom de l'alumne, el fitxer també el porta: tingues-ho
-present abans de passar-lo a ningú.)
-
-Si l'eina està publicada en un web, escriu-ne l'adreça al camp **Adreça pública
-de l'eina** (a *Preferències*): el fitxer desat hi apuntarà i funcionarà des de
-qualsevol ordinador. En blanc, l'enllaç apunta a la còpia d'aquest ordinador
-(`file:///…`), i el mateix fitxer t'avisa que si mous la carpeta deixarà de
-funcionar. L'adreça es desa amb els valors inicials, o sigui que s'escriu un
-cop.
+**Per guardar una prova**, desa l'adreça de la pàgina (a les adreces d'interès
+del navegador, o copiant-la): porta la prova sencera, amb les preguntes, els
+punts, el format del full i la capçalera, **nom de l'alumne inclòs** (tingues-ho
+present abans de passar l'enllaç a ningú).
 
 **Desa com a valors inicials** (a *Preferències*) desa al navegador com vols trobar l'eina cada
 vegada: continguts marcats, nivell, criteri de punts, format del full i
@@ -90,7 +82,7 @@ repartiment refà la prova (conservant les ★ i les pròpies).
 no hi cap: és l'única manera que la pantalla parteixi les línies igual que el
 paper i que el comptador de pàgines encerti. Per defecte s'escala perquè hi
 càpiga sencer d'ample (a 1366 px, un 93 %): és l'opció **Ajustat** del
-selector *Zoom*, que diu entre parèntesis a quina mida queda. Si hi tries un
+selector *Zoom*. Si hi tries un
 altre valor (50, 75, 100 o 125 %), mana el teu fins que hi tornis a posar
 *Ajustat*.
 
@@ -103,9 +95,8 @@ el que es veia deixava de ser el que s'imprimia.
 quants n'hi ha de marcats. Una cerca desplega el que troba. El navegador recorda
 quins cursos tens plegats.
 
-**Aparença.** El botó ◐ de dalt passa pel mode del sistema operatiu, el
-clar (☀) i el fosc (☾); la icona diu el mode d'ara. El full no canvia mai de color: és paper. La preferència es
-desa al navegador, no a la prova.
+**Aparença.** La interfície segueix el mode clar o fosc del sistema operatiu;
+no hi ha cap botó per canviar-lo. El full no canvia mai de color: és paper.
 
 **Apartats (6a, 6b).** Si dues o més preguntes SEGUIDES són del mateix
 exercici i tenen la mateixa consigna, surten com una sola pregunta amb apartats:
@@ -129,17 +120,6 @@ que mesura el nivell. És una estimació: si amb els teus grups les proves surte
 sistemàticament curtes o llargues, els tres valors són a `MINUTS_NIVELL`, a
 `assets/js/composa.js`. Una prova de mínims de 10 preguntes surt a uns 40
 minuts. La durada es desa amb *Desa com a valors inicials* i a l'adreça.
-
-**Exercicis de pràctica.** A la secció *Pla de repàs* del panell tries quants
-exercicis per contingut (cap, 1, 2 o 3) porta el pla, i si hi van les solucions
-al final. Són del mateix contingut i del mateix nivell que la prova, i la regla
-que importa és que **cap no és una pregunta de la prova**; mentre n'hi hagi
-d'altres, tampoc un apartat del mateix exercici (21a a la prova i 21b a la
-pràctica seria donar-li l'examen). Si el contingut no té res més, s'admet una
-altra variant del mateix generador: el mateix tipus d'exercici amb uns altres
-nombres. Surten del codi de la prova, o sigui que el mateix enllaç dona sempre
-el mateix pla. Cada contingut porta una casella perquè l'alumne el marqui quan
-l'ha repassat.
 
 **El nivell d'una pregunta concreta.** Al panell de la dreta, clicant una
 pregunta, s'obre amb un selector de nivell. Per defecte diu «General (ara 1)»:
@@ -250,12 +230,15 @@ El carril dels botons queda dins de la caixa de la pregunta (un `padding-left`
 amb un `margin-left` negatiu igual), de manera que el contingut no es mou i
 l'alçada tampoc —que és el que mesura el comptador de pàgines— però passar-hi
 el ratolí ja compta com a estar sobre la pregunta. I la barra inactiva porta
-`pointer-events:none`: amb l'espai de resposta a 0 la barra fa 74 px i la
+`pointer-events:none`: amb l'espai de resposta a 0 la barra fa 72 px i la
 pregunta 21, o sigui que sobresurt, i un element amb `opacity:0` segueix rebent
 clics. `tools/prova.js` comprova tots els botons amb l'espai més atapeït.
 
-En pantalla estreta el full es dibuixa a escala reduïda i uns botons de 17 px en
-quedarien 9, o sigui que allà les icones del marge s'amaguen i les accions es
+Les icones fan 22 px, són gris fosc i, amb el ratolí a sobre, creixen un 10 %
+i passen a negre: a 17 px i en gris clar gairebé no es veien.
+
+En pantalla estreta el full es dibuixa a escala reduïda i uns botons de 22 px en
+quedarien 12, o sigui que allà les icones del marge s'amaguen i les accions es
 fan des del panell d'ajustos, obrint la pregunta.
 
 **El «− 2 +» de cada contingut marcat** diu quantes preguntes en té la prova
@@ -264,7 +247,7 @@ construir sobre els criteris concrets que l'alumne no va assolir, i no sobre un
 total global. Als continguts no marcats no surt: marcar la casella ja hi posa
 una pregunta.
 
-**El nombre de pàgines** surt al costat del botó d'imprimir, amb un «≈»
+**El nombre de pàgines** surt al costat del botó d'imprimir (només a la prova), amb un «≈»
 que no és decoratiu: es calcula simulant la paginació —cada pregunta és un
 bloc que no es parteix— i, contrastat contra 126 PDF reals, encerta el
 96-98 % de les vegades. Quan falla és sempre una pàgina de menys. Afinar-ho
@@ -291,9 +274,12 @@ tenies.
 El .docx del departament  →  l'estructura: 50 sabers, amb les seves hores
 repas (banc de 892 items) →  592 preguntes, amb les seves solucions
 assets/js/generadors.js   →  351 preguntes pròpies, i infinites variants
-llibre (296 PDFs)         →  què repassar, al pla de repàs
-Mates amb Bogdan (12 PDF) →  material d'ampliació, al pla de repàs
+llibre (296 PDFs)         →  referències per saber (al mapa; ara no es mostren)
+Mates amb Bogdan (12 PDF) →  material d'ampliació (al mapa; ara no es mostra)
 ```
+
+Les referències al llibre i a Mates amb Bogdan les feia servir el *pla de repàs*,
+que s'ha tret de l'eina. `compila.py` les continua escrivint a `mapa.js`.
 
 Són **943 preguntes** al catàleg. Un cop compilades, l'eina no distingeix les
 d'un origen de les de l'altre.
@@ -421,10 +407,9 @@ la regla de tres, l'àrea i el volum.
     index.html                  l'eina sencera (una sola pàgina)
     assets/css/eina.css         pantalla
     assets/css/imprimir.css     @page, marges A4 i salts de pàgina
-    assets/js/aparenca.js       clar / fosc / sistema (es carrega al <head>)
     assets/js/atzar.js          atzar amb llavor: exàmens reproduïbles
     assets/js/composa.js        repartiment i tria de preguntes (funció pura)
-    assets/js/full.js           construcció dels tres documents imprimibles
+    assets/js/full.js           construcció dels dos documents imprimibles (prova i correcció)
     assets/js/app.js            controlador: arbre, estat i render
     assets/js/banc.js           GENERAT — els 943 ítems amb solució
     assets/js/mapa.js           GENERAT — currículum, cobertura i índex del llibre
@@ -521,7 +506,7 @@ La compilació s'atura si el nivell que declara un generador no és el que mesur
 ## Comprovar que tot funciona
 
 ```sh
-node tools/tests.js               # 169 comprovacions de la lògica, cap dependència
+node tools/tests.js               # 162 comprovacions de la lògica, cap dependència
 node tools/genera.js --comprova   # els 60 generadors sobre 12 000 variants
 python3 tools/prova_compilacio.py # banc.js i mapa.js al dia, compilació determinista
 node tools/prova.js               # unes 50 comprovacions en un navegador de debò
@@ -533,14 +518,13 @@ llegia la sortida. Necessita Playwright (`npm install --no-save playwright` i
 `npx playwright install chromium`) i no deixa cap fitxer a l'arbre.
 
 `prova.js` comprova, entre altres coses, que el full surti imprès des de
-qualsevol de les tres pestanyes. No és paranoia: en imprimir, el navegador
+qualsevol de les tres pestanyes de pantalla estreta. No és paranoia: en imprimir, el navegador
 mesura les media queries contra l'amplada del **paper** (uns 794 px a A4) i no
 contra la de la finestra, o sigui que la maquetació estreta s'activa sempre. Amb
 les regles de pantalla escrites com `@media (max-width:900px)` en comptes de
 `@media screen and (max-width:900px)`, la regla que amaga el full a la pestanya
 «Continguts» s'aplicava també al paper i sortia un full en blanc. També
-comprova que el comptador de pàgines digui el mateix que el PDF real, que cap
-exercici de pràctica sigui una pregunta de la prova, que l'adreça torni el
+comprova que el comptador de pàgines digui el mateix que el PDF real, que l'adreça torni el
 mateix full i que una adreça mal formada no trenqui res.
 
 `tests.js` comprova les coses que fan mal en paper: que els punts sumin
@@ -583,8 +567,7 @@ publiques aquest lloc en un servidor, publica'l en un lloc que l'alumnat no
 pugui obrir, igual que ja fas amb els `REVISIO-fullN.html` de `repas`.
 
 El mateix val per al repositori de GitHub: si és **públic**, `banc.js` hi és a
-la vista de tothom. Les preguntes del pla de repàs, en canvi, no són cap
-secret: estan fetes per donar-les a l'alumne.
+la vista de tothom.
 
 <!-- atribucio-centre:inici -->
 

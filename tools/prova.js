@@ -57,9 +57,22 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
 
   await pag.goto(URL_EINA);
   await pag.waitForTimeout(800);
-  await obreSeccions(pag);
 
   console.log('Arrencada');
+  /* La barra de dalt només porta el títol i el botó d'imprimir; la llista
+     de preguntes surt plegada; «Ajustat» no diu cap percentatge. */
+  const net = await pag.evaluate(() => ({
+    sobrers: ['#aparenca', '#desa-fitxer', '#obre-fitxer', '[data-doc="pla"]', '.marca span',
+              '.rail-cap h2', '.saber-meta'].filter(s => document.querySelector(s)),
+    plegada: !document.querySelector('#sec-preguntes').open,
+    ajustat: document.querySelector('#zoom option[value=auto]').textContent
+  }));
+  comprova('fora el tema, Obre/Desa, el pla de repàs, les hores i el banc', !net.sobrers.length,
+    net.sobrers.join(', '));
+  comprova('la llista de preguntes surt plegada', net.plegada);
+  comprova('el zoom diu «Ajustat» sense percentatge', net.ajustat === 'Ajustat', net.ajustat);
+  await obreSeccions(pag);
+
   const inici = await pag.evaluate(() => ({
     sabers: document.querySelectorAll('.saber').length,
     llavor: (document.querySelector('#llavor') || {}).textContent
@@ -146,22 +159,16 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
   comprova('el botó ▴ la plega',
     await pag.evaluate(() => !document.querySelector('.q-detall') &&
                              !document.querySelector('#full .activa')));
+  /* Amb la llista plegada, clicar una pregunta del full la desplega. */
+  await pag.evaluate(() => { document.querySelector('#sec-preguntes').open = false; });
   await pag.locator(PREGUNTES).nth(4).locator('.pregunta-cos').first().click();
   await pag.waitForTimeout(150);
-  comprova('clicar una pregunta del full l\'obre al panell',
-    await pag.evaluate(() => !!document.querySelector('.q.oberta [data-punts="4"]')));
+  comprova('clicar una pregunta del full l\'obre al panell (i desplega la llista)',
+    await pag.evaluate(() => !!document.querySelector('.q.oberta [data-punts="4"]') &&
+                             document.querySelector('#sec-preguntes').open));
   await pag.keyboard.press('Escape');
   await pag.waitForTimeout(150);
   comprova('Esc la plega', await pag.evaluate(() => !document.querySelector('.q-detall')));
-
-  /* Aparença: un sol botó que passa per sistema → clar → fosc → sistema. */
-  const temes = [];
-  for (let k = 0; k < 3; k++) {
-    await pag.click('#aparenca');
-    temes.push(await pag.evaluate(() => document.documentElement.dataset.theme || 'sistema'));
-  }
-  comprova('el botó d\'aparença fa clar → fosc → sistema', temes.join(',') === 'light,dark,sistema',
-    temes.join(','));
 
   /* Un <label> passa el clic al primer control que conté: amb els grups de
      botons dins d'un <label>, clicar el text «Nivell de les preguntes»
@@ -226,7 +233,7 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
   }
 
   /* Cap botó de la barra d'una pregunta pot quedar tapat. Amb l'espai de
-     resposta a 0, la barra fa 74 px i la pregunta 21: sobresurt per sota i
+     resposta a 0, la barra fa 72 px i la pregunta 21: sobresurt per sota i
      se superposa a la barra de la següent. */
   await pag.evaluate(() => {
     const s = document.querySelector('#espai');
@@ -256,66 +263,29 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
     s.value = 38; s.dispatchEvent(new Event('input'));
   });
 
-  console.log('Clau i pla de repàs');
+  console.log('Correcció');
   await pag.click('[data-doc="clau"]');
   await pag.waitForTimeout(400);
-  const files = await pag.evaluate(() => document.querySelectorAll('.clau-taula tbody tr').length);
-  comprova('la clau té una fila per pregunta', files === despres, `${files} files, ${despres} preguntes`);
-
-  await pag.click('[data-doc="pla"]');
-  await pag.waitForTimeout(400);
-  const pla = await pag.evaluate(() => {
-    const txt = el => el.textContent.replace(/\s+/g, ' ').trim();
-    return {
-      continguts: document.querySelectorAll('.pla-saber').length,
-      exercicis: [...document.querySelectorAll('.exercici-cos')].map(txt),
-      solucions: document.querySelectorAll('.solucions-llista li').length,
-      titol: (document.querySelector('.pla-sec h2') || {}).textContent
-    };
-  });
-  comprova('el pla té un apartat per contingut marcat', pla.continguts === 18, pla.continguts);
-  comprova('el pla porta 2 exercicis de pràctica per contingut', pla.exercicis.length === 36,
-    pla.exercicis.length);
-  comprova('una solució per exercici', pla.solucions === pla.exercicis.length,
-    `${pla.solucions} de ${pla.exercicis.length}`);
-  comprova('el títol del curs surt del currículum', pla.titol === 'Matemàtiques de 1r d\'ESO', pla.titol);
-
-  /* La regla que importa: cap exercici de pràctica és una pregunta de la
-     prova. Es compara el text tal com surt imprès. */
+  const correccio = await pag.evaluate(() => ({
+    files: document.querySelectorAll('.clau-taula tbody tr').length,
+    boto: document.querySelector('#imprimeix').firstChild.textContent,
+    pagines: document.querySelector('#pagines').hidden,
+    subtitol: document.querySelector('.doc-cap .subtitol').textContent
+  }));
+  comprova('la clau té una fila per pregunta', correccio.files === despres,
+    `${correccio.files} files, ${despres} preguntes`);
+  comprova('el botó diu «Imprimeix la correcció», sense pàgines',
+    correccio.boto === 'Imprimeix la correcció' && correccio.pagines, JSON.stringify(correccio));
+  comprova('el subtítol diu només «Full de correcció»', correccio.subtitol === 'Full de correcció',
+    correccio.subtitol);
   await pag.click('[data-doc="prova"]');
   await pag.waitForTimeout(300);
-  const textProva = await pag.evaluate(sel => [...document.querySelectorAll(sel)].map(el => {
-    const grup = el.closest('.pregunta-grup');
-    return ((grup ? grup.querySelector('.grup-cap .pregunta-cos').textContent : '') +
-            el.querySelector('.pregunta-cos').textContent).replace(/\s+/g, ' ').trim();
-  }), PREGUNTES);
-  const repetits = pla.exercicis.filter(t => textProva.includes(t));
-  comprova('cap exercici de pràctica és una pregunta de la prova', !repetits.length,
-    repetits.slice(0, 2).join(' | '));
+  comprova('a la prova, «Imprimeix la prova» amb les pàgines',
+    await pag.evaluate(() => document.querySelector('#imprimeix').firstChild.textContent ===
+      'Imprimeix la prova' && !document.querySelector('#pagines').hidden));
 
-  /* 3r d'ESO: el pla deia «Matemàtiques de 3eso» i no portava cap
-     referència al llibre. */
   await pag.click('[data-curs="3eso"]');
   await pag.waitForTimeout(400);
-  await pag.click('[data-doc="pla"]');
-  await pag.waitForTimeout(400);
-  const pla3 = await pag.evaluate(() => ({
-    titols: [...document.querySelectorAll('.pla-sec h2')].map(h => h.textContent),
-    llibre3: [...document.querySelectorAll('.font')].some(f => /Llibre de 3r d'ESO/.test(f.textContent)),
-    sensePractica: [...document.querySelectorAll('.pla-saber')]
-      .filter(li => li.querySelectorAll('.exercici').length !== 2)
-      .map(li => li.querySelector('strong').textContent)
-  }));
-  /* Comprensió lectora de 1r i de 3r comparteixen els sis ítems del
-     catàleg: el segon es quedava sense exercicis fins que app.js no hi va
-     afegir variants noves dels generadors. */
-  comprova('amb 1r i 3r marcats, cada contingut té els seus 2 exercicis',
-    !pla3.sensePractica.length, pla3.sensePractica.join(', '));
-  comprova('el pla de 3r es titula «Matemàtiques de 3r d\'ESO»',
-    pla3.titols.includes('Matemàtiques de 3r d\'ESO'), pla3.titols.join(' / '));
-  comprova('el pla de 3r remet al llibre de 3r', pla3.llibre3);
-  await pag.click('[data-doc="prova"]');
-  await pag.waitForTimeout(200);
 
   console.log('Adreça');
   /* L'adreça ha de tornar a muntar exactament el mateix full, capçalera
@@ -350,18 +320,6 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
   await pag2.waitForTimeout(600);
   const full2 = await pag2.evaluate(() => document.querySelector('#full').innerHTML);
   comprova('l\'adreça reprodueix el full idèntic (capçalera i figures incloses)', full1 === full2);
-
-  /* «Desa la prova» baixa un fitxer; «Obre…» el torna a carregar. */
-  const [baixada] = await Promise.all([pag.waitForEvent('download'), pag.click('#desa-fitxer')]);
-  const desat = await baixada.path();
-  const pag4 = await nav.newPage({ viewport: { width: 1560, height: 1000 } });
-  await pag4.goto(URL_EINA);
-  await pag4.waitForTimeout(400);
-  await pag4.setInputFiles('#fitxer', desat);
-  await pag4.waitForTimeout(800);
-  comprova('«Obre…» torna a carregar una prova desada',
-    await pag4.evaluate(() => document.querySelector('#full').innerHTML) === full1);
-  await pag4.close();
 
   /* Una adreça retallada, editada a mà o amb ids que no existeixen no pot
      trencar la pàgina ni fer sortir preguntes buides. */

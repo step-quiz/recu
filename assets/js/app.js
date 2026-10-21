@@ -145,14 +145,7 @@
       encapcalaments: true,
       mostraPunts: false,
       // Preguntes consecutives del mateix exercici: 6a, 6b.
-      agrupa: true,
-      // Pla de repàs: exercicis de pràctica per contingut i les solucions.
-      practica: 2,
-      solucionsPla: true,
-      // On és publicada l'eina. Si es deixa en blanc, el fitxer que baixa
-      // «Desa la prova» apunta a l'adreça d'ara mateix, que amb doble clic
-      // és un `file:///...` i deixa de funcionar si mous la carpeta.
-      baseUrl: ''
+      agrupa: true
     }
   };
 
@@ -164,8 +157,7 @@
      Els continguts marcats sí que s'hi desen: qui recupera 2n d'ESO ho fa
      moltes vegades seguides i tornar-los a marcar cada cop és feina inútil. */
   var CAMPS_INICIALS = ['centre', 'titol', 'instruccions', 'espai', 'paper',
-                        'figures', 'encapcalaments', 'mostraPunts', 'baseUrl',
-                        'practica', 'solucionsPla', 'agrupa'];
+                        'figures', 'encapcalaments', 'mostraPunts', 'agrupa'];
   var SPEC_INICIALS = ['nombre', 'perfil', 'pes', 'ordre', 'punts', 'criteriPunts', 'durada'];
 
   function desaInicials() {
@@ -726,8 +718,8 @@
       return;
     }
 
-    // Si el contingut no estava marcat, es marca: el pla de repàs ha
-    // d'incloure el que s'avalua.
+    // Si el contingut no estava marcat, es marca: la columna de l'esquerra
+    // ha de dir el que s'avalua.
     if (estat.sabers.indexOf(saberId) < 0) marca([saberId], true);
 
     inserisc({ itemId: nou.id, saberId: saberId, punts: 0 });
@@ -842,7 +834,6 @@
         return estat.sabers.indexOf(s.id) >= 0;
       }).length;
       var tots = mostrats.every(function (s) { return estat.sabers.indexOf(s.id) >= 0; });
-      var maxHores = Math.max.apply(null, mostrats.map(function (s) { return s.hores; }));
 
       var cos = '', sentitActual = null;
       mostrats.forEach(function (s, k) {
@@ -867,12 +858,6 @@
             '<input type="checkbox" data-saber="' + esc(s.id) + '"' + (marcat ? ' checked' : '') + '>' +
             '<div class="saber-cos">' +
               '<div class="saber-tit">' + esc(s.titol) + '</div>' +
-              '<div class="saber-meta">' +
-                '<span class="hores" style="width:' +
-                  Math.round(3 + (s.hores / maxHores) * 34) + 'px"></span>' +
-                '<span>' + s.hores + ' h</span><span>·</span>' +
-                '<span>' + s.items.length + ' al banc</span>' +
-              '</div>' +
             '</div>' +
           '</label>' +
           /* El comptador «− 2 +» només als continguts marcats. Als altres
@@ -977,6 +962,8 @@
 
   function obre(i, desdeFull) {
     oberta = oberta === i ? -1 : i;
+    // La llista va plegada: obrir-hi una pregunta la desplega.
+    if (oberta >= 0) $('#sec-preguntes').open = true;
     pintaLlista();
     var fila = $('#llista [data-fila="' + oberta + '"]');
     if (fila) fila.scrollIntoView({ block: 'nearest' });
@@ -1007,11 +994,12 @@
     if (oberta >= estat.preguntes.length) oberta = -1;
     pintaTemps();
 
-    /* Els avisos, a DALT: a sota d'una llista de vint preguntes no els
-       veia ningú. */
+    /* Els avisos, a DALT i fora de la llista: a sota d'una llista de vint
+       preguntes no els veia ningú, i amb la llista plegada tampoc. */
+    var av = '';
     if (estat.desquadrat) {
       var d = estat.desquadrat;
-      h += '<p class="avis">La prova suma ' + n(d.suma) + ' punts i no ' +
+      av += '<p class="avis">La prova suma ' + n(d.suma) + ' punts i no ' +
         n(estat.spec.punts) + ': ' +
         (d.fixats
           ? 'hi ha punts escrits a mà. ' +
@@ -1020,7 +1008,11 @@
             ' preguntes no poden sumar menys de ' + n(d.minim) + '.') +
         '</p>';
     }
-    estat.avisos.forEach(function (a) { h += '<p class="avis">' + esc(a) + '</p>'; });
+    estat.avisos.forEach(function (a) { av += '<p class="avis">' + esc(a) + '</p>'; });
+    $('#avisos').innerHTML = av;
+    $('#resum-preguntes').textContent = estat.preguntes.length
+      ? estat.preguntes.length + (estat.preguntes.length === 1 ? ' pregunta' : ' preguntes')
+      : '';
 
     if (!estat.preguntes.length) {
       h += '<p class="buida">' + (estat.sabers.length
@@ -1108,47 +1100,6 @@
     if (tornar && $(tornar)) $(tornar).focus();
   }
 
-  /* ------------------------------------------------ exercicis de pràctica */
-  /**
-   * Els exercicis de pràctica del pla de repàs. La tria la fa
-   * `Composa.practica` amb el catàleg; quan un contingut no en té prou
-   * (Comprensió lectora de 1r, 2n i 3r comparteixen els mateixos sis
-   * ítems) i té generadors, se'n fabriquen variants noves, que no poden
-   * coincidir amb cap pregunta de la prova ni amb cap altre exercici.
-   *
-   * Les llavors són deterministes (surten del codi de la prova): la mateixa
-   * adreça dona sempre el mateix pla.
-   */
-  function practicaDelPla() {
-    var n = estat.cfg.practica;
-    var idsProva = estat.preguntes.map(function (q) { return q.itemId; });
-    var pr = window.Composa.practica({
-      sabers: estat.sabers, n: n, perfil: estat.spec.perfil,
-      llavor: estat.spec.llavor, prova: idsProva
-    }, banc, sabersPerId);
-
-    var vistes = {};
-    var marca = function (id) { if (banc[id]) vistes[firma(banc[id])] = true; };
-    idsProva.forEach(marca);
-    Object.keys(pr).forEach(function (sid) { pr[sid].forEach(marca); });
-    var pes = window.Composa.PERFILS[estat.spec.perfil] || window.Composa.PERFILS.minims;
-
-    estat.sabers.forEach(function (sid, k) {
-      if (!pr[sid] || pr[sid].length >= n) return;
-      // Els generadors del nivell que la prova demana; si no n'hi ha cap, tots.
-      var gens = (gensPerSaber[sid] || []).filter(function (g) { return pes[g.nivell] >= 1; });
-      if (!gens.length) gens = gensPerSaber[sid] || [];
-      for (var t = 0; pr[sid].length < n && gens.length && t < 40; t++) {
-        var it = variant(gens[t % gens.length].id, 'pr' + estat.spec.llavor + 's' + k + 't' + t);
-        if (it && !vistes[firma(it)]) {
-          vistes[firma(it)] = true;
-          pr[sid].push(it.id);
-        }
-      }
-    });
-    return pr;
-  }
-
   /**
    * Temps estimat de la prova contra els minuts que té l'alumne. Surt al
    * panell, al costat del control de durada: és on es decideix quantes
@@ -1177,9 +1128,7 @@
 
     var dades = { cfg: cfg, preguntes: estat.preguntes, sabers: estat.sabers,
                   agrupacio: window.Composa.agrupa(estat.preguntes, banc, estat.cfg.agrupa) };
-    if (estat.vista === 'pla') dades.practica = practicaDelPla();
     var html = estat.vista === 'clau' ? window.Full.clau(dades, banc, sabersPerId)
-             : estat.vista === 'pla' ? window.Full.pla(dades, banc, sabersPerId, MAPA)
              : window.Full.prova(dades, banc, sabersPerId);
 
     var full = $('#full');
@@ -1228,8 +1177,8 @@
       blocs.push([el.offsetHeight * aMm,
                   (parseFloat(getComputedStyle(el).marginBottom) || 0) * aMm]);
     }
-    /* Les llistes i el que porta `.partible` (un contingut del pla amb els
-       seus exercicis) es poden partir entre pàgines: es baixa als fills. */
+    /* Les llistes i el que porta `.partible` (un grup d'apartats) es poden
+       partir entre pàgines: es baixa als fills. */
     function recorre(el) {
       if (el.classList.contains('doc-peu')) return;
       if (el.tagName === 'OL' || el.tagName === 'UL' || el.classList.contains('partible')) {
@@ -1269,7 +1218,7 @@
      manera que la pantalla i el paper parteixin les línies igual. Perquè hi
      càpiga en un portàtil, per defecte s'escala a l'ample que queda entre
      les dues columnes ('auto'). Si el professor mou el control, mana ell
-     fins que torni a prémer «Ajusta». */
+     fins que torni a triar «Ajustat». */
   var zoom = 'auto';
 
   function aplicaZoom() {
@@ -1284,8 +1233,6 @@
     // L'escala no redueix la caixa del full: sense això, sota un full al
     // 70 % hi quedaria un 30 % de la seva alçada en blanc.
     full.style.setProperty('--baix', ((s - 1) * full.offsetHeight) + 'px');
-    // Un sol selector: «Ajustat» diu entre parèntesis a quina mida queda.
-    $('#zoom option[value=auto]').textContent = 'Ajustat (' + Math.round(s * 100) + ' %)';
     $('#zoom').value = zoom === 'auto' ? 'auto' : String(zoom);
   }
 
@@ -1293,12 +1240,7 @@
     pintaRail();
     pintaLlista();
     pintaFull();
-    // El pla de repàs surt dels continguts marcats i no de les preguntes:
-    // amb 2n marcat i cap pregunta triada, el pla té vint entrades i s'ha
-    // de poder imprimir.
-    $('#imprimeix').disabled = estat.vista === 'pla'
-      ? !estat.sabers.length
-      : !estat.preguntes.length;
+    $('#imprimeix').disabled = !estat.preguntes.length;
   }
 
   /* ------------------------------------------------- estat a l'adreça (hash) */
@@ -1312,13 +1254,12 @@
         m: estat.cfg.model, pt: estat.cfg.mostraPunts ? 1 : 0,
         cp: estat.spec.criteriPunts,
         /* Tot el que canvia el paper. Sense les dues caselles, apagar les
-           figures no sobrevivia a «Desa la prova»; sense la capçalera, el
-           fitxer d'un alumne concret s'obria amb el nom en blanc i la data
+           figures no sobrevivia a l'enllaç; sense la capçalera, l'enllaç
+           d'un alumne concret s'obria amb el nom en blanc i la data
            d'avui. */
         fg: estat.cfg.figures ? 1 : 0, ec: estat.cfg.encapcalaments ? 1 : 0,
         ce: estat.cfg.centre, ti: estat.cfg.titol, in: estat.cfg.instruccions,
         al: estat.cfg.alumne, gr: estat.cfg.grup, da: estat.cfg.data,
-        pr: estat.cfg.practica, ps: estat.cfg.solucionsPla ? 1 : 0,
         ag: estat.cfg.agrupa ? 1 : 0, du: estat.spec.durada, su: estat.cfg.subtitol
       };
       /* La llista de preguntes es desa SEMPRE, no només quan s'ha editat.
@@ -1393,8 +1334,6 @@
       if (text(d.al, 200)) estat.cfg.alumne = d.al;
       if (text(d.gr, 60)) estat.cfg.grup = d.gr;
       if (text(d.da, 10) && /^\d{4}-\d{2}-\d{2}$/.test(d.da)) estat.cfg.data = d.da;
-      if ([0, 1, 2, 3].indexOf(d.pr) >= 0) estat.cfg.practica = d.pr;
-      if (d.ps != null) estat.cfg.solucionsPla = !!d.ps;
       if (d.ag != null) estat.cfg.agrupa = !!d.ag;
       if (nombre(d.du, 5, 600)) estat.spec.durada = Math.round(d.du);
 
@@ -1435,125 +1374,18 @@
              nivell: [1, 2, 3].indexOf(x[3]) >= 0 ? x[3] : undefined };
   }
 
-  /* ------------------------------------------- desar la prova en un fitxer
-     Un HTML petit que només conté l'adreça d'aquesta prova exacta. Obrir-lo
-     amb doble clic la torna a muntar tal com era. No hi ha servidor ni base
-     de dades: el fitxer és el registre, i es pot desar a la carpeta del curs
-     o passar-lo a un company. La idea ve de l'eina de prova inicial de 1r. */
-  /** L'adreça que ha de portar el fitxer desat. */
-  function adreca() {
-    var base = (estat.cfg.baseUrl || '').trim();
-    if (!base) return location.href;
-    if (!/^https?:\/\//i.test(base)) base = 'https://' + base;
-    try {
-      /* Amb `URL` i no amb una regex sobre la cadena sencera: el patró que
-         retallava el fitxer final (`…/index.html`) també es menjava el
-         domini quan no hi havia camí, i `https://exemple.cat` es convertia
-         en `https:/`. Aquí només es toca el `pathname`. */
-      var u = new URL(base);
-      var cami = u.pathname.replace(/\/[^\/]*\.[a-z0-9]{2,5}$/i, '')
-                           .replace(/\/+$/, '');
-      return u.origin + cami + '/' + location.hash;
-    } catch (e) {
-      return location.href;          // adreça il·legible: val més la d'ara
-    }
-  }
-
-  function fitxerDeLaProva() {
-    var u = adreca();
-    var local = u.indexOf('file:') === 0;
-    var avui = new Date().toLocaleDateString('ca-ES');
-    var cursos = {};
-    estat.sabers.forEach(function (id) { cursos[id.slice(0, 4)] = true; });
-    var quins = MAPA.cursos.filter(function (c) { return cursos[c.id]; })
-                           .map(function (c) { return c.titol; }).join(' i ') || '—';
-
-    return '<!DOCTYPE html>\n<html lang="ca"><head><meta charset="utf-8">' +
-      '<meta name="viewport" content="width=device-width,initial-scale=1">' +
-      '<title>' + esc(estat.cfg.titol) + ' \u00b7 codi ' + esc(estat.cfg.llavor) + '</title>' +
-      '<style>' +
-      'body{font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;' +
-      'background:#F1F4F8;margin:0;padding:40px 16px;color:#16202E}' +
-      'main{max-width:640px;margin:0 auto;background:#fff;border-radius:10px;' +
-      'padding:32px 34px;box-shadow:0 1px 6px rgba(22,32,46,.14)}' +
-      'h1{color:#2455A4;font-size:22px;margin:0 0 4px}' +
-      '.sub{color:#5D6B7E;margin:0 0 22px}' +
-      '.dades{background:#E7EEF9;border-radius:7px;padding:12px 16px;' +
-      'margin:0 0 22px;font-size:15px}.dades b{color:#2455A4}' +
-      'a.boto{display:inline-block;background:#16202E;color:#fff;' +
-      'text-decoration:none;font-weight:700;padding:12px 22px;border-radius:7px}' +
-      'textarea{width:100%;height:88px;margin-top:8px;font:12px/1.4 ui-monospace,' +
-      'Menlo,Consolas,monospace;border:1px solid #C2CCD8;border-radius:6px;' +
-      'padding:8px;resize:vertical;color:#333}' +
-      '.peu{color:#5D6B7E;font-size:13px;margin-top:22px}' +
-      '</style></head><body><main>' +
-      '<h1>' + esc(estat.cfg.titol) + '</h1>' +
-      '<p class="sub">' + esc(quins) + ' \u00b7 ' + estat.preguntes.length + ' preguntes</p>' +
-      '<div class="dades">codi <b>' + esc(estat.cfg.llavor) + '</b>' +
-      (estat.cfg.model ? ' \u00b7 model <b>' + esc(estat.cfg.model) + '</b>' : '') +
-      '<br>Aquesta adre\u00e7a torna a muntar exactament la mateixa prova: ' +
-      'les mateixes preguntes, en el mateix ordre i amb els mateixos punts.</div>' +
-      '<p><a class="boto" href="' + esc(u) + '">Obre la prova</a></p>' +
-      '<p class="peu">Si l\u2019enlla\u00e7 no s\u2019obre, copia aquesta adre\u00e7a ' +
-      'al navegador:</p>' +
-      '<textarea readonly onclick="this.select()">' + esc(u) + '</textarea>' +
-      '<p class="peu">Desat el ' + avui + '. Aquest fitxer nom\u00e9s guarda ' +
-      'l\u2019adre\u00e7a; la prova es munta al navegador quan l\u2019obres.' +
-      (local
-        ? ' Apunta a la c\u00f2pia de l\u2019eina d\u2019aquest ordinador: si mous ' +
-          'la carpeta, l\u2019enlla\u00e7 deixa de funcionar. Per evitar-ho, posa ' +
-          'l\u2019adre\u00e7a p\u00fablica de l\u2019eina al panell d\u2019ajustos.'
-        : '') + '</p>' +
-      '</main></body></html>';
-  }
-
-  function desaFitxer() {
-    var b = new Blob([fitxerDeLaProva()], { type: 'text/html;charset=utf-8' });
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(b);
-    a.download = 'prova-' + estat.cfg.llavor +
-      (estat.cfg.model ? '-model-' + estat.cfg.model : '') + '.html';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function () {
-      URL.revokeObjectURL(a.href);
-      a.parentNode.removeChild(a);
-    }, 2000);
-  }
-
-  /**
-   * Torna a obrir una prova desada amb «Desa la prova». El fitxer és un
-   * HTML que només porta l'adreça de la prova; d'aquí se'n treu la part
-   * de després del «#», que és la prova sencera, i es carrega en aquesta
-   * mateixa finestra. Així funciona encara que l'adreça desada apunti a
-   * una carpeta que ja no existeix.
-   */
-  function obreFitxer(f) {
-    var r = new FileReader();
-    r.onload = function () {
-      var m = String(r.result).match(/href="[^"#]*#([A-Za-z0-9+\/=%]+)"/);
-      if (!m) {
-        alert('Aquest fitxer no és una prova desada amb «Desa la prova».');
-        return;
-      }
-      location.hash = m[1];
-      location.reload();
-    };
-    r.readAsText(f);
-  }
-
-  /** Canvia el document que es veu al centre: prova, clau o pla. */
+  /** Canvia el document que es veu al centre: la prova o la correcció. */
   function mostraVista(vista) {
     estat.vista = vista;
     document.querySelectorAll('[data-doc]').forEach(function (x) {
       x.setAttribute('aria-selected', x.dataset.doc === vista);
     });
-    $('#imprimeix').firstChild.textContent = 'Imprimeix ' + (
-      vista === 'clau' ? 'la clau' : vista === 'pla' ? 'el pla' : 'la prova');
-    // `pinta()` i no `pintaFull()`: el botó s'habilita segons la vista
-    // —el pla depèn dels continguts marcats i no de les preguntes— i
-    // canviant de pestanya no es recalculava.
-    pinta();
+    $('#imprimeix').firstChild.textContent =
+      vista === 'clau' ? 'Imprimeix la correcció' : 'Imprimeix la prova';
+    // El nombre de pàgines només es diu per a la prova: és la que es
+    // reparteix i la que es decideix si cap en un full.
+    $('#pagines').hidden = vista === 'clau';
+    pintaFull();
   }
 
   /** «Altres preguntes» i Ctrl+G: un codi nou i una tria nova. */
@@ -1579,7 +1411,6 @@
     $('#paper').value = estat.cfg.paper;
     $('#ordre').value = estat.spec.ordre;
     $('#model').value = estat.cfg.model;
-    $('#baseUrl').value = estat.cfg.baseUrl;
     $('#figures').checked = estat.cfg.figures;
     $('#encapcalaments').checked = estat.cfg.encapcalaments;
     $('#mostraPunts').checked = estat.cfg.mostraPunts;
@@ -1593,10 +1424,6 @@
     document.querySelectorAll('[data-criteri]').forEach(function (b) {
       b.setAttribute('aria-pressed', b.dataset.criteri === estat.spec.criteriPunts);
     });
-    document.querySelectorAll('[data-practica]').forEach(function (b) {
-      b.setAttribute('aria-pressed', +b.dataset.practica === estat.cfg.practica);
-    });
-    $('#solucionsPla').checked = estat.cfg.solucionsPla;
     $('#agrupa').checked = estat.cfg.agrupa;
     $('#durada').value = estat.spec.durada;
     pintaResums();
@@ -1611,10 +1438,6 @@
     $('#resum-punts').textContent =
       n(sp.punts) + ' p · ' + sp.durada + ' min · ' + NOM_ORDRE[sp.ordre];
     $('#resum-full').textContent = c.espai + ' mm · ' + NOM_PAPER[c.paper];
-    $('#resum-pla').textContent = c.practica
-      ? c.practica + ' exercici' + (c.practica === 1 ? '' : 's') +
-        (c.solucionsPla ? ' · amb solucions' : '')
-      : 'sense exercicis';
     $('#resum-prefs').textContent = valorsInicials ? 'valors inicials desats' : '';
   }
 
@@ -1742,6 +1565,7 @@
        panell fan servir els mateixos `data-*`. */
     $('#full').addEventListener('click', accioPregunta);
     $('#llista').addEventListener('click', accioPregunta);
+    $('#avisos').addEventListener('click', accioPregunta);
 
     function accioPregunta(ev) {
       if (ev.target.id === 'allibera') {
@@ -1833,22 +1657,6 @@
         desaAlHash();
       });
     });
-    /* Tocar el pla de repàs el mostra: si no, el canvi passaria a un
-       document que no es veu. */
-    document.querySelectorAll('[data-practica]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        estat.cfg.practica = +b.dataset.practica;
-        sincronitzaControls();
-        mostraVista('pla');
-        desaAlHash();
-      });
-    });
-    $('#solucionsPla').addEventListener('change', function () {
-      estat.cfg.solucionsPla = this.checked;
-      mostraVista('pla');
-      desaAlHash();
-    });
-
     $('#ordre').addEventListener('change', function () {
       estat.spec.ordre = this.value;
       reordena();          // canviar l'ordre no ha de canviar les preguntes
@@ -1870,15 +1678,11 @@
         estat.cfg[k] = this.checked; pintaFull(); desaAlHash();
       });
     });
-    // Tot el que surt imprès va a l'adreça; `baseUrl` no, és de l'eina.
-    ['model', 'baseUrl']
-      .forEach(function (k) {
-        $('#' + k).addEventListener('input', function () {
-          estat.cfg[k] = this.value;
-          pintaFull();
-          if (k !== 'baseUrl') desaAlHash();
-        });
-      });
+    $('#model').addEventListener('input', function () {
+      estat.cfg.model = this.value;
+      pintaFull();
+      desaAlHash();
+    });
 
     document.querySelectorAll('[data-doc]').forEach(function (b) {
       b.addEventListener('click', function () { mostraVista(b.dataset.doc); });
@@ -1890,22 +1694,6 @@
     });
 
     $('#imprimeix').addEventListener('click', function () { window.print(); });
-    $('#desa-fitxer').addEventListener('click', desaFitxer);
-    $('#obre-fitxer').addEventListener('click', function () { $('#fitxer').click(); });
-    $('#fitxer').addEventListener('change', function () {
-      if (this.files[0]) obreFitxer(this.files[0]);
-      this.value = '';
-    });
-    // També s'hi pot deixar anar el fitxer a sobre, arrossegant-lo.
-    document.addEventListener('dragover', function (ev) {
-      if (ev.dataTransfer && [].indexOf.call(ev.dataTransfer.types, 'Files') >= 0) ev.preventDefault();
-    });
-    document.addEventListener('drop', function (ev) {
-      var f = ev.dataTransfer && ev.dataTransfer.files[0];
-      if (!f) return;
-      ev.preventDefault();
-      obreFitxer(f);
-    });
     $('#desa-inicials').addEventListener('click', desaInicials);
     $('#oblida-inicials').addEventListener('click', oblidaInicials);
 

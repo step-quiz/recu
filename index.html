@@ -8,8 +8,6 @@
 <link rel="stylesheet" href="assets/lib/katex/katex.min.css">
 <link rel="stylesheet" href="assets/css/eina.css">
 <link rel="stylesheet" href="assets/css/imprimir.css" media="print">
-<!-- Al <head> i abans de pintar res: així no parpelleja el tema equivocat. -->
-<script src="assets/js/aparenca.js"></script>
 </head>
 <body>
 
@@ -19,15 +17,9 @@
   <header class="barra">
     <div class="marca">
       <strong>Prova de recuperació</strong>
-      <span>Matemàtiques · 1r, 2n i 3r d'ESO</span>
     </div>
     <div class="buit"></div>
-    <button type="button" class="aparenca" id="aparenca" data-aparenca-cicle
-      title="Aparença" aria-label="Aparença">◐</button>
     <div class="barra-accions">
-      <button class="btn" id="obre-fitxer" title="Torna a obrir una prova desada amb «Desa la prova» (també pots arrossegar el fitxer damunt de la pàgina)">Obre…</button>
-      <input type="file" id="fitxer" accept=".html,.htm,text/html" hidden>
-      <button class="btn" id="desa-fitxer" title="Baixa un fitxer amb aquesta prova exacta. Per recuperar-la: doble clic al fitxer, o el botó «Obre…»">Desa la prova</button>
       <button class="btn principal" id="imprimeix">Imprimeix la prova<small id="pagines"></small></button>
     </div>
   </header>
@@ -42,7 +34,6 @@
   <!-- ------------------------------------------------ rail: el currículum -->
   <aside class="rail">
     <div class="rail-cap">
-      <h2>Continguts a recuperar</h2>
       <input class="cerca" id="cerca" type="search" placeholder="Cerca un contingut…" aria-label="Cerca un contingut">
     </div>
     <div id="rail-cos"></div>
@@ -56,7 +47,6 @@
       <div class="pestanyes" role="tablist">
         <button role="tab" data-doc="prova" aria-selected="true">Prova</button>
         <button role="tab" data-doc="clau" aria-selected="false">Correcció</button>
-        <button role="tab" data-doc="pla" aria-selected="false">Pla de repàs</button>
       </div>
       <div class="buit"></div>
       <label class="zoom">
@@ -118,25 +108,34 @@
       </div>
     </div>
 
-    <div class="grup">
-      <h3>Preguntes <small>· clica'n una per canviar-la</small></h3>
-      <div class="llista" id="llista"></div>
-      <button class="btn petit" id="obre-propia">+ Pregunta pròpia</button>
-      <div id="propia" hidden>
-        <label class="camp">
-          <span>Enunciat (el LaTeX va entre dòlars: $x^2$)</span>
-          <textarea id="propia-enunciat" rows="3"></textarea>
-        </label>
-        <label class="camp">
-          <span>Solució, per al full de correcció</span>
-          <textarea id="propia-solucio" rows="2"></textarea>
-        </label>
-        <div class="fila">
-          <button class="btn petit principal" id="afegeix-propia">Afegeix-la</button>
-          <button class="btn petit" id="cancella-propia">Cancel·la</button>
+    <!-- Els avisos, fora de la llista: amb la llista plegada s'han de veure
+         igualment. -->
+    <div class="avisos" id="avisos"></div>
+
+    <!-- Plegada en obrir l'eina, sempre (no es recorda): la llista és llarga
+         i el full ja ensenya les preguntes. Clicant-ne una al full s'obre. -->
+    <details class="sec" id="sec-preguntes">
+      <summary>Preguntes <span class="resum" id="resum-preguntes"></span></summary>
+      <div class="sec-cos">
+        <p class="ajuda">Clica'n una per canviar-la.</p>
+        <div class="llista" id="llista"></div>
+        <button class="btn petit" id="obre-propia">+ Pregunta pròpia</button>
+        <div id="propia" hidden>
+          <label class="camp">
+            <span>Enunciat (el LaTeX va entre dòlars: $x^2$)</span>
+            <textarea id="propia-enunciat" rows="3"></textarea>
+          </label>
+          <label class="camp">
+            <span>Solució, per al full de correcció</span>
+            <textarea id="propia-solucio" rows="2"></textarea>
+          </label>
+          <div class="fila">
+            <button class="btn petit principal" id="afegeix-propia">Afegeix-la</button>
+            <button class="btn petit" id="cancella-propia">Cancel·la</button>
+          </div>
         </div>
       </div>
-    </div>
+    </details>
 
     <details class="sec" data-sec="full">
       <summary>Format del full <span class="resum" id="resum-full"></span></summary>
@@ -160,23 +159,6 @@
       </div>
     </details>
 
-    <details class="sec" data-sec="pla">
-      <summary>Pla de repàs <span class="resum" id="resum-pla"></span></summary>
-      <div class="sec-cos">
-        <div class="camp">
-          <span>Exercicis de pràctica per contingut</span>
-          <div class="seg" role="group" aria-label="Exercicis de pràctica per contingut">
-            <button type="button" data-practica="0" aria-pressed="false">Cap</button>
-            <button type="button" data-practica="1" aria-pressed="false">1</button>
-            <button type="button" data-practica="2" aria-pressed="true">2</button>
-            <button type="button" data-practica="3" aria-pressed="false">3</button>
-          </div>
-        </div>
-        <label class="check"><input type="checkbox" id="solucionsPla" checked> Amb les solucions al final</label>
-        <p class="ajuda">Mai no hi surt cap pregunta de la prova.</p>
-      </div>
-    </details>
-
     <details class="sec" data-sec="prefs">
       <summary>Preferències <span class="resum" id="resum-prefs"></span></summary>
       <div class="sec-cos">
@@ -188,12 +170,6 @@
           <button class="btn petit" id="oblida-inicials">Oblida'ls</button>
         </div>
         <p class="ajuda" id="inicials-avis" role="status" aria-live="polite"></p>
-        <label class="camp">
-          <span>Adreça pública de l'eina</span>
-          <input type="text" id="baseUrl" placeholder="https://exemple.cat/recuperacio/">
-        </label>
-        <p class="ajuda">Per al botó <b>Desa la prova</b>: amb l'adreça
-          pública, el fitxer desat funciona des de qualsevol ordinador.</p>
       </div>
     </details>
     <!-- Al final de tot: gairebé sempre es fan servir els valors per

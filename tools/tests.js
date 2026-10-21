@@ -416,45 +416,6 @@ comprova('l\'avís nomena els continguts sense pregunta',
     p.map(q => banc[q.itemId].nivell + ':' + pos(q)).join(' '));
 }
 
-/* ------------------------------------------------------ pla de repàs */
-console.log('Exercicis de pràctica');
-{
-  const prova = window.Composa.composa({ ...base, sabers: tots, nombre: 24, llavor: 'PL' }, banc, sp);
-  const idsProva = prova.preguntes.map(q => q.itemId);
-  const spec = { sabers: tots, n: 3, perfil: 'minims', llavor: 'PL', prova: idsProva };
-  const pr = window.Composa.practica(spec, banc, sp);
-  const tots3 = Object.values(pr).flat();
-  comprova('cap exercici de pràctica és una pregunta de la prova',
-    tots3.every(id => !idsProva.includes(id)));
-  comprova('cap exercici de pràctica es repeteix', new Set(tots3).size === tots3.length);
-  comprova('cada exercici és del seu contingut',
-    Object.entries(pr).every(([sid, l]) => l.every(id => sp[sid].items.includes(id))));
-  /* Només els continguts que no comparteixen ítems amb cap altre: els que
-     sí (Comprensió lectora de 1r, 2n i 3r) es reparteixen els mateixos, i
-     el que falta ho completa app.js amb variants noves dels generadors. */
-  const propis = Object.keys(pr).filter(sid => sp[sid].items.every(id => banc[id].sabers.length === 1));
-  comprova('3 exercicis per contingut quan n\'hi ha prou',
-    propis.length >= 10 && propis.every(sid =>
-      pr[sid].length === Math.min(3, sp[sid].items.filter(id => !idsProva.includes(id)).length)),
-    propis.filter(sid => pr[sid].length < 3).join());
-  /* Mentre n'hi hagi d'altres, cap apartat del mateix exercici que una
-     pregunta de la prova: 21a a la prova i 21b a la pràctica és donar-li
-     l'examen. */
-  const pare = id => banc[id].full + '-' + banc[id].ex;
-  const paresProva = new Set(idsProva.map(pare));
-  let germans = 0;
-  Object.entries(pr).forEach(([sid, l]) => {
-    const alternatives = sp[sid].items.filter(id => !idsProva.includes(id) &&
-      !paresProva.has(pare(id))).length;
-    l.forEach((id, k) => { if (paresProva.has(pare(id)) && alternatives > k) germans++; });
-  });
-  comprova('cap germà d\'una pregunta de la prova mentre n\'hi hagi d\'altres', !germans, germans);
-  comprova('la pràctica és determinista',
-    JSON.stringify(window.Composa.practica(spec, banc, sp)) === JSON.stringify(pr));
-  comprova('amb 0 exercicis no n\'hi ha cap',
-    Object.values(window.Composa.practica({ ...spec, n: 0 }, banc, sp)).flat().length === 0);
-}
-
 /* --------------------------------------------------------------- apartats */
 console.log('Apartats i temps');
 {
