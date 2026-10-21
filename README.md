@@ -249,13 +249,18 @@ El carril dels botons queda dins de la caixa de la pregunta (un `padding-left`
 amb un `margin-left` negatiu igual), de manera que el contingut no es mou i
 l'alçada tampoc —que és el que mesura el comptador de pàgines— però passar-hi
 el ratolí ja compta com a estar sobre la pregunta. I la barra inactiva porta
-`pointer-events:none`: amb l'espai de resposta a 0 la barra fa 97 px i la
+`pointer-events:none`: amb l'espai de resposta a 0 la barra fa 133 px i la
 pregunta 21, o sigui que sobresurt, i un element amb `opacity:0` segueix rebent
 clics. `tools/prova.js` comprova tots els botons amb l'espai més atapeït.
 
-Les icones fan 22 px, són gris fosc i, amb el ratolí a sobre, creixen un 10 %
-i passen a negre sobre fons gris clar: a 17 px i en gris clar gairebé no es
-veien.
+Les icones fan 22 px, són gris fosc i van separades 15 px. Amb el ratolí a
+sobre creixen un 20 %, amb vora blau fosc i fons blau clar: a 17 px, en gris
+clar i enganxades gairebé no es veien.
+
+Les instruccions per defecte són només «Instruccions: ». Una adreça o uns
+valors inicials desats amb les instruccions llargues d'abans («Resol cada
+exercici a l'espai…») es llegeixen amb les noves; si les havies retocat, es
+conserven tal com les vas deixar.
 
 En pantalla estreta el full es dibuixa a escala reduïda i uns botons de 22 px en
 quedarien 12, o sigui que allà les icones del marge s'amaguen i les accions es
