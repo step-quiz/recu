@@ -298,21 +298,22 @@
 
     if (!p.length) return h;
 
-    /* Cada pregunta, dues files: l'enunciat a tota l'amplada, copiat i
-       numerat igual que a la prova (1., 2. a), b)…), i a sota la solució
-       (30 %) i els passos (70 %), a), b), c)… Els punts ja són a la
-       graella. Cada pregunta és un <tbody> que no es parteix en imprimir:
-       l'enunciat no es queda sol a baix de tot d'una pàgina. */
-    h += '<table class="clau-taula"><colgroup><col class="sol"><col></colgroup>' +
-         '<thead><tr><th>Solució</th><th>Passos</th></tr></thead>';
-
+    /* Cada pregunta, una taula de quatre files, i un espai entre taules:
+         1. «Enunciat»
+         2. l'enunciat, copiat i numerat igual que a la prova (1., 2. a)…)
+         3. «Solució» | «Passos»
+         4. la solució (30 %) | els passos, a), b), c)… (70 %)
+       Els punts ja són a la graella. En imprimir, una taula no es parteix
+       entre dues pàgines (imprimir.css). */
     var numero = function (n, cos) {
       return '<div class="clau-num"><b>' + n + '</b><div>' + cos + '</div></div>';
     };
-    var pregunta = function (i, enunciat, consigna) {
+    var taula = function (i, enunciat) {
       var s = solucio(banc[p[i].itemId]);
-      return '<tbody class="clau-q">' + (consigna || '') +
+      return '<table class="clau-taula"><colgroup><col class="sol"><col></colgroup><tbody>' +
+               '<tr><th colspan="2">Enunciat</th></tr>' +
                '<tr><td colspan="2" class="clau-enunciat">' + enunciat + '</td></tr>' +
+               '<tr><th>Solució</th><th>Passos</th></tr>' +
                '<tr>' +
                  '<td class="clau-resposta">' + s.r + '</td>' +
                  '<td>' +
@@ -322,33 +323,34 @@
                      : '') +
                  '</td>' +
                '</tr>' +
-             '</tbody>';
+             '</tbody></table>';
     };
 
     grupsDe(estat).forEach(function (g, n) {
       g = g.filter(function (i) { return banc[p[i].itemId]; });
       if (!g.length) return;
       if (g.length === 1) {
-        h += pregunta(g[0], numero((n + 1) + '.', cosItem(banc[p[g[0]].itemId], cfg)));
+        h += taula(g[0], numero((n + 1) + '.', cosItem(banc[p[g[0]].itemId], cfg)));
         return;
       }
-      /* Un grup d'apartats: la consigna en una fila (amb el primer
-         apartat, perquè no quedi sola) i, a sota, cada apartat amb la seva
-         solució, com a la prova. */
+      /* Un grup d'apartats: una taula per apartat. La consigna va a
+         l'enunciat del primer («2. Resol… a) …»); els altres només porten
+         la seva lletra. */
       var primer = banc[p[g[0]].itemId];
       var ambCap = cfg.encapcalaments ||
         g.some(function (i) { return banc[p[i].itemId].capCal; });
       g.forEach(function (i, k) {
         var it = banc[p[i].itemId];
-        h += pregunta(i, numero('abcdefghijklmnopqrstuvwxyz'.charAt(k) + ')',
+        var apartat = numero('abcdefghijklmnopqrstuvwxyz'.charAt(k) + ')',
           textMates(it.enunciat) +
           (it.figura && (cfg.figures || it.figuraCal)
-            ? '<div class="figura-cont">' + it.figura + '</div>' : '')),
-          k ? '' : '<tr class="clau-grup"><td colspan="2">' +
-            numero((n + 1) + '.', ambCap ? textMates(primer.cap) : '') + '</td></tr>');
+            ? '<div class="figura-cont">' + it.figura + '</div>' : ''));
+        h += taula(i, k
+          ? apartat
+          : numero((n + 1) + '.', (ambCap ? '<div class="clau-consigna">' +
+              textMates(primer.cap) + '</div>' : '') + apartat));
       });
     });
-    h += '</table>';
 
     /* Graella de correcció: una fila per posar la puntuació de cada
        pregunta mentre es corregeix, sense haver de buscar-la a la taula.
