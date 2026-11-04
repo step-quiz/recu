@@ -1,7 +1,7 @@
-# Prova de recuperació — Matemàtiques 1r, 2n i 3r d'ESO i 4t d'ESO Aplicades
+# Prova de recuperació — Matemàtiques 1r, 2n, 3r i 4t d'ESO (Aplicades i Acadèmiques)
 
 Lloc estàtic per muntar l'examen global de recuperació d'un alumne que arrossega
-les matemàtiques d'un curs anterior (3r que recupera 2n, 4t que recupera 3r…). Cursos: 1r, 2n, 3r i **4t d'ESO · Aplicades**. HTML, CSS i JavaScript vainilla: cap build,
+les matemàtiques d'un curs anterior (3r que recupera 2n, 4t que recupera 3r…). Cursos: 1r, 2n, 3r, **4t d'ESO · Aplicades** i **4t d'ESO · Acadèmiques**. HTML, CSS i JavaScript vainilla: cap build,
 cap servidor, cap dependència externa. **Obre `index.html` amb doble clic.**
 
 Genera dos documents des d'una sola selecció de continguts:
@@ -145,7 +145,7 @@ d'aquell nivell— fins que la tornis a posar a «general».
 Serveix per al cas que ho va motivar: una prova de mínims amb un parell de
 preguntes més exigents, sense haver de tocar el nivell general.
 
-Els nivells que un contingut no té surten **desactivats**: només 37 dels 62
+Els nivells que un contingut no té surten **desactivats**: només 47 dels 76
 en tenen els tres. Angles de 1r d'ESO, per exemple, té 25 preguntes i totes de
 nivell 1.
 
@@ -252,9 +252,9 @@ contingut de 1r d'ESO a una prova de 2n, la pregunta va on li toca segons el
 currículum. Amb l'ordre «Barrejat» o «De fàcil a difícil» s'afegeix al final,
 perquè allà la posició curricular no vol dir res.
 
-El dau només pot existir on la pregunta ve d'un generador. Les 811 preguntes que
+El dau només pot existir on la pregunta ve d'un generador. Les 821 preguntes que
 venen del banc de `repas` són text ja escrit i no es poden reparametritzar; les
-654 pròpies sí, i el pou és infinit. 45 dels seixanta-dos sabers tenen
+766 pròpies sí, i el pou és infinit. 59 dels setanta-sis sabers tenen
 material propi, i a aquests, a la pràctica, no se'ls acaben mai les preguntes. Per decidir si una pregunta et va bé, l'has d'estar mirant.
 
 El carril dels botons queda dins de la caixa de la pregunta (un `padding-left`
@@ -309,9 +309,9 @@ Res del que hi ha aquí és nou: això és una capa d'índex sobre material que 
 tenies.
 
 ```
-El .docx del departament  →  l'estructura: 62 sabers, amb les seves hores
-repas (banc de 1029 items)→  811 preguntes, amb les seves solucions
-assets/js/generadors.js   →  654 preguntes pròpies, i infinites variants
+El .docx del departament  →  l'estructura: 76 sabers, amb les seves hores
+repas (banc de 1029 items)→  821 preguntes, amb les seves solucions
+assets/js/generadors.js   →  766 preguntes pròpies, i infinites variants
 llibre (296 PDFs)         →  referències per saber (al mapa; ara no es mostren)
 Mates amb Bogdan (12 PDF) →  material d'ampliació (al mapa; ara no es mostra)
 ```
@@ -319,7 +319,7 @@ Mates amb Bogdan (12 PDF) →  material d'ampliació (al mapa; ara no es mostra)
 Les referències al llibre i a Mates amb Bogdan les feia servir el *pla de repàs*,
 que s'ha tret de l'eina. `compila.py` les continua escrivint a `mapa.js`.
 
-Són **1465 preguntes** al catàleg. Un cop compilades, l'eina no distingeix les
+Són **1587 preguntes** al catàleg. Un cop compilades, l'eina no distingeix les
 d'un origen de les de l'altre.
 Els enunciats, les figures SVG i les resolucions són literalment els de `repas`;
 el que canvia és que aquí es fan servir com a **resposta oberta**, sense les
@@ -331,7 +331,7 @@ quatre opcions: l'alumne escriu el procés.
 estadístiques (64), Equacions de 1r grau (55), Divisibilitat (50), Fraccions
 (41), Potències (35) i Pitàgores (31).
 
-**Ara mateix no hi ha cap forat**: els 62 sabers del currículum tenen preguntes,
+**Ara mateix no hi ha cap forat**: els 76 sabers del currículum tenen preguntes,
 i tots en tenen almenys una de nivell 1. Fins fa poc no era així; el que ho ha
 tancat és `assets/js/generadors.js` (vegeu més avall). Si algun dia se'n torna a
 obrir un, els sabers sense preguntes no es llisten i al peu del curs hi surt una
@@ -449,11 +449,11 @@ la regla de tres, l'àrea i el volum.
     assets/js/composa.js        repartiment i tria de preguntes (funció pura)
     assets/js/full.js           construcció dels dos documents imprimibles (prova i correcció)
     assets/js/app.js            controlador: arbre, estat i render
-    assets/js/banc.js           GENERAT — els 1465 ítems amb solució
+    assets/js/banc.js           GENERAT — els 1587 ítems amb solució
     assets/js/mapa.js           GENERAT — currículum, cobertura i índex del llibre
     assets/lib/katex/           KaTeX en local
 
-    assets/js/generadors.js     els 111 generadors del material propi
+    assets/js/generadors.js     els 131 generadors del material propi
 
     tools/mapa_curricular.py    el mapa saber → fonts. AQUÍ es toca el currículum
     tools/compila.py            genera banc.js i mapa.js (necessita Node)
@@ -461,8 +461,8 @@ la regla de tres, l'àrea i el volum.
     tools/tests.js              proves de la lògica (node, sense dependències)
     tools/prova.js              prova amb navegador (necessita Playwright)
     tools/prova_compilacio.py   banc.js i mapa.js al dia, compilació determinista
-    tools/llibre_des_de_tex.py  instantània dels títols d'un llibre d'Overleaf (4t Aplicades)
-    tools/llibre/               instantànies: 4eso-apl.json
+    tools/llibre_des_de_tex.py  instantània dels títols d'un llibre d'Overleaf (4t Aplicades i Acadèmiques)
+    tools/llibre/               instantànies: 4eso-apl.json, 4eso.json
 
     .github/workflows/tests.yml         les quatre proves, a cada push i PR
     .github/workflows/unzip-upload.yml  descomprimeix els ZIP de _uploads/
@@ -526,14 +526,56 @@ python3 tools/compila.py --afegeix-repas ../repas-main
 ```
 
 Només refà els sabers que encara no són al `mapa.js`, i deixa 1r–3r **byte a byte** com
-estaven (comprovat ítem per ítem). Si algun dia es vol posar al dia el banc de 1r–3r amb
-el `repas` nou, és una decisió a part, amb la compilació completa (`--repas`, `--llibre`).
+estaven (comprovat ítem per ítem). Posar al dia el banc de 1r–3r amb
+el `repas` nou és una decisió a part, amb la compilació completa (`--repas`, `--llibre`);
+vegeu el final de l'apartat de 4t Acadèmiques.
 Els títols de les unitats de `4eso-apl` surten de la instantània `tools/llibre/4eso-apl.json`
 (que es refà amb `tools/llibre_des_de_tex.py`), perquè aquest llibre viu a Overleaf i no
 al repositori `llibre`.
 
 Un detall de la interfície que això va destapar: l'id del curs ja no és el prefix de
 quatre lletres dels sabers (`4eso-apl`, no `4eso`); `app.js` ho resol amb un mapa saber → curs.
+
+---
+
+## 4t d'ESO · Acadèmiques
+
+És el cinquè curs (`id` `4eso-aca`, sabers `4eso-aca-…`) i segueix el *Repartiment de
+continguts* de 4t **sencer**: tot el que fa Aplicades i, a més, el que Aplicades no fa.
+Els catorze sabers repeteixen els d'Aplicades amb els mateixos sufixos i les mateixes
+hores, més dos de nous (logaritmes i trigonometria) i algun d'ampliat:
+
+| Saber de B | Hores | Què té respecte d'A |
+|---|---|---|
+| Logaritmes (`num-logaritmes`) | 4 | nou: definició, propietats, `log` i `ln` |
+| Repàs previ a la trigonometria (`esp-repas`) | 4 | el mateix repàs que A, amb el nom de B |
+| Trigonometria (`mes-trigonometria`) | 12 | nou: raons, angles notables, complementaris, reducció al 1r quadrant, teoremes del sinus i del cosinus |
+| Funció exponencial i logarítmica (`alg-exponencial`) | 6 | s'hi afegeix el domini, la inversa i les bases 10 i *e* |
+| Variable estadística (`est-variable`) | 10 | a més del recorregut i la desviació mitjana, **variància i desviació típica** (B no té `VETOS_CONSIGNA`) |
+| Combinatòria (`est-combinatoria`) | 8 | a més de l'arbre i el factorial: variacions, variacions amb repetició, combinacions, Tartaglia i binomi de Newton |
+
+**Com es comparteix el material.** Cada generador d'Aplicades declara els seus sabers
+`4eso-apl-X`; la funció `reg()` de `generadors.js` hi afegeix sola el `4eso-aca-X`
+corresponent. Així una pregunta nova d'A serveix a B sense tocar res; al revés no
+passa: els generadors només de B (`trig-…`, `log-…`, `flog-…`, `com-variacions`,
+`com-vr`, `com-combinacions`, `com-tartaglia`, `com-newton`, `est-variancia`) declaren
+directament `4eso-aca-…`. Els ítems de `repas` es comparteixen igual: si ja eren al banc
+per A, només guanyen l'id del saber de B (el registre no canvia). Els deu ítems de
+variància que A veta, els té B.
+
+**Llibre.** Les unitats són les de `4eso` (4t B, UD1–UD10), amb els títols a
+`tools/llibre/4eso.json`, generat amb `tools/llibre_des_de_tex.py`. La UD8 (vectors i
+rectes) no és al Repartiment i no té cap saber.
+
+**Cobertura.** Trigonometria, logaritmes i funció exponencial i logarítmica només tenen
+preguntes de nivell 1: el banc `repas` no té material d'aquests continguts (el mateix
+passa amb l'exponencial d'A).
+
+**Pendent: posar al dia 1r–3r.** `compila.py --afegeix-repas` ha afegit 4t sense tocar
+res de 1r–3r (comprovat ítem per ítem amb el `banc.js` d'abans i el de després). El
+`repas` actual és més nou que el que va alimentar 1r–3r; per portar-los-hi cal una
+compilació completa (`--repas ../repas-main --llibre ../llibre-main`), que canvia ítems,
+dificultats i, per tant, el codi d'una prova ja generada. És el pas següent.
 
 ---
 
@@ -604,8 +646,8 @@ La compilació s'atura si el nivell que declara un generador no és el que mesur
 ## Comprovar que tot funciona
 
 ```sh
-node tools/tests.js               # 180 comprovacions de la lògica, cap dependència
-node tools/genera.js --comprova   # els 111 generadors sobre 22 200 variants
+node tools/tests.js               # 200 comprovacions de la lògica, cap dependència
+node tools/genera.js --comprova   # els 131 generadors sobre 26 200 variants
 python3 tools/prova_compilacio.py # banc.js i mapa.js al dia, compilació determinista
 node tools/prova.js               # unes 75 comprovacions en un navegador de debò
 ```

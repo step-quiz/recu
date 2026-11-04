@@ -426,11 +426,112 @@ SABERS_4ESO_APL = [
          llibre=[("4eso-apl", 9, None)], bogdan=[]),
 ]
 
+# ------------------------------------------------ 4t d'ESO · Acadèmiques (B)
+# El «Repartiment de continguts» de 4t SENCER (hereta el de A i hi afegeix el que
+# A no fa: trigonometria, logaritmes i funció logarítmica, variància i desviació
+# típica, combinatòria amb fórmules i binomi). Mateixos sufixos que A
+# (`4eso-aca-X` <-> `4eso-apl-X`), de manera que els generadors d'A serveixen
+# també aquí (vegeu `reg` a generadors.js). Llibre: `4eso` (4t B, UD1–UD10).
+SABERS_4ESO_ACA = [
+    dict(id="4eso-aca-lec", sentit="lectora", titol="Comprensió lectora matemàtica", hores=16,
+         detall="Vocabulari específic. Obtenció d'informació en textos d'àmbit "
+                "matemàtic. Expressió algebraica de patrons. Resolució de problemes "
+                "a partir d'un context.",
+         repas=[], llibre=[], bogdan=[]),
+
+    dict(id="4eso-aca-num-reals", sentit="numeric", titol="El conjunt dels nombres reals", hores=8,
+         detall="Naturals, enters, racionals i irracionals. Infinitud de decimals entre "
+                "dos nombres. Fracció, decimal i percentatge. Exponent negatiu, zero i "
+                "racional. Nombres que no són reals: x²=k, k<0.",
+         repas=[(2, "negatiu", None), (2, "verifica", None)],
+         llibre=[("4eso", 1, None)], bogdan=["nombres-reals"]),
+
+    dict(id="4eso-aca-num-logaritmes", sentit="numeric", titol="Logaritmes", hores=4,
+         detall="Definició de logaritme. Propietats. Logaritme decimal (log) i "
+                "neperià (ln).",
+         repas=[],
+         llibre=[("4eso", 6, [4])], bogdan=[]),
+
+    dict(id="4eso-aca-num-percentatge", sentit="numeric", titol="Percentatge", hores=12,
+         detall="Diagrama de sectors. Mitjana aritmètica ponderada. Augments i "
+                "disminucions percentuals. IVA. Interès en un crèdit.",
+         repas=[(6, "percentatges", None), (6, "factor_multiplicador", None),
+                (6, "aplicacions_percentatge", None), (6, "encadenats", None)],
+         llibre=[("4eso", 2, None)], bogdan=[]),
+
+    dict(id="4eso-aca-esp-repas", sentit="espacial", titol="Repàs previ a la trigonometria", hores=4,
+         detall="Circumferència, radi i angle central. Triangle rectangle i teorema de "
+                "Pitàgores. Triangles semblants. Signe de les coordenades segons el quadrant.",
+         repas=[(7, "triangles", None), (8, "semblanca", None)],
+         llibre=[("4eso", 7, [1])], bogdan=["geometria", "semblanca"]),
+
+    dict(id="4eso-aca-mes-trigonometria", sentit="mesura", titol="Trigonometria", hores=12,
+         detall="Raons trigonomètriques (sinus, cosinus, tangent). Angles notables "
+                "(30°, 45°, 60°) i complementaris. Circumferència goniomètrica, de 0° a "
+                "270°, i reducció al primer quadrant. Resolució de triangles rectangles. "
+                "Teoremes del sinus i del cosinus.",
+         repas=[],
+         llibre=[("4eso", 7, None)], bogdan=["trigonometria"]),
+
+    dict(id="4eso-aca-alg-llenguatge", sentit="algebraic", titol="Llenguatge algebraic i identitats", hores=8,
+         detall="Expressar relacions o patrons de taules i gràfics. Identitats notables, "
+                "de forma gràfica i manipulant algebraicament.",
+         repas=[(3, "termes", None), (4, "notables", None), (4, "factor_comu", None)],
+         llibre=[("4eso", 3, None)], bogdan=["algebra", "polinomis"]),
+
+    dict(id="4eso-aca-alg-equacio2", sentit="algebraic", titol="Equació de 2n grau", hores=8,
+         detall="x²=k; (x-a)²=k; (ax-b)(cx-d)=0. Nombre de solucions. Equació completa "
+                "i discriminant. Problemes que porten a una equació de 2n grau.",
+         repas=[(5, "formula_general", None), (5, "factoritzacio", None)],
+         llibre=[("4eso", 4, [2, 3, 4])], bogdan=["equacions-1r2n-grau"]),
+
+    dict(id="4eso-aca-alg-quadratica", sentit="algebraic", titol="Funció quadràtica", hores=8,
+         detall="y=ax²; y=ax²+c. Punts de tall amb els eixos de y=ax²+bx+c. Vocabulari "
+                "de la paràbola. Coordenades del vèrtex.",
+         repas=[(10, "funcions_quadratiques", None), (10, "parabola_produccio", None)],
+         llibre=[("4eso", 5, None)], bogdan=["funcions"]),
+
+    dict(id="4eso-aca-alg-inversa", sentit="algebraic", titol="Magnituds inversament proporcionals", hores=6,
+         detall="Definició. Exemple: donada una àrea A=24, tots els rectangles. "
+                "La hipèrbola y=k/x segons k>0 o k<0.",
+         repas=[(6, "directa_inversa", None)],
+         llibre=[("4eso", 6, [1, 2])], bogdan=["funcions"]),
+
+    dict(id="4eso-aca-alg-exponencial", sentit="algebraic", titol="Funció exponencial i logarítmica", hores=6,
+         detall="Contextos on apareix. Gràfica de b^x segons 0<b<1 i b>1. Asímptotes, "
+                "creixement i decreixement. Funció logarítmica: domini, bases 10 i e, "
+                "inversa de l'exponencial.",
+         repas=[],
+         llibre=[("4eso", 6, [3, 5])], bogdan=["funcions"]),
+
+    dict(id="4eso-aca-est-variable", sentit="estocastic", titol="Variable estadística quantitativa", hores=10,
+         detall="Variables discretes i contínues. Marca de classe. Paràmetres de "
+                "centralització i de dispersió (recorregut, variància i desviació típica).",
+         repas=[(11, "frequencies", None), (11, "centralitzacio", None),
+                (11, "dispersio", None)],
+         llibre=[("4eso", 9, [1, 2, 3])], bogdan=[]),
+
+    dict(id="4eso-aca-est-combinatoria", sentit="estocastic", titol="Combinatòria", hores=8,
+         detall="Recompte amb arbre. Factorial, variacions, permutacions i combinacions. "
+                "Triangle de Tartaglia i binomi de Newton.",
+         repas=[(12, "combinatoria", None)],
+         llibre=[("4eso", 10, [1, 2, 3])], bogdan=[]),
+
+    dict(id="4eso-aca-est-probabilitat", sentit="estocastic", titol="Probabilitat", hores=10,
+         detall="Diagrames de Venn. Regla de Laplace. Probabilitat condicionada i "
+                "composta. Llei dels grans nombres.",
+         repas=[(12, "laplace", None), (12, "esdeveniments", None),
+                (12, "probabilitat_condicionada", None),
+                (12, "probabilitat_composta", None)],
+         llibre=[("4eso", 10, [4, 5])], bogdan=[]),
+]
+
 CURSOS = [
     dict(id="1eso", titol="1r d'ESO", hores=90, sabers=SABERS_1ESO),
     dict(id="2eso", titol="2n d'ESO", hores=90, sabers=SABERS_2ESO),
     dict(id="3eso", titol="3r d'ESO", hores=90, sabers=SABERS_3ESO),
     dict(id="4eso-apl", titol="4t d'ESO · Aplicades", hores=120, sabers=SABERS_4ESO_APL),
+    dict(id="4eso-aca", titol="4t d'ESO · Acadèmiques", hores=120, sabers=SABERS_4ESO_ACA),
 ]
 
 # ---------------------------------------------------------------------------
@@ -471,12 +572,14 @@ BLOCS_DE_FRACCIONS = {"fraccions", "decimals", "percentatges",
                       "fd-a-decimal", "fd-a-fraccio",
                       # 4t: la fracció ÉS el contingut (decimal i percentatge, exponent
                       # racional) o la notació de la funció (y=k/x)
-                      "rea-fdp", "rea-pot-racional", "inv-hiperbola", "rea-classifica"}
+                      "rea-fdp", "rea-pot-racional", "inv-hiperbola", "rea-classifica",
+                      # 4t B: els valors exactes (1/2, √3/2…) són el contingut
+                      "trig-notables", "trig-reduccio", "trig-raons"}
 
 # Blocs on l'arrel no exacta ÉS el contingut que s'avalua. A la resta, una
 # arrel lletja a l'enunciat és artificial (ningú mesura un trapezi i li surt
 # \sqrt{164}) i treu l'exercici del nivell mínim; aquí és l'exercici mateix.
-BLOCS_D_ARRELS = {"arr-entre", "rea-classifica"}
+BLOCS_D_ARRELS = {"arr-entre", "rea-classifica", "trig-notables", "trig-reduccio"}
 
 # Ítems fora del banc a tot arreu. El banc de repàs és de resposta múltiple i
 # aquests tres enunciats es refereixen a unes opcions que aquí no s'imprimeixen

@@ -1,0 +1,334 @@
+{
+ "label": "4t ESO B",
+ "prefix": "4eso",
+ "units": [
+  {
+   "num": 1,
+   "title": "Nombres reals",
+   "activities": [
+    {
+     "num": 1,
+     "title": "Quant és exacte?"
+    },
+    {
+     "num": 2,
+     "title": "El mapa dels reals i la recta"
+    },
+    {
+     "num": 3,
+     "title": "Trossos de recta: intervals"
+    },
+    {
+     "num": 4,
+     "title": "Radicals, amb totes les de la llei"
+    },
+    {
+     "num": 5,
+     "title": "Denominadors nets i errors controlats"
+    },
+    {
+     "num": 6,
+     "title": "Síntesi i estudi per a la prova"
+    },
+    {
+     "num": 7,
+     "title": "El Dossier del nombre real"
+    }
+   ]
+  },
+  {
+   "num": 2,
+   "title": "Percentatges i matemàtica financera",
+   "activities": [
+    {
+     "num": 1,
+     "title": "Qui hi surt guanyant?"
+    },
+    {
+     "num": 2,
+     "title": "El factor multiplicador, a fons"
+    },
+    {
+     "num": 3,
+     "title": "Impostos, rebuts i interessos simples: comptat o a terminis?"
+    },
+    {
+     "num": 4,
+     "title": "Síntesi i estudi per a la prova"
+    },
+    {
+     "num": 5,
+     "title": "Informe breu de decisió financera"
+    }
+   ]
+  },
+  {
+   "num": 3,
+   "title": "Expressions algebraiques",
+   "activities": [
+    {
+     "num": 1,
+     "title": "Per què sempre funciona?"
+    },
+    {
+     "num": 2,
+     "title": "Operar amb polinomis"
+    },
+    {
+     "num": 3,
+     "title": "Demostrar les identitats notables"
+    },
+    {
+     "num": 4,
+     "title": "Factoritzar, el camí invers"
+    },
+    {
+     "num": 5,
+     "title": "Ruffini i les arrels d'un polinomi"
+    },
+    {
+     "num": 6,
+     "title": "Síntesi i estudi per a la prova"
+    },
+    {
+     "num": 7,
+     "title": "El llibre de les demostracions"
+    }
+   ]
+  },
+  {
+   "num": 4,
+   "title": "Equacions, inequacions i sistemes",
+   "activities": [
+    {
+     "num": 1,
+     "title": "Quan una x no n'hi ha prou"
+    },
+    {
+     "num": 2,
+     "title": "Equacions de 2n grau, primers mètodes"
+    },
+    {
+     "num": 3,
+     "title": "La fórmula general i el discriminant"
+    },
+    {
+     "num": 4,
+     "title": "Problemes que amaguen una $x^2$"
+    },
+    {
+     "num": 5,
+     "title": "Inequacions d'una i de dues incògnites"
+    },
+    {
+     "num": 6,
+     "title": "Síntesi i estudi per a la prova"
+    },
+    {
+     "num": 7,
+     "title": "Dossier d'equacions i inequacions"
+    }
+   ]
+  },
+  {
+   "num": 5,
+   "title": "La paràbola: la funció quadràtica",
+   "activities": [
+    {
+     "num": 1,
+     "title": "De l'equació a la corba"
+    },
+    {
+     "num": 2,
+     "title": "Llegir una funció: característiques i taxa de variació"
+    },
+    {
+     "num": 3,
+     "title": "L'efecte dels coeficients"
+    },
+    {
+     "num": 4,
+     "title": "Vèrtex, eix i punts de tall"
+    },
+    {
+     "num": 5,
+     "title": "Estudiar i interpretar una paràbola"
+    },
+    {
+     "num": 6,
+     "title": "Síntesi i estudi per a la prova"
+    },
+    {
+     "num": 7,
+     "title": "Estudi de la paràbola"
+    }
+   ]
+  },
+  {
+   "num": 6,
+   "title": "Famílies de funcions i logaritmes",
+   "activities": [
+    {
+     "num": 1,
+     "title": "Més enllà de la recta i la paràbola"
+    },
+    {
+     "num": 2,
+     "title": "La hipèrbola"
+    },
+    {
+     "num": 3,
+     "title": "La funció exponencial"
+    },
+    {
+     "num": 4,
+     "title": "Logaritmes"
+    },
+    {
+     "num": 5,
+     "title": "La funció logarítmica"
+    },
+    {
+     "num": 6,
+     "title": "Síntesi i estudi per a la prova"
+    },
+    {
+     "num": 7,
+     "title": "Atles de funcions"
+    }
+   ]
+  },
+  {
+   "num": 7,
+   "title": "Trigonometria",
+   "activities": [
+    {
+     "num": 1,
+     "title": "Mesurar l'inabastable"
+    },
+    {
+     "num": 2,
+     "title": "Sinus, cosinus i tangent"
+    },
+    {
+     "num": 3,
+     "title": "Angles de qualsevol mida"
+    },
+    {
+     "num": 4,
+     "title": "Resoldre triangles rectangles"
+    },
+    {
+     "num": 5,
+     "title": "Els teoremes del sinus i del cosinus"
+    },
+    {
+     "num": 6,
+     "title": "Síntesi i estudi per a la prova"
+    },
+    {
+     "num": 7,
+     "title": "Expedició de mesura trigonomètrica"
+    }
+   ]
+  },
+  {
+   "num": 8,
+   "title": "Vectors i rectes: geometria amb coordenades",
+   "activities": [
+    {
+     "num": 1,
+     "title": "El pla de Descartes"
+    },
+    {
+     "num": 2,
+     "title": "Vectors, distàncies i punts mitjans"
+    },
+    {
+     "num": 3,
+     "title": "Les expressions de la recta"
+    },
+    {
+     "num": 4,
+     "title": "Transformacions amb coordenades"
+    },
+    {
+     "num": 5,
+     "title": "Síntesi i estudi per a la prova"
+    },
+    {
+     "num": 6,
+     "title": "Geometria amb coordenades"
+    }
+   ]
+  },
+  {
+   "num": 9,
+   "title": "Estadística de dues variables",
+   "activities": [
+    {
+     "num": 1,
+     "title": "D'una a dues variables"
+    },
+    {
+     "num": 2,
+     "title": "Posició i dispersió"
+    },
+    {
+     "num": 3,
+     "title": "Mitjana ponderada, dades agrupades i taules de dues variables"
+    },
+    {
+     "num": 4,
+     "title": "Correlació i regressió gràfica"
+    },
+    {
+     "num": 5,
+     "title": "Síntesi i estudi per a la prova"
+    },
+    {
+     "num": 6,
+     "title": "Informe estadístic de dues variables"
+    }
+   ]
+  },
+  {
+   "num": 10,
+   "title": "Combinatòria i probabilitat",
+   "activities": [
+    {
+     "num": 1,
+     "title": "De quantes maneres pot passar?"
+    },
+    {
+     "num": 2,
+     "title": "Comptar amb arbre"
+    },
+    {
+     "num": 3,
+     "title": "Fórmules del recompte, Tartaglia i el binomi de Newton"
+    },
+    {
+     "num": 4,
+     "title": "Mesurar l'atzar"
+    },
+    {
+     "num": 5,
+     "title": "Experiments compostos"
+    },
+    {
+     "num": 6,
+     "title": "Decisions davant l'atzar"
+    },
+    {
+     "num": 7,
+     "title": "Síntesi i estudi per a la prova"
+    },
+    {
+     "num": 8,
+     "title": "Dossier de l'atzar"
+    }
+   ]
+  }
+ ]
+}

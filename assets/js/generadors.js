@@ -180,6 +180,12 @@
    * `repas`, que no tenen generador, ho segueix deduint `compila.py`.
    */
   function reg(o) {
+    /* 4t Aplicades i 4t Acadèmiques comparteixen sabers (el Repartiment és el
+       mateix, menys el que A no fa): un generador d'un saber d'A serveix al
+       saber del mateix nom de B, `4eso-apl-X` -> `4eso-aca-X`. Els de B soles
+       (trigonometria, logaritmes…) declaren directament `4eso-aca-…`. */
+    o.sabers = o.sabers.concat(o.sabers.filter(function (s) { return /^4eso-apl-/.test(s); })
+      .map(function (s) { return s.replace('4eso-apl-', '4eso-aca-'); }));
     o.figura = o.figura || null;
     o.capCal = !!o.capCal;
     o.figuraCal = !!o.figuraCal;
@@ -2289,6 +2295,341 @@
     fn: function (r) {
       var d = r.tria(VOCAB4);
       return { enunciat: d[0], resposta: d[1], passos: [d[2]] };
+    }
+  });
+
+  /* =====================================================================
+     4t d'ESO · ACADÈMIQUES (B)
+     Els sabers equivalents als d'Aplicades (`4eso-apl-X` -> `4eso-aca-X`)
+     hereten els generadors d'A (vegeu `reg`). Aquí només hi ha el que és
+     només de B: trigonometria, logaritmes i funció logarítmica,
+     combinatòria amb fórmules i el binomi, i variància i desviació típica.
+     ===================================================================== */
+  var TRG = '4eso-aca-mes-trigonometria', LOG = '4eso-aca-num-logaritmes',
+      FLO = '4eso-aca-alg-exponencial', CMB = '4eso-aca-est-combinatoria',
+      VAR = '4eso-aca-est-variable';
+
+  /* ------------------------------------------------------ trigonometria == */
+  var EXACTE = {
+    30: { sin: '\\dfrac{1}{2}', cos: '\\dfrac{\\sqrt{3}}{2}', tan: '\\dfrac{\\sqrt{3}}{3}' },
+    45: { sin: '\\dfrac{\\sqrt{2}}{2}', cos: '\\dfrac{\\sqrt{2}}{2}', tan: '1' },
+    60: { sin: '\\dfrac{\\sqrt{3}}{2}', cos: '\\dfrac{1}{2}', tan: '\\sqrt{3}' }
+  };
+  var TRIPLETS_T = [[3, 4, 5], [6, 8, 10], [5, 12, 13], [8, 15, 17]];
+
+  reg({
+    id: 'trig-raons', sabers: [TRG], nivell: 1, cap: '',
+    fn: function (r) {
+      var t = r.tria(TRIPLETS_T), op = t[0], ad = t[1], h = t[2];
+      return {
+        enunciat: 'Un triangle rectangle té catets de $' + op + '$ cm i $' + ad + '$ cm, i hipotenusa de $' + h +
+          '$ cm. Calcula el sinus, el cosinus i la tangent de l\'angle oposat al catet de $' + op + '$ cm.',
+        resposta: '$\\sin A = ' + fracTex(op, h) + '$, $\\cos A = ' + fracTex(ad, h) + '$, $\\tan A = ' + fracTex(op, ad) + '$',
+        passos: ['Sinus: catet oposat entre hipotenusa. Cosinus: catet contigu entre hipotenusa. Tangent: oposat entre contigu.',
+                 '$\\sin A = \\dfrac{' + op + '}{' + h + '}$, $\\cos A = \\dfrac{' + ad + '}{' + h + '}$, $\\tan A = \\dfrac{' + op + '}{' + ad + '}$']
+      };
+    }
+  });
+
+  reg({
+    id: 'trig-notables', capCal: true, sabers: [TRG], nivell: 1,
+    cap: '',
+    fn: function (r) {
+      var a = r.tria([30, 45, 60]), f = r.tria(['sin', 'cos', 'tan']);
+      if (r.enter(3) === 0) {
+        var v = EXACTE[a][f], angles = [30, 45, 60].filter(function (x) { return EXACTE[x][f] === v; });
+        if (angles.length === 1) {
+          return { cap: 'Quin angle agut compleix aquesta igualtat?', enunciat: '$\\' + f + ' A = ' + v + '$',
+                   resposta: '$A = ' + a + '^\\circ$',
+                   passos: ['És un dels valors exactes que cal saber: $\\' + f + ' ' + a + '^\\circ = ' + v + '$.'] };
+        }
+      }
+      return { cap: 'Escriu el valor exacte.', enunciat: '$\\' + f + ' ' + a + '^\\circ$',
+               resposta: '$' + EXACTE[a][f] + '$',
+               passos: ['Són els valors dels angles notables: $\\' + f + ' ' + a + '^\\circ = ' + EXACTE[a][f] + '$.'] };
+    }
+  });
+
+  reg({
+    id: 'trig-reduccio', capCal: true, sabers: [TRG], nivell: 1,
+    cap: 'Escriu el valor exacte reduint l\'angle al primer quadrant.',
+    fn: function (r) {
+      var a = r.tria([120, 135, 150, 210, 225, 240, 300, 315, 330]), f = r.tria(['sin', 'cos']),
+          q = a < 180 ? 2 : a < 270 ? 3 : 4, ref = q === 2 ? 180 - a : q === 3 ? a - 180 : 360 - a,
+          signe = f === 'sin' ? (q === 2 ? 1 : -1) : (q === 4 ? 1 : -1), v = EXACTE[ref][f];
+      return {
+        enunciat: '$\\' + f + ' ' + a + '^\\circ$',
+        resposta: '$' + (signe < 0 ? '-' : '') + v + '$',
+        passos: ['$' + a + '^\\circ$ és al ' + (q === 2 ? 'segon' : q === 3 ? 'tercer' : 'quart') +
+                 ' quadrant; l\'angle de referència és $' + (q === 2 ? '180^\\circ - ' + a : q === 3 ? a + '^\\circ - 180' : '360^\\circ - ' + a) +
+                 (q === 2 ? '^\\circ' : '^\\circ') + ' = ' + ref + '^\\circ$.',
+                 'En aquest quadrant el ' + (f === 'sin' ? 'sinus' : 'cosinus') + ' és ' + (signe > 0 ? 'positiu' : 'negatiu') +
+                 ': $\\' + f + ' ' + a + '^\\circ = ' + (signe < 0 ? '-' : '') + '\\' + f + ' ' + ref + '^\\circ = ' +
+                 (signe < 0 ? '-' : '') + v + '$.']
+      };
+    }
+  });
+
+  reg({
+    id: 'trig-complementari', capCal: true, sabers: [TRG], nivell: 1,
+    cap: 'Completa amb l\'angle que falta.',
+    fn: function (r) {
+      var a = r.tria([10, 15, 20, 25, 35, 40, 55, 70]), sin = r.enter(2) === 0;
+      return {
+        enunciat: '$\\' + (sin ? 'sin' : 'cos') + ' ' + a + '^\\circ = \\' + (sin ? 'cos' : 'sin') + ' \\ \\square$',
+        resposta: '$' + (90 - a) + '^\\circ$',
+        passos: ['Dos angles complementaris sumen $90^\\circ$: el sinus de l\'un és el cosinus de l\'altre.',
+                 '$90^\\circ - ' + a + '^\\circ = ' + (90 - a) + '^\\circ$']
+      };
+    }
+  });
+
+  reg({
+    id: 'trig-catet', sabers: [TRG], nivell: 1, cap: '',
+    fn: function (r) {
+      var h = r.tria([6, 8, 10, 12, 14, 20]), a = r.tria([30, 60]);
+      return {
+        enunciat: 'Triangle rectangle: hipotenusa $' + h + '$ cm i angle agut $' + a +
+          '^\\circ$. Quant fa el catet ' + (a === 30 ? 'oposat' : 'contigu') + ' a l\'angle?',
+        resposta: '$' + h / 2 + '$ cm',
+        passos: [a === 30 ? '$\\sin 30^\\circ = \\dfrac{c}{' + h + '}$, i $\\sin 30^\\circ = \\dfrac{1}{2}$.'
+                          : '$\\cos 60^\\circ = \\dfrac{c}{' + h + '}$, i $\\cos 60^\\circ = \\dfrac{1}{2}$.',
+                 '$c = ' + h + ' \\cdot \\dfrac{1}{2} = ' + h / 2 + '$ cm']
+      };
+    }
+  });
+
+  reg({
+    id: 'trig-sinus', sabers: [TRG], nivell: 1, cap: '',
+    fn: function (r) {
+      var a = r.tria([4, 6, 8, 10]);
+      return {
+        enunciat: 'Un triangle té els angles $A = 30^\\circ$ i $B = 45^\\circ$, i el costat oposat a $A$ fa $' + a +
+          '$ cm. Quant fa el costat oposat a $B$?',
+        resposta: '$' + a + '\\sqrt{2} \\approx ' + coma(Math.round(a * Math.SQRT2 * 100) / 100) + '$ cm',
+        passos: ['Teorema del sinus: $\\dfrac{a}{\\sin A} = \\dfrac{b}{\\sin B}$.',
+                 '$b = \\dfrac{' + a + ' \\cdot \\sin 45^\\circ}{\\sin 30^\\circ} = ' + a + ' \\cdot \\dfrac{\\sqrt{2}/2}{1/2} = ' + a + '\\sqrt{2}$',
+                 '$' + a + '\\sqrt{2} \\approx ' + coma(Math.round(a * Math.SQRT2 * 100) / 100) + '$ cm']
+      };
+    }
+  });
+
+  var COSINUS = [[60, 3, 8, 7], [60, 5, 8, 7], [60, 8, 15, 13], [60, 7, 15, 13],
+                 [120, 3, 5, 7], [120, 5, 16, 19], [120, 7, 8, 13]];
+
+  reg({
+    id: 'trig-cosinus', sabers: [TRG], nivell: 1, cap: '',
+    fn: function (r) {
+      var t = r.tria(COSINUS), c = t[0], a = t[1], b = t[2], x = t[3], m = c === 60 ? -1 : 1;
+      return {
+        enunciat: 'Un triangle té dos costats de $' + a + '$ cm i $' + b + '$ cm que formen un angle de $' + c +
+          '^\\circ$. Quant fa el tercer costat?',
+        resposta: '$' + x + '$ cm',
+        passos: ['Teorema del cosinus: $x^2 = a^2 + b^2 - 2ab\\cos C$, amb $\\cos ' + c + '^\\circ = ' +
+                 (c === 60 ? '\\dfrac{1}{2}' : '-\\dfrac{1}{2}') + '$.',
+                 '$x^2 = ' + a + '^2 + ' + b + '^2 ' + (m < 0 ? '-' : '+') + ' ' + a + ' \\cdot ' + b + ' = ' + x * x + '$',
+                 '$x = \\sqrt{' + x * x + '} = ' + x + '$ cm']
+      };
+    }
+  });
+
+  /* --------------------------------------------------------- logaritmes == */
+  var BASES_LOG = [[2, 6], [3, 4], [5, 3], [10, 2]];
+
+  reg({
+    id: 'log-def', capCal: true, sabers: [LOG], nivell: 1,
+    cap: '',
+    fn: function (r) {
+      var b = r.tria(BASES_LOG), n = r.entre(0, b[1]), N = Math.pow(b[0], n);
+      if (r.enter(3) === 0) {
+        return { cap: 'Troba $x$.', enunciat: '$\\log_{' + b[0] + '} x = ' + n + '$',
+                 resposta: '$x = ' + N + '$',
+                 passos: ['$\\log_{' + b[0] + '} x = ' + n + '$ vol dir $' + b[0] + '^{' + n + '} = x$.',
+                          '$x = ' + N + '$'] };
+      }
+      return { cap: 'Calcula el logaritme.', enunciat: '$\\log_{' + b[0] + '} ' + N + '$',
+               resposta: '$' + n + '$',
+               passos: ['Es busca l\'exponent al qual cal elevar $' + b[0] + '$ per obtenir $' + N + '$.',
+                        '$' + b[0] + '^{' + n + '} = ' + N + '$, per tant $\\log_{' + b[0] + '} ' + N + ' = ' + n + '$'] };
+    }
+  });
+
+  reg({
+    id: 'log-propietats', capCal: true, sabers: [LOG], nivell: 1,
+    cap: 'Calcula amb les propietats dels logaritmes.',
+    fn: function (r) {
+      var b = r.tria([2, 3, 5]), p = r.entre(1, b === 2 ? 4 : 2), q = r.entre(1, b === 2 ? 3 : 2), f = r.enter(3),
+          L = function (e) { return '\\log_{' + b + '} ' + Math.pow(b, e); };
+      if (f === 0) {
+        return { enunciat: '$' + L(p) + ' + ' + L(q) + '$', resposta: '$' + (p + q) + '$',
+                 passos: ['$\\log_{' + b + '} ' + Math.pow(b, p) + ' = ' + p + '$ i $\\log_{' + b + '} ' + Math.pow(b, q) + ' = ' + q + '$.',
+                          '$' + p + ' + ' + q + ' = ' + (p + q) + '$ (el logaritme d\'un producte és la suma de logaritmes)'] };
+      }
+      if (f === 1) {
+        var gran = Math.max(p, q) + 1;
+        return { enunciat: '$' + L(gran) + ' - ' + L(q) + '$', resposta: '$' + (gran - q) + '$',
+                 passos: ['$\\log_{' + b + '} ' + Math.pow(b, gran) + ' = ' + gran + '$ i $\\log_{' + b + '} ' + Math.pow(b, q) + ' = ' + q + '$.',
+                          '$' + gran + ' - ' + q + ' = ' + (gran - q) + '$ (el logaritme d\'un quocient és la resta)'] };
+      }
+      return { enunciat: '$' + q + ' \\cdot \\log_{' + b + '} ' + Math.pow(b, p) + '$', resposta: '$' + p * q + '$',
+               passos: ['$\\log_{' + b + '} ' + Math.pow(b, p) + ' = ' + p + '$.', '$' + q + ' \\cdot ' + p + ' = ' + p * q + '$'] };
+    }
+  });
+
+  reg({
+    id: 'log-equacio', capCal: true, sabers: [LOG], nivell: 1,
+    cap: 'Resol l\'equació amb logaritmes.',
+    fn: function (r) {
+      var b = r.tria(BASES_LOG), n = r.entre(1, b[1]), N = Math.pow(b[0], n);
+      return { enunciat: '$' + b[0] + '^{x} = ' + N + '$', resposta: '$x = ' + n + '$',
+               passos: ['$x = \\log_{' + b[0] + '} ' + N + '$.', '$' + b[0] + '^{' + n + '} = ' + N + '$, o sigui $x = ' + n + '$'] };
+    }
+  });
+
+  var LN = [['\\ln e', '1'], ['\\ln 1', '0'], ['\\ln e^{3}', '3'], ['\\log 100', '2'], ['\\log 10', '1'],
+            ['\\log 1', '0'], ['\\log 10^{4}', '4'], ['e^{\\ln 5}', '5'], ['10^{\\log 7}', '7'],
+            ['\\ln e^{5}', '5'], ['\\log 0{,}01', '-2']];
+  var LN_PAS = { '\\ln e': 'El logaritme neperià té base $e$: $\\ln e = 1$.',
+                 '\\log 10': 'El logaritme decimal té base $10$: $\\log 10 = 1$.' };
+
+  reg({
+    id: 'log-ln', capCal: true, sabers: [LOG], nivell: 1,
+    cap: 'Calcula. ($\\log$ és en base $10$ i $\\ln$ en base $e$.)',
+    fn: function (r) {
+      var q = r.tria(LN);
+      return { enunciat: '$' + q[0] + '$', resposta: '$' + q[1] + '$',
+               passos: [LN_PAS[q[0]] || (/^e\^|^10\^/.test(q[0]) ? 'L\'exponencial i el logaritme de la mateixa base es cancel·len.' :
+                        'El logaritme és l\'exponent: la base elevada a aquest nombre dona l\'argument.'),
+                        '$' + q[0] + ' = ' + q[1] + '$'] };
+    }
+  });
+
+  /* -------------------------------------------- funció logarítmica == */
+  reg({
+    id: 'flog-domini', capCal: true, sabers: [FLO], nivell: 1,
+    cap: 'Quin és el domini d\'aquesta funció?',
+    fn: function (r) {
+      var a = r.entre(-4, 6) || 3, base = r.tria(['\\log_{2}', '\\log_{3}', '\\ln', '\\log']);
+      return { enunciat: '$y = ' + base + '(' + xMes(-a) + ')$',
+               resposta: '$x > ' + a + '$, o sigui $(' + a + ', +\\infty)$',
+               passos: ['L\'argument del logaritme ha de ser positiu: $' + xMes(-a) + ' > 0$.', '$x > ' + a + '$'] };
+    }
+  });
+
+  reg({
+    id: 'flog-valor', capCal: true, sabers: [FLO], nivell: 1,
+    cap: 'Calcula la imatge.',
+    fn: function (r) {
+      var b = r.tria([2, 3, 5]), n = r.entre(0, b === 2 ? 5 : 3), x = Math.pow(b, n);
+      return { enunciat: '$f(x) = \\log_{' + b + '} x$, calcula $f(' + x + ')$', resposta: '$' + n + '$',
+               passos: ['$f(' + x + ') = \\log_{' + b + '} ' + x + '$.', '$' + b + '^{' + n + '} = ' + x + '$, per tant $f(' + x + ') = ' + n + '$'] };
+    }
+  });
+
+  reg({
+    id: 'flog-inversa', capCal: true, sabers: [FLO], nivell: 1,
+    cap: 'Quina funció és la inversa d\'aquesta?',
+    fn: function (r) {
+      var b = r.tria(['2', '3', '10', 'e']);
+      return { enunciat: '$y = ' + b + '^{x}$', resposta: '$y = ' + (b === 'e' ? '\\ln x' : b === '10' ? '\\log x' : '\\log_{' + b + '} x') + '$',
+               passos: ['L\'exponencial i el logaritme de la mateixa base són funcions inverses.',
+                        'Les gràfiques són simètriques respecte de la recta $y = x$.'] };
+    }
+  });
+
+  /* -------------------------------------------------- combinatòria == */
+  reg({
+    id: 'com-variacions', sabers: [CMB], nivell: 1, cap: '',
+    fn: function (r) {
+      var n = r.entre(4, 6), k = r.entre(2, 3), v = 1, i, t = [];
+      for (i = 0; i < k; i++) { v *= n - i; t.push(n - i); }
+      return {
+        enunciat: 'Amb $' + n + '$ xifres diferents, quants nombres de $' + k + '$ xifres sense repetir-ne cap es poden fer?',
+        resposta: '$' + v + '$',
+        passos: ['Importa l\'ordre i no es repeteix: variacions de $' + n + '$ elements agafats de $' + k + '$ en $' + k + '$.',
+                 '$V_{' + n + ',' + k + '} = ' + t.join(' \\cdot ') + ' = ' + v + '$']
+      };
+    }
+  });
+
+  reg({
+    id: 'com-vr', sabers: [CMB], nivell: 1, cap: '',
+    fn: function (r) {
+      var n = r.entre(2, 4), k = r.entre(2, 3), v = Math.pow(n, k);
+      return {
+        enunciat: 'Un codi té $' + k + '$ caràcters i cada un pot ser un de $' + n + '$ símbols (es poden repetir). Quants codis hi ha?',
+        resposta: '$' + v + '$',
+        passos: ['Importa l\'ordre i es pot repetir: variacions amb repetició.',
+                 '$VR_{' + n + ',' + k + '} = ' + n + '^{' + k + '} = ' + v + '$']
+      };
+    }
+  });
+
+  reg({
+    id: 'com-combinacions', sabers: [CMB], nivell: 1, cap: '',
+    fn: function (r) {
+      var n = r.entre(4, 7), k = r.entre(2, 3), num = 1, den = 1, i, tn = [], td = [];
+      for (i = 0; i < k; i++) { num *= n - i; den *= i + 1; tn.push(n - i); td.push(i + 1); }
+      return {
+        enunciat: 'De quantes maneres es poden triar $' + k + '$ persones d\'un grup de $' + n + '$, sense que importi l\'ordre?',
+        resposta: '$' + num / den + '$',
+        passos: ['No importa l\'ordre: combinacions de $' + n + '$ elements agafats de $' + k + '$ en $' + k + '$.',
+                 '$C_{' + n + ',' + k + '} = \\dfrac{' + tn.join(' \\cdot ') + '}{' + td.join(' \\cdot ') + '} = ' + num / den + '$']
+      };
+    }
+  });
+
+  var TARTAGLIA = [[1], [1, 1], [1, 2, 1], [1, 3, 3, 1], [1, 4, 6, 4, 1], [1, 5, 10, 10, 5, 1]];
+
+  reg({
+    id: 'com-tartaglia', capCal: true, sabers: [CMB], nivell: 1,
+    cap: 'Escriu la fila del triangle de Tartaglia que correspon a aquest exponent.',
+    fn: function (r) {
+      var n = r.entre(2, 5);
+      return { enunciat: '$(a + b)^{' + n + '}$', resposta: '$' + TARTAGLIA[n].join(',\\ ') + '$',
+               passos: ['Cada nombre és la suma dels dos que té a sobre, a la fila anterior: $' + TARTAGLIA[n - 1].join(',\\ ') + '$.',
+                        'Fila ' + n + ': $' + TARTAGLIA[n].join(',\\ ') + '$']};
+    }
+  });
+
+  reg({
+    id: 'com-newton', capCal: true, sabers: [CMB], nivell: 1,
+    cap: 'Desenvolupa amb el binomi de Newton.',
+    fn: function (r) {
+      var n = r.entre(2, 4), a = r.tria([1, 2, 3]), c = TARTAGLIA[n], t = [], k, coef, exp;
+      for (k = 0; k <= n; k++) {
+        coef = c[k] * Math.pow(a, n - k); exp = n - k;
+        t.push((coef === 1 && exp > 0 ? '' : coef) + (exp === 0 ? '' : exp === 1 ? 'x' : 'x^{' + exp + '}'));
+      }
+      return { enunciat: '$(x + ' + a + ')^{' + n + '}$', resposta: '$' + t.join(' + ') + '$',
+               passos: ['Coeficients de la fila ' + n + ' del triangle de Tartaglia: $' + c.join(',\\ ') + '$.',
+                        'Cada terme porta $x$ amb exponent que baixa i $' + a + '$ amb exponent que puja.',
+                        '$' + t.join(' + ') + '$'] };
+    }
+  });
+
+  /* ------------------------------------------------------- variància == */
+  reg({
+    id: 'est-variancia', capCal: true, sabers: [VAR], nivell: 1,
+    cap: 'Calcula la mitjana, la variància i la desviació típica d\'aquestes dades.',
+    fn: function (r) {
+      var n = 4, m, ds, s2, sig, i;
+      do {
+        m = r.entre(8, 16); ds = [];
+        for (i = 0; i < n - 1; i++) ds.push(r.entre(-4, 4));
+        ds.push(-ds.reduce(function (a, b) { return a + b; }, 0));
+        s2 = ds.reduce(function (a, b) { return a + b * b; }, 0);
+        sig = Math.sqrt(s2 / n);
+      } while (s2 % n !== 0 || s2 === 0 || sig !== Math.floor(sig) || Math.abs(ds[n - 1]) > 6);
+      var xs = ds.map(function (d) { return m + d; });
+      return {
+        enunciat: '$' + xs.join(',\\ ') + '$',
+        resposta: 'Mitjana $' + m + '$; variància $' + s2 / n + '$; desviació típica $' + sig + '$',
+        passos: ['Mitjana: $\\bar{x} = ' + m + '$.',
+                 'Desviacions al quadrat: $' + ds.map(function (d) { return d * d; }).join(' + ') + ' = ' + s2 + '$.',
+                 'Variància: $\\sigma^2 = ' + s2 + ' : ' + n + ' = ' + s2 / n + '$.',
+                 'Desviació típica: $\\sigma = \\sqrt{' + s2 / n + '} = ' + sig + '$']
+      };
     }
   });
 

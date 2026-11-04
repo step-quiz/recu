@@ -94,8 +94,24 @@ comprova('4t Aplicades: tots els sabers tenen una pregunta de nivell 1 i cap és
   sp['4eso-apl-lec'].items.length > 0 &&
   cursos[3].sabers.length === 12 && cursos[3].sabers.every(s => s.perNivell[0] >= 6),
   cursos[3].sabers.filter(s => s.perNivell[0] < 6).map(s => s.id).join());
-comprova('hi ha els quatre cursos', cursos.length === 4 &&
-  cursos.map(c => c.id).join() === '1eso,2eso,3eso,4eso-apl');
+/* 4t Acadèmiques: el Repartiment sencer, amb la trigonometria, els logaritmes i la
+   variància, que Aplicades no fa; i els mateixos sabers que A amb les mateixes hores. */
+comprova('4t Acadèmiques: 14 sabers, tots amb pregunta de nivell 1',
+  cursos[4].sabers.length === 14 && cursos[4].sabers.every(s => s.perNivell[0] >= 6),
+  cursos[4].sabers.filter(s => s.perNivell[0] < 6).map(s => s.id).join());
+comprova('4t Acadèmiques té trigonometria, logaritmes, variància i combinatòria amb fórmules',
+  ['4eso-aca-mes-trigonometria', '4eso-aca-num-logaritmes'].every(id => sp[id].items.length >= 20) &&
+  window.BANC.items.some(i => i.sabers.includes('4eso-aca-est-variable') &&
+    /vari[àa]ncia/i.test(i.cap + ' ' + i.enunciat)) &&
+  window.BANC.items.some(i => i.sabers.includes('4eso-aca-est-combinatoria') && /binomi|Newton|C_\{/.test(i.enunciat + ' ' + i.cap)));
+comprova('4t Aplicades no té cap pregunta de trigonometria ni de logaritmes',
+  !window.BANC.items.some(i => i.sabers.some(s => s.startsWith('4eso-apl-')) &&
+    /\\(sin|cos|tan|log|ln)\b/.test(i.cap + ' ' + i.enunciat)));
+comprova('els sabers de B que repeteixen els d\'A tenen les mateixes hores',
+  cursos[3].sabers.every(a => { const b = cursos[4].sabers.find(x => x.id === a.id.replace('apl', 'aca'));
+    return b && b.hores === a.hores; }));
+comprova('hi ha els cinc cursos', cursos.length === 5 &&
+  cursos.map(c => c.id).join() === '1eso,2eso,3eso,4eso-apl,4eso-aca');
 
 /* Veredictes del departament sobre ítems concrets, del repàs d'una prova
    impresa. Són el criteri real de què és assequible per a un alumne que ve

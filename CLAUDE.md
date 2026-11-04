@@ -30,7 +30,7 @@ repositori, si n'hi ha més avall, manen sobre aquestes quan diuen una altra cos
 
 ## Aquest repositori
 
-**Prova de recuperació — Matemàtiques 1r, 2n i 3r d'ESO i 4t d'ESO Aplicades.** Llegeix primer:
+**Prova de recuperació — Matemàtiques 1r, 2n, 3r i 4t d'ESO (Aplicades i Acadèmiques).** Llegeix primer:
 
 - [`README.md`](README.md)
 

@@ -266,6 +266,58 @@ function aritmetica(it, errors, aplicades) {
     const [n0, t] = dols(it.enunciat), f = /duplica/.test(e) ? 2 : 3;
     if (n0 * f ** t !== +mat(it.resposta).replace(/\\,/g, '')) malament('població incorrecta');
   }
+  /* ---- 4t d'ESO · Acadèmiques ------------------------------------------ */
+  const prim = t => +((String(t).match(/-?\d+/) || [])[0]);
+  if (it.gen === 'trig-raons') {
+    compta();
+    const [op, ad, h] = (it.enunciat.match(/\$(\d+)\$/g) || []).map(x => +x.slice(1, -1));
+    if (op * op + ad * ad !== h * h) malament('el triangle no és rectangle');
+    const fr = [...it.resposta.matchAll(/\\dfrac\{(\d+)\}\{(\d+)\}/g)].map(q => q[1] / q[2]);
+    const bons = [op / h, ad / h, op / ad];
+    if (fr.length !== 3 || fr.some((v, i) => Math.abs(v - bons[i]) > 1e-9)) malament('raons incorrectes');
+  }
+  if (it.gen === 'trig-cosinus') {
+    compta();
+    const [a, b] = dols(it.enunciat), c = +(it.enunciat.match(/(\d+)\^\\circ/) || [])[1], x = prim(it.resposta);
+    const x2 = a * a + b * b - 2 * a * b * (c === 60 ? 0.5 : -0.5);
+    if (Math.abs(x * x - x2) > 1e-9) malament('teorema del cosinus incorrecte');
+  }
+  if (it.gen === 'trig-sinus') {
+    compta();
+    const [a] = dols(it.enunciat), val = decimal((mat(it.resposta).match(/approx *(\d+(?:\{,\}\d+)?)/) || [])[1] || 'NaN');
+    if (Math.abs(val - a * Math.SQRT2) > 0.006) malament('teorema del sinus incorrecte');
+  }
+  if (it.gen === 'trig-catet') {
+    compta();
+    const [h] = dols(it.enunciat);
+    if (prim(it.resposta) * 2 !== h) malament('catet incorrecte');
+  }
+  if (it.gen === 'com-variacions' || it.gen === 'com-vr' || it.gen === 'com-combinacions') {
+    compta();
+    const [n, k] = dols(it.enunciat), x = prim(mat(it.resposta).replace(/\\,/g, ''));
+    const f = q => q <= 1 ? 1 : q * f(q - 1);
+    // a `com-vr` l'enunciat diu primer els caràcters (k) i després els símbols (n)
+    const esperat = it.gen === 'com-variacions' ? f(n) / f(n - k) : it.gen === 'com-vr' ? Math.pow(k, n)
+      : f(k) / (f(n) * f(k - n)); // combinacions: l'enunciat diu primer triar (n) i després el grup (k)
+    if (x !== esperat) malament('recompte incorrecte');
+  }
+  if (it.gen === 'log-def') {
+    compta();
+    const m = mat(it.enunciat), b = +(m.match(/log_\{?(\d+)\}?/) || [])[1];
+    if (/=/.test(m)) {
+      const n = +m.split('=')[1], x = +(mat(it.resposta).match(/x *= *(\d+)/) || [])[1];
+      if (Math.pow(b, n) !== x) malament('logaritme incorrecte');
+    } else {
+      const N = +m.replace(/^.*log_\{?\d+\}? */, '');
+      if (Math.pow(b, prim(it.resposta)) !== N) malament('logaritme incorrecte');
+    }
+  }
+  if (it.gen === 'est-variancia') {
+    compta();
+    const xs = nums(mat(it.enunciat)), n = xs.length, m = xs.reduce((a, b) => a + b, 0) / n,
+      v = xs.reduce((a, b) => a + (b - m) * (b - m), 0) / n, [rm, rv, rs] = nums(it.resposta.replace(/[^\d,{}]+/g, ' ').trim().split(/\s+/).join(' '));
+    if (rm !== m || rv !== v || rs * rs !== v) malament('mitjana, variància o desviació incorrectes');
+  }
 }
 
 function comprova() {
@@ -303,7 +355,9 @@ function comprova() {
    'eq2-x2k', 'eq2-parentesi', 'eq2-producte', 'eq2-incompleta', 'eq2-formula',
    'eq2-discriminant', 'qua-vertex', 'qua-talls', 'qua-valor', 'pct-variacio',
    'pct-iva', 'pct-ponderada', 'pit-hipotenusa', 'pit-catet', 'est-desv-mitjana',
-   'pro-venn', 'pro-composta', 'exp-context']
+   'pro-venn', 'pro-composta', 'exp-context',
+   'trig-raons', 'trig-cosinus', 'trig-sinus', 'trig-catet', 'com-variacions', 'com-vr',
+   'com-combinacions', 'log-def', 'est-variancia']
     .forEach(g => {
       if (!aplicades[g]) {
         errors.push(`${g}: la comprovació aritmètica no s'ha pogut aplicar ` +
