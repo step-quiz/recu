@@ -73,10 +73,11 @@
     return l;
   }
 
-  var sabersPerId = buit(), ordreSabers = [];
+  var sabersPerId = buit(), ordreSabers = [], cursDeSaber = buit();
   MAPA.cursos.forEach(function (c) {
     c.sabers.forEach(function (s) {
       sabersPerId[s.id] = s;
+      cursDeSaber[s.id] = c.id;     // l'id del curs NO és sempre el prefix de 4 lletres («4eso-apl»)
       ordreSabers.push(s.id);
     });
   });
@@ -220,7 +221,7 @@
 
   function subtitolAutomatic() {
     var cursos = {};
-    estat.sabers.forEach(function (id) { cursos[id.slice(0, 4)] = true; });
+    estat.sabers.forEach(function (id) { cursos[cursDeSaber[id]] = true; });
     var noms = MAPA.cursos
       .filter(function (c) { return cursos[c.id]; })
       .map(function (c) { return c.titol; });
@@ -857,8 +858,8 @@
   function marca(ids, activa) {
     ids.forEach(function (id) {
       // Marcar un contingut torna a desplegar el seu curs (vegeu `cursObert`).
-      if (activa && obertAMa[id.slice(0, 4)] === false) {
-        delete obertAMa[id.slice(0, 4)];
+      if (activa && obertAMa[cursDeSaber[id]] === false) {
+        delete obertAMa[cursDeSaber[id]];
         desaCursos();
       }
       var i = estat.sabers.indexOf(id);

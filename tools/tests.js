@@ -85,8 +85,17 @@ comprova('divisibilitat de 1r i 2n no té nombres negatius',
     sp[id].items.every(x => !/[−-]\s*\d/.test(banc[x].enunciat))));
 comprova('cap enunciat es refereix a unes opcions que no s\'imprimeixen',
   window.BANC.items.every(i => !/qu(in|ina)\s+d'aquest/i.test(i.enunciat)));
-comprova('hi ha els tres cursos', cursos.length === 3 &&
-  cursos.map(c => c.id).join() === '1eso,2eso,3eso');
+/* 4t Aplicades: la dispersió és recorregut i desviació mitjana (índex de 4eso-apl);
+   la variància i la desviació típica no hi són. */
+comprova('4t Aplicades no porta variància ni desviació típica',
+  !window.BANC.items.some(i => i.sabers.includes('4eso-apl-est-variable') &&
+    /vari[àa]ncia|desviaci[óo] t[ií]pica|sigma/i.test(i.cap + ' ' + i.enunciat)));
+comprova('4t Aplicades: tots els sabers tenen una pregunta de nivell 1 i cap és buit',
+  sp['4eso-apl-lec'].items.length > 0 &&
+  cursos[3].sabers.length === 12 && cursos[3].sabers.every(s => s.perNivell[0] >= 6),
+  cursos[3].sabers.filter(s => s.perNivell[0] < 6).map(s => s.id).join());
+comprova('hi ha els quatre cursos', cursos.length === 4 &&
+  cursos.map(c => c.id).join() === '1eso,2eso,3eso,4eso-apl');
 
 /* Veredictes del departament sobre ítems concrets, del repàs d'una prova
    impresa. Són el criteri real de què és assequible per a un alumne que ve

@@ -342,10 +342,95 @@ SABERS_3ESO = [
          llibre=[("3eso", 8, None)], bogdan=[]),
 ]
 
+# ------------------------------------------------- 4t d'ESO · Aplicades (A)
+# Sabers del «Repartiment de continguts» de 4t, MENYS el que Aplicades no fa:
+# trigonometria (sentit de la mesura sencer), logaritmes i funció logarítmica,
+# i la variància i la desviació típica (a la via A, dispersió = recorregut i
+# desviació mitjana). Les hores són les del document. El llibre de referència
+# és `4eso-apl` (UD1–UD11); les unitats són les de l'índex d'aquell llibre.
+SABERS_4ESO_APL = [
+    dict(id="4eso-apl-lec", sentit="lectora", titol="Comprensió lectora matemàtica", hores=16,
+         detall="Vocabulari específic. Obtenció d'informació en textos d'àmbit "
+                "matemàtic. Expressió algebraica de patrons. Resolució de problemes "
+                "a partir d'un context.",
+         repas=[], llibre=[], bogdan=[]),
+
+    dict(id="4eso-apl-num-reals", sentit="numeric", titol="El conjunt dels nombres reals", hores=8,
+         detall="Naturals, enters, racionals i irracionals. Infinitud de decimals entre "
+                "dos nombres. Fracció, decimal i percentatge. Exponent negatiu, zero i "
+                "racional. Nombres que no són reals: x²=k, k<0.",
+         repas=[(2, "negatiu", None), (2, "verifica", None)],
+         llibre=[("4eso-apl", 1, None)], bogdan=["nombres-reals"]),
+
+    dict(id="4eso-apl-num-percentatge", sentit="numeric", titol="Percentatge", hores=12,
+         detall="Diagrama de sectors. Mitjana aritmètica ponderada. Augments i "
+                "disminucions percentuals. IVA. Interès en un crèdit.",
+         repas=[(6, "percentatges", None), (6, "factor_multiplicador", None),
+                (6, "aplicacions_percentatge", None), (6, "encadenats", None)],
+         llibre=[("4eso-apl", 2, None)], bogdan=[]),
+
+    dict(id="4eso-apl-esp-repas", sentit="espacial", titol="Repàs previ: Pitàgores i semblança", hores=4,
+         detall="Circumferència, radi i angle central. Triangle rectangle i teorema de "
+                "Pitàgores. Triangles semblants. Signe de les coordenades segons el quadrant.",
+         repas=[(7, "triangles", None), (8, "semblanca", None)],
+         llibre=[("4eso-apl", 4, None)], bogdan=["geometria", "semblanca"]),
+
+    dict(id="4eso-apl-alg-llenguatge", sentit="algebraic", titol="Llenguatge algebraic i identitats", hores=8,
+         detall="Expressar relacions o patrons de taules i gràfics. Identitats notables, "
+                "de forma gràfica i manipulant algebraicament.",
+         repas=[(3, "termes", None), (4, "notables", None), (4, "factor_comu", None)],
+         llibre=[("4eso-apl", 11, None)], bogdan=["algebra", "polinomis"]),
+
+    dict(id="4eso-apl-alg-equacio2", sentit="algebraic", titol="Equació de 2n grau", hores=8,
+         detall="x²=k; (x-a)²=k; (ax-b)(cx-d)=0. Nombre de solucions. Equació completa "
+                "i discriminant.",
+         repas=[(5, "formula_general", None), (5, "factoritzacio", None)],
+         llibre=[("4eso-apl", 5, None)], bogdan=["equacions-1r2n-grau"]),
+
+    dict(id="4eso-apl-alg-quadratica", sentit="algebraic", titol="Funció quadràtica", hores=8,
+         detall="y=ax²; y=ax²+c. Punts de tall amb els eixos de y=ax²+bx+c. Vocabulari "
+                "de la paràbola. Coordenades del vèrtex.",
+         repas=[(10, "funcions_quadratiques", None), (10, "parabola_produccio", None)],
+         llibre=[("4eso-apl", 6, None)], bogdan=["funcions"]),
+
+    dict(id="4eso-apl-alg-inversa", sentit="algebraic", titol="Magnituds inversament proporcionals", hores=6,
+         detall="Definició. Exemple: donada una àrea A=24, tots els rectangles. "
+                "La hipèrbola y=k/x segons k>0 o k<0.",
+         repas=[(6, "directa_inversa", None)],
+         llibre=[("4eso-apl", 3, None)], bogdan=["funcions"]),
+
+    dict(id="4eso-apl-alg-exponencial", sentit="algebraic", titol="Funció exponencial", hores=6,
+         detall="Contextos on apareix. Gràfica de b^x segons 0<b<1 i b>1. Asímptotes, "
+                "creixement i decreixement. (La funció logarítmica no s'hi fa.)",
+         repas=[],
+         llibre=[("4eso-apl", 7, [3])], bogdan=["funcions"]),
+
+    dict(id="4eso-apl-est-variable", sentit="estocastic", titol="Variable estadística quantitativa", hores=10,
+         detall="Variables discretes i contínues. Marca de classe. Paràmetres de "
+                "centralització i de dispersió (recorregut i desviació mitjana).",
+         repas=[(11, "frequencies", None), (11, "centralitzacio", None),
+                (11, "dispersio", None)],
+         llibre=[("4eso-apl", 8, None)], bogdan=[]),
+
+    dict(id="4eso-apl-est-combinatoria", sentit="estocastic", titol="Combinatòria", hores=8,
+         detall="Recompte amb arbre i principi multiplicatiu. Permutacions i factorial.",
+         repas=[(12, "combinatoria", None)],
+         llibre=[("4eso-apl", 9, [2])], bogdan=[]),
+
+    dict(id="4eso-apl-est-probabilitat", sentit="estocastic", titol="Probabilitat", hores=10,
+         detall="Diagrames de Venn. Regla de Laplace. Probabilitat condicionada i "
+                "composta. Llei dels grans nombres.",
+         repas=[(12, "laplace", None), (12, "esdeveniments", None),
+                (12, "probabilitat_condicionada", None),
+                (12, "probabilitat_composta", None)],
+         llibre=[("4eso-apl", 9, None)], bogdan=[]),
+]
+
 CURSOS = [
     dict(id="1eso", titol="1r d'ESO", hores=90, sabers=SABERS_1ESO),
     dict(id="2eso", titol="2n d'ESO", hores=90, sabers=SABERS_2ESO),
     dict(id="3eso", titol="3r d'ESO", hores=90, sabers=SABERS_3ESO),
+    dict(id="4eso-apl", titol="4t d'ESO · Aplicades", hores=120, sabers=SABERS_4ESO_APL),
 ]
 
 # ---------------------------------------------------------------------------
@@ -368,6 +453,13 @@ VETOS = [
     (r"[−-]\s*\d", ["1eso-num-divisibilitat", "2eso-num-divisibilitat"]),
 ]
 
+# Vetos que miren també l'encapçalament (la consigna), no només l'enunciat.
+# A Aplicades la dispersió és el recorregut i la desviació mitjana: la variància
+# i la desviació típica queden fora del currículum (índex de 4eso-apl, §9).
+VETOS_CONSIGNA = [
+    (r"vari[àa]ncia|desviaci[óo] t[ií]pica|\\sigma", ["4eso-apl-est-variable"]),
+]
+
 # Blocs on la fracció ÉS el contingut que s'avalua. A la resta, una fracció
 # a l'enunciat és maquinària que s'hi afegeix (una equació amb denominadors,
 # una funció amb pendent fraccionària) i treu l'exercici del nivell mínim:
@@ -376,12 +468,15 @@ VETOS = [
 BLOCS_DE_FRACCIONS = {"fraccions", "decimals", "percentatges",
                       "factor_multiplicador", "directa_inversa",
                       # generadors propis de «Fraccions i decimals» de 1r
-                      "fd-a-decimal", "fd-a-fraccio"}
+                      "fd-a-decimal", "fd-a-fraccio",
+                      # 4t: la fracció ÉS el contingut (decimal i percentatge, exponent
+                      # racional) o la notació de la funció (y=k/x)
+                      "rea-fdp", "rea-pot-racional", "inv-hiperbola", "rea-classifica"}
 
 # Blocs on l'arrel no exacta ÉS el contingut que s'avalua. A la resta, una
 # arrel lletja a l'enunciat és artificial (ningú mesura un trapezi i li surt
 # \sqrt{164}) i treu l'exercici del nivell mínim; aquí és l'exercici mateix.
-BLOCS_D_ARRELS = {"arr-entre"}
+BLOCS_D_ARRELS = {"arr-entre", "rea-classifica"}
 
 # Ítems fora del banc a tot arreu. El banc de repàs és de resposta múltiple i
 # aquests tres enunciats es refereixen a unes opcions que aquí no s'imprimeixen

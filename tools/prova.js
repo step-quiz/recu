@@ -85,7 +85,7 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
   comprova('en obrir l\'eina, els cursos surten plegats', dalt.sabers === 0, dalt.sabers);
   comprova('amb la prova buida, no diu quantes pàgines', dalt.pagines);
   comprova('«Instruccions:» sense res més no s\'imprimeix', dalt.instr);
-  for (const c of ['1eso', '2eso', '3eso']) await pag.click(`[data-plega="${c}"]`);
+  for (const c of ['1eso', '2eso', '3eso', '4eso-apl']) await pag.click(`[data-plega="${c}"]`);
 
   /* Comprensió lectora, l'últim sentit de cada curs; cap botó «Altres preguntes». */
   const rail = await pag.evaluate(() => ({
@@ -94,7 +94,7 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
       [...c.querySelectorAll('.sentit-tit > span')].pop().textContent)
   }));
   comprova('«Millora de la comprensió lectora» surt l\'última de cada curs',
-    rail.darrers.length === 3 && rail.darrers.every(t => t === 'Millora de la comprensió lectora'),
+    rail.darrers.length === 4 && rail.darrers.every(t => t === 'Millora de la comprensió lectora'),
     rail.darrers.join(' / '));
   comprova('no hi ha el botó «Altres preguntes»', !rail.altra);
   await obreSeccions(pag);
@@ -124,14 +124,14 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
   const sabersDe = c => pag.evaluate(id =>
     document.querySelectorAll(`[data-saber^="${id}-"]`).length, c);
   let plegables = true;
-  for (const c of ['1eso', '2eso', '3eso']) {
+  for (const c of ['1eso', '2eso', '3eso', '4eso-apl']) {
     const obert = await sabersDe(c);
     await pag.click(`[data-plega="${c}"]`);
     const plegat = await sabersDe(c);
     await pag.click(`[data-plega="${c}"]`);
     if (!(obert > 0 && plegat === 0 && await sabersDe(c) === obert)) plegables = false;
   }
-  comprova('els tres cursos es pleguen i es despleguen', plegables);
+  comprova('els quatre cursos es pleguen i es despleguen', plegables);
 
   /* Marcar un curs plegat el desplega sol; els altres, plegats. */
   {
@@ -140,11 +140,27 @@ const paginesPdf = buf => (buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) 
     await pc.waitForTimeout(500);
     await pc.click('[data-curs="2eso"]');
     await pc.waitForTimeout(400);
-    const vis = await pc.evaluate(() => ['1eso', '2eso', '3eso'].map(c =>
+    const vis = await pc.evaluate(() => ['1eso', '2eso', '3eso', '4eso-apl'].map(c =>
       document.querySelectorAll(`[data-saber^="${c}-"]`).length));
     comprova('«Tot el curs» desplega el curs i deixa els altres plegats',
-      vis[0] === 0 && vis[1] > 0 && vis[2] === 0, vis.join(','));
+      vis[0] === 0 && vis[1] > 0 && vis[2] === 0 && vis[3] === 0, vis.join(','));
+    /* 4t Aplicades: l'id del curs no és el prefix de quatre lletres dels sabers. */
     await pc.close();
+    const pq = await nav.newPage({ viewport: { width: 1560, height: 1000 } });
+    await pq.goto(URL_EINA);
+    await pq.waitForTimeout(500);
+    await pq.click('[data-curs="4eso-apl"]');
+    await pq.waitForTimeout(400);
+    const q4 = await pq.evaluate(() => ({
+      sabers: document.querySelectorAll('[data-saber^="4eso-apl-"]').length,
+      preguntes: document.querySelectorAll('.pregunta:not(.pregunta-grup), .apartat').length,
+      subtitol: (document.querySelector('.doc-cap .subtitol') || {}).textContent
+    }));
+    comprova('«Tot el curs» de 4t Aplicades desplega els seus 12 continguts',
+      q4.sabers === 12 && q4.preguntes === 12, JSON.stringify(q4));
+    comprova('el subtítol diu «4t d\'ESO · Aplicades»',
+      q4.subtitol === 'Continguts de 4t d\'ESO · Aplicades', q4.subtitol);
+    await pq.close();
   }
 
   console.log('Composició');

@@ -25,8 +25,10 @@ import subprocess
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from mapa_curricular import (CURSOS, SENTITS, BOGDAN, VETOS, EXCLOSOS,  # noqa: E402
-                             BLOCS_DE_FRACCIONS, BLOCS_D_ARRELS)
+from mapa_curricular import (CURSOS, SENTITS, BOGDAN, VETOS, VETOS_CONSIGNA,  # noqa: E402
+                             EXCLOSOS, BLOCS_DE_FRACCIONS, BLOCS_D_ARRELS)
+
+ARREL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def llegeix_full(carpeta, n):
@@ -220,8 +222,10 @@ def item_de_repas(full, it, titol_bloc, bloc):
         "blocTitol": titol_bloc[(full, bloc)],
         "ex": it["ex"],
         "ap": it["ap"],
-        "dif": it["dif"],
-        "nivell": calcula_nivell(it, resolucio, correcta, cap, bloc),
+        # El `repas` actual puntua la dificultat de 1 a 4; aquí sempre ha estat
+        # 1..3 (només el 3, «difícil», compta al nivell). El 4 s'hi plega.
+        "dif": min(it["dif"], 3),
+        "nivell": calcula_nivell(dict(it, dif=min(it["dif"], 3)), resolucio, correcta, cap, bloc),
         "passos": len(resolucio),
         "cap": cap,
         # Sense l'encapçalament, uns quants ítems del banc es queden en un
@@ -242,6 +246,34 @@ def item_de_repas(full, it, titol_bloc, bloc):
             ensure_ascii=False).encode("utf-8")).decode("ascii"),
         "sabers": [],
     }
+
+
+def llibre_de_curs(c, ruta_llibre, avisos):
+    """
+    Títols de les unitats i activitats d'un curs, per a les referències al
+    llibre. Surten de `contingut/<curs>/course.json` del repositori `llibre`
+    o, si no hi és (4t d'ESO Aplicades viu a Overleaf), de la instantània
+    `tools/llibre/<curs>.json`, que fa `tools/llibre_des_de_tex.py`.
+    """
+    ruta = os.path.join(ruta_llibre or "", "contingut", c, "course.json")
+    instantania = os.path.join(ARREL, "tools", "llibre", c + ".json")
+    if ruta_llibre and os.path.exists(ruta):
+        with open(ruta, encoding="utf-8") as f:
+            d = json.load(f)
+        return {
+            "label": d.get("label", c),
+            "prefix": d.get("pdfPrefix", c),
+            "units": [{"num": u["num"], "title": u["title"],
+                       "activities": [{"num": a["num"], "title": a["title"]}
+                                      for a in u["activities"]]}
+                      for u in d["units"]],
+        }
+    if os.path.exists(instantania):
+        with open(instantania, encoding="utf-8") as f:
+            return json.load(f)
+    if ruta_llibre:
+        avisos.append(f"llibre: falta {ruta}")
+    return None
 
 
 def repas_de_les_fonts(ruta_repas, ruta_llibre):
@@ -282,7 +314,10 @@ def repas_de_les_fonts(ruta_repas, ruta_llibre):
                         if f"f{full}-{it['id']}" in EXCLOSOS:
                             continue
                         vetat = any(s["id"] in sabers_veto and re.search(patro, it["enunciat"])
-                                    for patro, sabers_veto in VETOS)
+                                    for patro, sabers_veto in VETOS) or \
+                            any(s["id"] in sabers_veto and re.search(
+                                patro, it.get("encapcalament", "") + " " + it["enunciat"])
+                                for patro, sabers_veto in VETOS_CONSIGNA)
                         if vetat:
                             vetats[s["id"]] = vetats.get(s["id"], 0) + 1
                             continue
@@ -299,20 +334,9 @@ def repas_de_les_fonts(ruta_repas, ruta_llibre):
     # 3r sortia sense cap referència.
     llibre = {}
     for c in [curs["id"] for curs in CURSOS]:
-        ruta = os.path.join(ruta_llibre, "contingut", c, "course.json")
-        if not os.path.exists(ruta):
-            avisos.append(f"llibre: falta {ruta}")
-            continue
-        with open(ruta, encoding="utf-8") as f:
-            d = json.load(f)
-        llibre[c] = {
-            "label": d.get("label", c),
-            "prefix": d.get("pdfPrefix", c),
-            "units": [{"num": u["num"], "title": u["title"],
-                       "activities": [{"num": a["num"], "title": a["title"]}
-                                      for a in u["activities"]]}
-                      for u in d["units"]],
-        }
+        d = llibre_de_curs(c, ruta_llibre, avisos)
+        if d:
+            llibre[c] = d
     return {"items": items, "per_saber": per_saber, "llibre": llibre,
             "vetats": vetats, "avisos": avisos}
 
@@ -324,7 +348,7 @@ def llegeix_generat(ruta):
     return json.loads(s[s.index("{"): s.rindex("}") + 1])
 
 
-def repas_compilat(sortida):
+def repas_compilat(sortida, avisa=True):
     """
     La mateixa part del banc, però treta del `banc.js` i el `mapa.js` que ja
     hi ha. És el que fa `--nomes-propis`: per tocar `generadors.js` no cal
@@ -344,11 +368,54 @@ def repas_compilat(sortida):
             per_saber[s["id"]] = [g for g in s["items"] if g in items]
     for curs in CURSOS:
         for s in curs["sabers"]:
-            if s["id"] not in per_saber and s["repas"]:
+            if avisa and s["id"] not in per_saber and s["repas"]:
                 avisos.append(f"{s['id']}: saber nou, sense ítems de repàs; "
                               "cal la compilació completa (--repas i --llibre)")
     return {"items": items, "per_saber": per_saber, "llibre": mapa["llibre"],
             "vetats": {}, "avisos": avisos}
+
+
+def repas_afegint(ruta_repas, sortida):
+    """
+    Afegeix al banc ja compilat NOMÉS els sabers que encara no hi són.
+
+    El repositori `repas` ha crescut des de l'última compilació completa
+    (més exercicis, `dif` recalibrat, solucions corregides). Una compilació
+    completa canviaria 1r, 2n i 3r: ítems nous als seus sabers, uns altres
+    nivells, i un mateix codi de prova donaria una altra prova. Aquest mode
+    deixa 1r, 2n i 3r byte a byte com són i hi afegeix només el curs nou.
+
+    Un ítem que ja és al banc (p. ex. un bloc de percentatges que 2n ja fa
+    servir) es queda tal com és i només guanya el saber nou; els ítems que
+    no hi són arriben de `repas`, amb només els sabers nous.
+    """
+    base = repas_compilat(sortida, avisa=False)
+    avisos = []
+    fonts = repas_de_les_fonts(ruta_repas, None)
+    nous = [s["id"] for c in CURSOS for s in c["sabers"] if s["id"] not in base["per_saber"]]
+    if not nous:
+        avisos.append("--afegeix-repas: tots els sabers ja són al banc; res a afegir")
+    avisos = [a for a in avisos if not a.startswith("llibre:")]
+    items, per_saber = dict(base["items"]), dict(base["per_saber"])
+    for sid in nous:
+        ids = fonts["per_saber"].get(sid, [])
+        per_saber[sid] = list(ids)
+        for g in ids:
+            if g in items:
+                items[g] = dict(items[g], sabers=items[g]["sabers"] + [sid]
+                                if sid not in items[g]["sabers"] else items[g]["sabers"])
+            else:
+                it = dict(fonts["items"][g])
+                it["sabers"] = [sid]
+                items[g] = it
+    llibre = dict(base["llibre"])
+    for c in CURSOS:
+        if c["id"] not in llibre:
+            d = llibre_de_curs(c["id"], None, [])
+            if d:
+                llibre[c["id"]] = d
+    return {"items": items, "per_saber": per_saber, "llibre": llibre,
+            "vetats": fonts["vetats"], "avisos": avisos}
 
 
 def ordre_item(it):
@@ -534,6 +601,9 @@ def main():
         description="Genera assets/js/banc.js i assets/js/mapa.js.")
     p.add_argument("--repas", help="carpeta de repas-main (compilació completa)")
     p.add_argument("--llibre", help="carpeta de llibre-main (compilació completa)")
+    p.add_argument("--afegeix-repas", metavar="REPAS",
+                   help="carpeta de repas-main: afegeix al banc.js que ja hi ha només "
+                        "els sabers nous del mapa, sense tocar els cursos existents")
     p.add_argument("--nomes-propis", action="store_true",
                    help="refà només el material propi (generadors.js) i el mapa, "
                         "reaprofitant la part de repàs del banc.js que ja hi ha")
@@ -541,12 +611,14 @@ def main():
         os.path.dirname(os.path.abspath(__file__)), "..", "assets", "js"))
     args = p.parse_args()
 
-    if args.nomes_propis:
+    if args.afegeix_repas:
+        repas = repas_afegint(args.afegeix_repas, args.sortida)
+    elif args.nomes_propis:
         repas = repas_compilat(args.sortida)
     elif args.repas and args.llibre:
         repas = repas_de_les_fonts(args.repas, args.llibre)
     else:
-        p.error("cal --repas i --llibre, o bé --nomes-propis")
+        p.error("cal --repas i --llibre, o bé --afegeix-repas, o bé --nomes-propis")
     compila(repas, args.sortida)
 
 

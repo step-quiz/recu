@@ -1,0 +1,360 @@
+{
+ "label": "4t ESO A",
+ "prefix": "4eso-apl",
+ "units": [
+  {
+   "num": 1,
+   "title": "Nombres reals des de l'estimació",
+   "activities": [
+    {
+     "num": 1,
+     "title": "Quant fa, més o menys?"
+    },
+    {
+     "num": 2,
+     "title": "Els nombres que no s'acaben"
+    },
+    {
+     "num": 3,
+     "title": "La recta real i les representacions"
+    },
+    {
+     "num": 4,
+     "title": "La calculadora amb cap"
+    },
+    {
+     "num": 5,
+     "title": "El mapa dels reals"
+    },
+    {
+     "num": 6,
+     "title": "Producte: «El full de l'estimador»"
+    },
+    {
+     "num": 7,
+     "title": "Estudi per a la prova escrita"
+    }
+   ]
+  },
+  {
+   "num": 2,
+   "title": "Percentatges i matemàtica financera",
+   "activities": [
+    {
+     "num": 1,
+     "title": "Qui hi surt guanyant?"
+    },
+    {
+     "num": 2,
+     "title": "El factor multiplicador"
+    },
+    {
+     "num": 3,
+     "title": "Percentatges encadenats"
+    },
+    {
+     "num": 4,
+     "title": "Impostos i IVA en context"
+    },
+    {
+     "num": 5,
+     "title": "L'interès i el cost d'un crèdit"
+    },
+    {
+     "num": 6,
+     "title": "Comptat, terminis o crèdit?"
+    },
+    {
+     "num": 7,
+     "title": "Síntesi financera"
+    },
+    {
+     "num": 8,
+     "title": "Producte: «Informe de decisió de compra»"
+    },
+    {
+     "num": 9,
+     "title": "Estudi per a la prova escrita"
+    }
+   ]
+  },
+  {
+   "num": 3,
+   "title": "Proporcionalitat i escales",
+   "activities": [
+    {
+     "num": 1,
+     "title": "Directa o inversa?"
+    },
+    {
+     "num": 2,
+     "title": "Proporcionalitat directa i inversa"
+    },
+    {
+     "num": 3,
+     "title": "Escales i plànols"
+    },
+    {
+     "num": 4,
+     "title": "Síntesi: proporcionalitat i escales"
+    },
+    {
+     "num": 5,
+     "title": "Producte: «A escala real»"
+    },
+    {
+     "num": 6,
+     "title": "Estudi per a la prova escrita"
+    }
+   ]
+  },
+  {
+   "num": 4,
+   "title": "Mesura indirecta",
+   "activities": [
+    {
+     "num": 1,
+     "title": "Mesurar l'impossible"
+    },
+    {
+     "num": 2,
+     "title": "Semblança i mesura indirecta"
+    },
+    {
+     "num": 3,
+     "title": "El teorema de Pitàgores per mesurar"
+    },
+    {
+     "num": 4,
+     "title": "Síntesi: mètodes de mesura indirecta"
+    },
+    {
+     "num": 5,
+     "title": "Producte: «Els mesuradors»"
+    },
+    {
+     "num": 6,
+     "title": "Estudi per a la prova escrita"
+    }
+   ]
+  },
+  {
+   "num": 5,
+   "title": "Equacions de 2n grau",
+   "activities": [
+    {
+     "num": 1,
+     "title": "Quan una recta no arriba"
+    },
+    {
+     "num": 2,
+     "title": "Equacions de 2n grau senzilles"
+    },
+    {
+     "num": 3,
+     "title": "Factoritzada i completa"
+    },
+    {
+     "num": 4,
+     "title": "Modelitzar amb equacions"
+    },
+    {
+     "num": 5,
+     "title": "Interpretar i decidir"
+    },
+    {
+     "num": 6,
+     "title": "Mapa de les equacions"
+    },
+    {
+     "num": 7,
+     "title": "Producte: «El cas resolt»"
+    },
+    {
+     "num": 8,
+     "title": "Estudi per a la prova escrita"
+    }
+   ]
+  },
+  {
+   "num": 6,
+   "title": "La paràbola",
+   "activities": [
+    {
+     "num": 1,
+     "title": "La forma dels fenòmens"
+    },
+    {
+     "num": 2,
+     "title": "Llegir i dibuixar una paràbola"
+    },
+    {
+     "num": 3,
+     "title": "De la gràfica al significat"
+    },
+    {
+     "num": 4,
+     "title": "Paràbola i equació de 2n grau"
+    },
+    {
+     "num": 5,
+     "title": "Mapa de la paràbola"
+    },
+    {
+     "num": 6,
+     "title": "Producte: «El fenomen parabòlic»"
+    },
+    {
+     "num": 7,
+     "title": "Estudi per a la prova escrita"
+    }
+   ]
+  },
+  {
+   "num": 7,
+   "title": "Funcions: llegim gràfics",
+   "activities": [
+    {
+     "num": 1,
+     "title": "El gràfic parla"
+    },
+    {
+     "num": 2,
+     "title": "Famílies de funcions des del gràfic"
+    },
+    {
+     "num": 3,
+     "title": "L'exponencial com a fenomen"
+    },
+    {
+     "num": 4,
+     "title": "Gràfics enganyosos i producte «El gràfic parla»"
+    },
+    {
+     "num": 5,
+     "title": "Estudi per a la prova escrita"
+    }
+   ]
+  },
+  {
+   "num": 8,
+   "title": "Estadística: projecte amb dades reals",
+   "activities": [
+    {
+     "num": 1,
+     "title": "Dades que decideixen"
+    },
+    {
+     "num": 2,
+     "title": "Recollida i organització de dades"
+    },
+    {
+     "num": 3,
+     "title": "Mesures de posició i mitjana ponderada"
+    },
+    {
+     "num": 4,
+     "title": "La dispersió com a variabilitat"
+    },
+    {
+     "num": 5,
+     "title": "Llegir dades amb esperit crític"
+    },
+    {
+     "num": 6,
+     "title": "Mapa del cicle estadístic"
+    },
+    {
+     "num": 7,
+     "title": "Producte: «Estudi estadístic propi»"
+    },
+    {
+     "num": 8,
+     "title": "Estudi per a la prova escrita"
+    }
+   ]
+  },
+  {
+   "num": 9,
+   "title": "Atzar i decisions",
+   "activities": [
+    {
+     "num": 1,
+     "title": "Em convé jugar?"
+    },
+    {
+     "num": 2,
+     "title": "Comptar amb arbre"
+    },
+    {
+     "num": 3,
+     "title": "Probabilitat amb Laplace i experimentació"
+    },
+    {
+     "num": 4,
+     "title": "Probabilitat composta amb arbre"
+    },
+    {
+     "num": 5,
+     "title": "Atzar i decisions crítiques"
+    },
+    {
+     "num": 6,
+     "title": "Mapa de l'atzar"
+    },
+    {
+     "num": 7,
+     "title": "Producte: «Analistes de l'atzar»"
+    },
+    {
+     "num": 8,
+     "title": "Estudi per a la prova escrita"
+    }
+   ]
+  },
+  {
+   "num": 10,
+   "title": "Sistemes d'equacions i inequacions",
+   "activities": [
+    {
+     "num": 1,
+     "title": "Quan una incògnita no basta"
+    },
+    {
+     "num": 2,
+     "title": "Dos camins segurs"
+    },
+    {
+     "num": 3,
+     "title": "Del problema al sistema"
+    },
+    {
+     "num": 4,
+     "title": "Veure la solució"
+    },
+    {
+     "num": 5,
+     "title": "Com a mínim, com a màxim: inequacions"
+    },
+    {
+     "num": 6,
+     "title": "Mapa de mètodes i producte"
+    },
+    {
+     "num": 7,
+     "title": "Estudi per a la prova escrita"
+    }
+   ]
+  },
+  {
+   "num": 11,
+   "title": "Idea de polinomi",
+   "activities": [
+    {
+     "num": 1,
+     "title": "La idea de polinomi"
+    }
+   ]
+  }
+ ]
+}

@@ -1,7 +1,7 @@
-# Prova de recuperació — Matemàtiques 1r, 2n i 3r d'ESO
+# Prova de recuperació — Matemàtiques 1r, 2n i 3r d'ESO i 4t d'ESO Aplicades
 
 Lloc estàtic per muntar l'examen global de recuperació d'un alumne que arrossega
-les matemàtiques d'un curs anterior (3r que recupera 2n, 4t que recupera 3r…). HTML, CSS i JavaScript vainilla: cap build,
+les matemàtiques d'un curs anterior (3r que recupera 2n, 4t que recupera 3r…). Cursos: 1r, 2n, 3r i **4t d'ESO · Aplicades**. HTML, CSS i JavaScript vainilla: cap build,
 cap servidor, cap dependència externa. **Obre `index.html` amb doble clic.**
 
 Genera dos documents des d'una sola selecció de continguts:
@@ -145,7 +145,7 @@ d'aquell nivell— fins que la tornis a posar a «general».
 Serveix per al cas que ho va motivar: una prova de mínims amb un parell de
 preguntes més exigents, sense haver de tocar el nivell general.
 
-Els nivells que un contingut no té surten **desactivats**: només 27 dels 50
+Els nivells que un contingut no té surten **desactivats**: només 37 dels 62
 en tenen els tres. Angles de 1r d'ESO, per exemple, té 25 preguntes i totes de
 nivell 1.
 
@@ -195,7 +195,7 @@ l'encapçalament (`capCal`: l'enunciat és una dada solta, com «$3850$») o que
 necessita la figura (`figuraCal`: la pregunta *és* el dibuix). Aquests dos
 elements es continuen imprimint encara que el professor apagui les opcions
 corresponents, perquè si no el full sortiria amb preguntes que no es poden
-respondre. Els declara el generador; per als 592 ítems de `repas` els dedueix
+respondre. Els declara el generador; per als 811 ítems de `repas` els dedueix
 el compilador. Una comprovació de `tests.js` recorre les quatre combinacions
 dels dos interruptors i verifica que cap ítem no es quedi buit amb cap.
 
@@ -252,9 +252,9 @@ contingut de 1r d'ESO a una prova de 2n, la pregunta va on li toca segons el
 currículum. Amb l'ordre «Barrejat» o «De fàcil a difícil» s'afegeix al final,
 perquè allà la posició curricular no vol dir res.
 
-El dau només pot existir on la pregunta ve d'un generador. Les 592 preguntes que
+El dau només pot existir on la pregunta ve d'un generador. Les 811 preguntes que
 venen del banc de `repas` són text ja escrit i no es poden reparametritzar; les
-351 pròpies sí, i el pou és infinit. Trenta-tres dels cinquanta sabers tenen
+654 pròpies sí, i el pou és infinit. 45 dels seixanta-dos sabers tenen
 material propi, i a aquests, a la pràctica, no se'ls acaben mai les preguntes. Per decidir si una pregunta et va bé, l'has d'estar mirant.
 
 El carril dels botons queda dins de la caixa de la pregunta (un `padding-left`
@@ -309,9 +309,9 @@ Res del que hi ha aquí és nou: això és una capa d'índex sobre material que 
 tenies.
 
 ```
-El .docx del departament  →  l'estructura: 50 sabers, amb les seves hores
-repas (banc de 892 items) →  592 preguntes, amb les seves solucions
-assets/js/generadors.js   →  351 preguntes pròpies, i infinites variants
+El .docx del departament  →  l'estructura: 62 sabers, amb les seves hores
+repas (banc de 1029 items)→  811 preguntes, amb les seves solucions
+assets/js/generadors.js   →  654 preguntes pròpies, i infinites variants
 llibre (296 PDFs)         →  referències per saber (al mapa; ara no es mostren)
 Mates amb Bogdan (12 PDF) →  material d'ampliació (al mapa; ara no es mostra)
 ```
@@ -319,7 +319,7 @@ Mates amb Bogdan (12 PDF) →  material d'ampliació (al mapa; ara no es mostra)
 Les referències al llibre i a Mates amb Bogdan les feia servir el *pla de repàs*,
 que s'ha tret de l'eina. `compila.py` les continua escrivint a `mapa.js`.
 
-Són **943 preguntes** al catàleg. Un cop compilades, l'eina no distingeix les
+Són **1465 preguntes** al catàleg. Un cop compilades, l'eina no distingeix les
 d'un origen de les de l'altre.
 Els enunciats, les figures SVG i les resolucions són literalment els de `repas`;
 el que canvia és que aquí es fan servir com a **resposta oberta**, sense les
@@ -331,7 +331,7 @@ quatre opcions: l'alumne escriu el procés.
 estadístiques (64), Equacions de 1r grau (55), Divisibilitat (50), Fraccions
 (41), Potències (35) i Pitàgores (31).
 
-**Ara mateix no hi ha cap forat**: els 50 sabers del currículum tenen preguntes,
+**Ara mateix no hi ha cap forat**: els 62 sabers del currículum tenen preguntes,
 i tots en tenen almenys una de nivell 1. Fins fa poc no era així; el que ho ha
 tancat és `assets/js/generadors.js` (vegeu més avall). Si algun dia se'n torna a
 obrir un, els sabers sense preguntes no es llisten i al peu del curs hi surt una
@@ -355,7 +355,7 @@ Circumferència i cercle, Semblança.
 
 ### El material propi: `assets/js/generadors.js`
 
-Seixanta generadors deterministes que produeixen preguntes amb solució i
+Cent onze generadors deterministes que produeixen preguntes amb solució i
 passos, i figures SVG on calen. El criteri és el que va sortir de revisar
 proves impreses:
 
@@ -449,11 +449,11 @@ la regla de tres, l'àrea i el volum.
     assets/js/composa.js        repartiment i tria de preguntes (funció pura)
     assets/js/full.js           construcció dels dos documents imprimibles (prova i correcció)
     assets/js/app.js            controlador: arbre, estat i render
-    assets/js/banc.js           GENERAT — els 943 ítems amb solució
+    assets/js/banc.js           GENERAT — els 1465 ítems amb solució
     assets/js/mapa.js           GENERAT — currículum, cobertura i índex del llibre
     assets/lib/katex/           KaTeX en local
 
-    assets/js/generadors.js     els 60 generadors del material propi
+    assets/js/generadors.js     els 111 generadors del material propi
 
     tools/mapa_curricular.py    el mapa saber → fonts. AQUÍ es toca el currículum
     tools/compila.py            genera banc.js i mapa.js (necessita Node)
@@ -461,6 +461,8 @@ la regla de tres, l'àrea i el volum.
     tools/tests.js              proves de la lògica (node, sense dependències)
     tools/prova.js              prova amb navegador (necessita Playwright)
     tools/prova_compilacio.py   banc.js i mapa.js al dia, compilació determinista
+    tools/llibre_des_de_tex.py  instantània dels títols d'un llibre d'Overleaf (4t Aplicades)
+    tools/llibre/               instantànies: 4eso-apl.json
 
     .github/workflows/tests.yml         les quatre proves, a cada push i PR
     .github/workflows/unzip-upload.yml  descomprimeix els ZIP de _uploads/
@@ -477,6 +479,61 @@ hi ha a `repas` amb `data/fullN.js`.
 Perquè el filtre del centre bloqueja els CDN, i perquè 87 % dels enunciats porten
 LaTeX: sense KaTeX l'examen surt imprès amb `$3x-4x^2$` en cru. La carpeta
 `assets/lib/katex/` ha de viatjar sempre amb `index.html`.
+
+---
+
+## 4t d'ESO · Aplicades
+
+És el quart curs de l'eina (`id` `4eso-apl`, sabers `4eso-apl-…`). Segueix el
+*Repartiment de continguts* de 4t, **sense el que Aplicades no fa**, que és el que
+diu l'índex del llibre `4eso-apl` (§9 del seu `handout.md`):
+
+| Es treu del Repartiment | Per què |
+|---|---|
+| Trigonometria (el sentit de la mesura sencer) | la via A mesura indirecta amb semblança i Pitàgores |
+| Logaritmes i funció logarítmica | l'exponencial hi és com a fenomen; el logaritme, no |
+| Variància i desviació típica | la dispersió és el recorregut i la desviació mitjana (`VETOS_CONSIGNA`) |
+| Variacions, combinacions, Tartaglia i Newton | la combinatòria és recompte amb arbre, principi multiplicatiu i factorial |
+
+Dotze sabers, amb les hores del document: comprensió lectora (16 h), nombres
+reals (8), percentatge (12), repàs previ de Pitàgores i semblança (4), llenguatge
+algebraic i identitats (8), equació de 2n grau (8), funció quadràtica (8),
+magnituds inversament proporcionals (6), funció exponencial (6), variable
+estadística (10), combinatòria (8) i probabilitat (10). Els sistemes d'equacions i
+les inequacions de la UD10 del llibre **no hi són**: no són al Repartiment de 4t
+(són de 3r). Les unitats del llibre (`llibre=[("4eso-apl", ud, …)]`) estan
+referenciades, però, com a la resta, no es mostren.
+
+El material ve de dos llocs:
+
+- **`repas`** (219 ítems nous): els blocs que 1r, 2n i 3r no feien servir i que són de 4t
+  (fórmula general i factorització de 2n grau, funcions quadràtiques i paràboles,
+  IVA/interessos i percentatges encadenats, dispersió, probabilitat composta i
+  condicionada, igualtats notables i successions).
+- **`generadors.js`** (52 generadors, ~300 ítems del catàleg): allà on el banc no
+  té nivell 1 o no té res (nombres reals, percentatges, equacions `x²=k`, vèrtex,
+  hipèrbola, exponencial, recorregut, desviació mitjana, factorial, Laplace,
+  condicionada…). Les comprovacions aritmètiques de `genera.js` els cobreixen.
+
+**Per què `--afegeix-repas` i no una compilació completa.** El `repas` d'ara (1029
+ítems) és més nou que el que va alimentar el `banc.js` de 1r–3r (892): té ítems
+nous als sabers que ja hi eren, un `dif` recalibrat de 1 a 4 i alguna solució
+corregida. Una compilació completa canviaria 1r, 2n i 3r, i un mateix codi de prova
+donaria una altra prova. Per això s'afegeix el curs nou sense tocar res del que hi ha:
+
+```sh
+python3 tools/compila.py --afegeix-repas ../repas-main
+```
+
+Només refà els sabers que encara no són al `mapa.js`, i deixa 1r–3r **byte a byte** com
+estaven (comprovat ítem per ítem). Si algun dia es vol posar al dia el banc de 1r–3r amb
+el `repas` nou, és una decisió a part, amb la compilació completa (`--repas`, `--llibre`).
+Els títols de les unitats de `4eso-apl` surten de la instantània `tools/llibre/4eso-apl.json`
+(que es refà amb `tools/llibre_des_de_tex.py`), perquè aquest llibre viu a Overleaf i no
+al repositori `llibre`.
+
+Un detall de la interfície que això va destapar: l'id del curs ja no és el prefix de
+quatre lletres dels sabers (`4eso-apl`, no `4eso`); `app.js` ho resol amb un mapa saber → curs.
 
 ---
 
@@ -500,6 +557,9 @@ Després es recompila:
 ```sh
 python3 tools/compila.py --repas ../repas-main --llibre ../llibre-main
 ```
+
+(Amb el `repas` actual, aquesta ordre també canvia 1r–3r; per afegir només un curs nou,
+vegeu `--afegeix-repas` a la secció de 4t.)
 
 L'informe que surt per pantalla diu, saber per saber, quants ítems hi han quedat
 i com estan repartits per dificultat, i marca amb `!!` els que s'han quedat a
@@ -544,10 +604,10 @@ La compilació s'atura si el nivell que declara un generador no és el que mesur
 ## Comprovar que tot funciona
 
 ```sh
-node tools/tests.js               # 162 comprovacions de la lògica, cap dependència
-node tools/genera.js --comprova   # els 60 generadors sobre 12 000 variants
+node tools/tests.js               # 180 comprovacions de la lògica, cap dependència
+node tools/genera.js --comprova   # els 111 generadors sobre 22 200 variants
 python3 tools/prova_compilacio.py # banc.js i mapa.js al dia, compilació determinista
-node tools/prova.js               # unes 50 comprovacions en un navegador de debò
+node tools/prova.js               # unes 75 comprovacions en un navegador de debò
 ```
 
 Totes quatre acaben amb codi 1 si alguna cosa falla. `prova.js` abans només

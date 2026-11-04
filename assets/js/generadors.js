@@ -195,7 +195,7 @@
      enunciat» i al banc de repàs només hi tenia un ítem de nivell 1. */
   var ALG = ['1eso-alg-llenguatge', '2eso-alg-llenguatge', '3eso-alg-llenguatge'];
   var EQU = ['2eso-alg-equacions', '3eso-alg-equacions'];
-  var LEC = ['1eso-lec', '2eso-lec', '3eso-lec'];
+  var LEC = ['1eso-lec', '2eso-lec', '3eso-lec', '4eso-apl-lec'];
   var SEM = ['3eso-esp-semblanca', '3eso-mes-semblanca'];
 
   /* =================================================== divisibilitat ===== */
@@ -1032,7 +1032,7 @@
 
   /* ============================================================ semblança = */
   reg({
-    id: 'sem-costat', capCal: true, sabers: SEM, nivell: 1,
+    id: 'sem-costat', capCal: true, sabers: SEM.concat('4eso-apl-esp-repas'), nivell: 1,
     cap: 'Dos polígons són semblants amb raó de semblança $k$. Si un costat del petit fa la mesura que es diu, quant fa el corresponent del gran?',
     fn: function (r) {
       var a = r.entre(3, 9), k = r.entre(2, 5);
@@ -1044,7 +1044,7 @@
   });
 
   reg({
-    id: 'sem-rao', capCal: true, sabers: SEM, nivell: 1,
+    id: 'sem-rao', capCal: true, sabers: SEM.concat('4eso-apl-esp-repas'), nivell: 1,
     cap: 'Dues figures són semblants. Calcula la raó de semblança del gran respecte del petit.',
     fn: function (r) {
       var petit = r.entre(3, 8), k = r.entre(2, 5), gran = petit * k;
@@ -1263,7 +1263,7 @@
   var QUADRANTS = { '++': 'primer', '-+': 'segon', '--': 'tercer', '+-': 'quart' };
 
   reg({
-    id: 'pc-quadrant', capCal: true, sabers: ['2eso-alg-placartesia'], nivell: 1,
+    id: 'pc-quadrant', capCal: true, sabers: ['2eso-alg-placartesia', '4eso-apl-esp-repas'], nivell: 1,
     cap: 'En quin quadrant és aquest punt?',
     fn: function (r) {
       var x = r.entre(1, 9) * (r.enter(2) ? 1 : -1), y = r.entre(1, 9) * (r.enter(2) ? 1 : -1);
@@ -1324,6 +1324,971 @@
                passos: ['El volum és el producte de les tres dimensions.',
                         '$V = ' + a + ' \\cdot ' + b + ' \\cdot ' + c + ' = ' + (a * b * c) +
                         '$ cm$^3$'] };
+    }
+  });
+
+  /* =====================================================================
+     4t d'ESO · APLICADES
+     Mateix criteri que la resta: nombres petits, enunciats curts, resultats
+     nets. Els tipus d'exercici (Caça l'error, Quina família?, Decideix…)
+     vénen de les activitats d'estudi del llibre `4eso-apl`.
+     ===================================================================== */
+  var REA = '4eso-apl-num-reals', PCT = '4eso-apl-num-percentatge',
+      REP = '4eso-apl-esp-repas', LLE = '4eso-apl-alg-llenguatge',
+      EQ2 = '4eso-apl-alg-equacio2', QUA = '4eso-apl-alg-quadratica',
+      INV = '4eso-apl-alg-inversa', EXP = '4eso-apl-alg-exponencial',
+      ESV = '4eso-apl-est-variable', COM = '4eso-apl-est-combinatoria',
+      PRO = '4eso-apl-est-probabilitat';
+
+  /** Fracció simplificada en LaTeX: 6/8 -> \dfrac{3}{4}; 4/2 -> 2. */
+  function fracTex(a, b) {
+    var g = mcd(Math.abs(a), b);
+    a /= g; b /= g;
+    return b === 1 ? String(a) : '\\dfrac{' + a + '}{' + b + '}';
+  }
+
+  /** Milers amb espai fi: 1000 -> 1\,000. */
+  function milers(n) {
+    var s = String(n);
+    return s.length > 4 ? s.replace(/\B(?=(\d{3})+(?!\d))/g, '\\,') : s;
+  }
+
+  /** `x + 3`, `x - 3`: un nombre amb el seu signe darrere de la x. */
+  function xMes(a) { return a < 0 ? 'x - ' + (-a) : 'x + ' + a; }
+
+  /* ----------------------------------------------------- nombres reals == */
+  var NOMBRES = [
+    ['12', 'Natural', '$12$ és un nombre natural (també és enter i racional).'],
+    ['0', 'Natural', 'El zero compta com a natural (i és enter i racional).'],
+    ['-5', 'Enter (no natural)', 'És negatiu: és enter, però no natural.'],
+    ['-8', 'Enter (no natural)', 'És negatiu: és enter, però no natural.'],
+    ['\\dfrac{3}{4}', 'Racional (no enter)', 'És una fracció que no és un nombre enter.'],
+    ['-\\dfrac{2}{3}', 'Racional (no enter)', 'És una fracció que no és un nombre enter.'],
+    ['2{,}5', 'Racional (no enter)', 'És un decimal exacte: $2{,}5 = \\dfrac{5}{2}$.'],
+    ['0{,}25', 'Racional (no enter)', 'És un decimal exacte: $0{,}25 = \\dfrac{1}{4}$.'],
+    ['\\sqrt{16}', 'Natural', '$\\sqrt{16} = 4$, que és natural.'],
+    ['\\sqrt{25}', 'Natural', '$\\sqrt{25} = 5$, que és natural.'],
+    ['\\sqrt{2}', 'Irracional', 'L\'arrel no és exacta: té infinits decimals sense període.'],
+    ['\\sqrt{7}', 'Irracional', 'L\'arrel no és exacta: té infinits decimals sense període.'],
+    ['\\pi', 'Irracional', '$\\pi$ té infinits decimals sense període.']
+  ];
+
+  reg({
+    id: 'rea-classifica', capCal: true, sabers: [REA], nivell: 1,
+    cap: 'Classifica aquest nombre: natural, enter, racional o irracional (el conjunt més petit on és).',
+    fn: function (r) {
+      var n = r.tria(NOMBRES);
+      return { enunciat: '$' + n[0] + '$', resposta: n[1], passos: [n[2]] };
+    }
+  });
+
+  var FDP = [[1, 2], [1, 4], [3, 4], [1, 5], [2, 5], [3, 5], [4, 5], [1, 10],
+             [3, 10], [7, 10], [9, 10], [1, 20], [3, 20]];
+
+  reg({
+    id: 'rea-fdp', capCal: true, sabers: [REA], nivell: 1,
+    cap: 'Expressa aquesta fracció com a decimal i com a percentatge.',
+    fn: function (r) {
+      var f = r.tria(FDP), d = f[0] / f[1], p = 100 * f[0] / f[1];
+      return {
+        enunciat: '$\\dfrac{' + f[0] + '}{' + f[1] + '}$',
+        resposta: '$' + coma(d) + '$ i $' + coma(p) + '\\,\\%$',
+        passos: ['$' + f[0] + ' : ' + f[1] + ' = ' + coma(d) + '$.',
+                 'El percentatge és el decimal per $100$: $' + coma(d) + ' \\cdot 100 = ' +
+                 coma(p) + '\\,\\%$.']
+      };
+    }
+  });
+
+  reg({
+    id: 'rea-pot-neg', capCal: true, sabers: [REA], nivell: 1,
+    cap: 'Calcula aquestes potències.',
+    fn: function (r) {
+      var a = r.tria([2, 3, 5]), n = r.entre(1, a === 2 ? 4 : 2);
+      if (r.enter(4) === 0) {
+        return { enunciat: '$' + a + '^{0}$', resposta: '$1$',
+                 passos: ['Tot nombre diferent de zero elevat a $0$ val $1$.'] };
+      }
+      return {
+        enunciat: '$' + a + '^{-' + n + '}$',
+        resposta: '$\\dfrac{1}{' + Math.pow(a, n) + '}$',
+        passos: ['Un exponent negatiu inverteix la base: $' + a + '^{-' + n +
+                 '} = \\dfrac{1}{' + a + '^{' + n + '}}$.',
+                 '$\\dfrac{1}{' + Math.pow(a, n) + '}$']
+      };
+    }
+  });
+
+  var RACIONALS = [[4, 1, 2, 2], [9, 1, 2, 3], [25, 1, 2, 5], [8, 1, 3, 2], [27, 1, 3, 3],
+                   [16, 1, 4, 2], [81, 1, 4, 3], [4, 3, 2, 8], [9, 3, 2, 27], [8, 2, 3, 4]];
+
+  reg({
+    id: 'rea-pot-racional', capCal: true, sabers: [REA], nivell: 1,
+    cap: 'Calcula aquestes potències d\'exponent fraccionari.',
+    fn: function (r) {
+      var p = r.tria(RACIONALS), arrel = p[2] === 2 ? '\\sqrt{' + p[0] + '}' :
+        '\\sqrt[' + p[2] + ']{' + p[0] + '}';
+      var passos = ['L\'exponent $\\dfrac{' + p[1] + '}{' + p[2] + '}$ vol dir arrel ' +
+                    (p[2] === 2 ? 'quadrada' : p[2] === 3 ? 'cúbica' : 'quarta') +
+                    ' i, després, potència.'];
+      if (p[1] === 1) passos.push('$' + arrel + ' = ' + p[3] + '$');
+      else passos.push('$(' + arrel + ')^{' + p[1] + '} = ' + Math.round(Math.pow(p[0], 1 / p[2])) +
+                       '^{' + p[1] + '} = ' + p[3] + '$');
+      return { enunciat: '$' + p[0] + '^{\\frac{' + p[1] + '}{' + p[2] + '}}$',
+               resposta: '$' + p[3] + '$', passos: passos };
+    }
+  });
+
+  reg({
+    id: 'rea-solucio-real', capCal: true, sabers: [REA], nivell: 1,
+    cap: 'Té solució dins dels nombres reals aquesta equació? Si en té, troba-la.',
+    fn: function (r) {
+      var k = r.tria([1, 4, 9, 16, 25, 36, 49, 0, -1, -4, -9, -16, -25]), s;
+      if (k > 0) {
+        s = Math.round(Math.sqrt(k));
+        return { enunciat: '$x^2 = ' + k + '$', resposta: '$x = ' + s + '$ o $x = -' + s + '$',
+                 passos: ['Hi ha dos nombres que elevats al quadrat donen $' + k + '$.',
+                          '$x = \\pm\\sqrt{' + k + '} = \\pm ' + s + '$']};
+      }
+      if (k === 0) {
+        return { enunciat: '$x^2 = 0$', resposta: '$x = 0$',
+                 passos: ['L\'únic nombre que al quadrat dona $0$ és el $0$.'] };
+      }
+      return { enunciat: '$x^2 = ' + k + '$', resposta: 'No té solució real',
+               passos: ['Un quadrat mai no és negatiu: cap nombre real al quadrat dona $' + k + '$.'] };
+    }
+  });
+
+  reg({
+    id: 'rea-entre', capCal: true, sabers: [REA], nivell: 1,
+    cap: 'Escriu un nombre decimal que sigui entre aquests dos.',
+    fn: function (r) {
+      var a = r.entre(1, 9), dec = r.enter(2) === 0, x, y, m;
+      if (dec) { x = a / 10; y = (a + 1) / 10; m = (2 * a + 1) / 20; }
+      else { x = a; y = a + 1; m = a + 0.5; }
+      return {
+        enunciat: '$' + coma(x) + '$ i $' + coma(y) + '$',
+        resposta: 'Per exemple, $' + coma(m) + '$',
+        passos: ['Entre dos nombres reals diferents n\'hi ha infinits.',
+                 'El punt mig és $\\dfrac{' + coma(x) + ' + ' + coma(y) + '}{2} = ' + coma(m) + '$.']
+      };
+    }
+  });
+
+  /* ------------------------------------------------------ percentatge == */
+  reg({
+    id: 'pct-variacio', sabers: [PCT], nivell: 1, cap: '',
+    fn: function (r) {
+      var preu = r.tria([20, 40, 60, 80, 100, 120, 160, 200]), p = r.tria([10, 20, 25, 50]),
+          puja = r.enter(2) === 0, f = puja ? 1 + p / 100 : 1 - p / 100, nou = preu * f;
+      return {
+        enunciat: 'Un preu de $' + preu + '$ € ' + (puja ? 'augmenta' : 'disminueix') + ' un $' + p +
+          '\\,\\%$. Quin és el preu nou?',
+        resposta: '$' + coma(nou) + '$ €',
+        passos: ['El factor multiplicador és $1 ' + (puja ? '+' : '-') + ' ' + coma(p / 100) +
+                 ' = ' + coma(f) + '$.',
+                 '$' + preu + ' \\cdot ' + coma(f) + ' = ' + coma(nou) + '$ €']
+      };
+    }
+  });
+
+  reg({
+    id: 'pct-factor', capCal: true, sabers: [PCT], nivell: 1,
+    cap: 'Escriu el factor multiplicador d\'aquest canvi.',
+    fn: function (r) {
+      var p = r.tria([5, 8, 10, 12, 15, 20, 25, 30, 40, 50]), puja = r.enter(2) === 0,
+          f = puja ? 1 + p / 100 : 1 - p / 100;
+      return {
+        enunciat: (puja ? 'Un augment' : 'Una disminució') + ' del $' + p + '\\,\\%$',
+        resposta: '$' + coma(f) + '$',
+        passos: ['$1 ' + (puja ? '+' : '-') + ' ' + coma(p / 100) + ' = ' + coma(f) + '$']
+      };
+    }
+  });
+
+  var TIPUS_IVA = [[21, [100, 200, 300, 400, 500]], [10, [20, 40, 50, 80, 150, 200]],
+                   [4, [25, 50, 75, 100, 200]]];
+
+  reg({
+    id: 'pct-iva', sabers: [PCT], nivell: 1, cap: '',
+    fn: function (r) {
+      var t = r.tria(TIPUS_IVA), base = r.tria(t[1]), iva = base * t[0] / 100;
+      return {
+        enunciat: 'Un producte costa $' + base + '$ € sense IVA. Hi apliquem un IVA del $' + t[0] +
+          '\\,\\%$. Quant val amb IVA?',
+        resposta: '$' + coma(base + iva) + '$ €',
+        passos: ['L\'IVA és el $' + t[0] + '\\,\\%$ de $' + base + '$: $' + base + ' \\cdot ' +
+                 coma(t[0] / 100) + ' = ' + coma(iva) + '$ €.',
+                 '$' + base + ' + ' + coma(iva) + ' = ' + coma(base + iva) + '$ €']
+      };
+    }
+  });
+
+  reg({
+    id: 'pct-interes', sabers: [PCT], nivell: 1, cap: '',
+    fn: function (r) {
+      var c, p, t, i;
+      if (r.enter(2) === 0) {
+        c = r.tria([100, 200, 300, 500]); p = r.tria([2, 3, 4, 5]); t = r.entre(2, 3);
+        i = c / 100 * p * t;
+        return {
+          enunciat: 'Un crèdit de $' + milers(c) + '$ € al $' + p + '\\,\\%$ d\'interès simple anual, ' +
+            'durant $' + t + '$ anys. Quin interès es paga?',
+          resposta: '$' + milers(i) + '$ €',
+          passos: ['Cada any paguem el $' + p + '\\,\\%$ de $' + milers(c) + '$: $' + (c / 100 * p) + '$ €.',
+                   '$' + (c / 100 * p) + ' \\cdot ' + t + ' = ' + milers(i) + '$ €']
+        };
+      }
+      c = r.tria([100, 200, 500]); p = r.tria([10, 20]);
+      var f = 1 + p / 100, fin = Math.round(c * f * f * 100) / 100;
+      return {
+        enunciat: '$' + c + '$ € al $' + p + '\\,\\%$ d\'interès compost anual. Quant hi haurà al cap de $2$ anys?',
+        resposta: '$' + coma(fin) + '$ €',
+        passos: ['El factor de cada any és $' + coma(f) + '$.',
+                 '$' + milers(c) + ' \\cdot ' + coma(f) + '^2 = ' + coma(fin) + '$ €']
+      };
+    }
+  });
+
+  reg({
+    id: 'pct-ponderada', sabers: [PCT], nivell: 1, cap: '',
+    fn: function (r) {
+      var pes = r.tria([[40, 60], [30, 70], [25, 75], [20, 80]]), a = r.entre(3, 9), b = r.entre(3, 9),
+          nota = (a * pes[0] + b * pes[1]) / 100;
+      return {
+        enunciat: 'L\'examen val un $' + pes[0] + '\\,\\%$ de la nota i el treball, un $' + pes[1] +
+          '\\,\\%$. Si has tret un $' + a + '$ a l\'examen i un $' + b + '$ al treball, quina és la nota final?',
+        resposta: '$' + coma(nota) + '$',
+        passos: ['Mitjana ponderada: cada nota es multiplica pel seu pes.',
+                 '$' + a + ' \\cdot ' + coma(pes[0] / 100) + ' + ' + b + ' \\cdot ' +
+                 coma(pes[1] / 100) + ' = ' + coma(nota) + '$']
+      };
+    }
+  });
+
+  reg({
+    id: 'pct-sectors', sabers: [PCT], nivell: 1, cap: '',
+    fn: function (r) {
+      var tot, ang, n;
+      if (r.enter(2) === 0) {
+        tot = r.tria([40, 60, 72, 120, 180, 360]); ang = r.tria([30, 45, 60, 90, 120, 180]);
+        n = tot * ang / 360;
+        if (n !== Math.floor(n)) { tot = 360; n = ang; }
+        return {
+          enunciat: 'En una enquesta a $' + tot + '$ persones, un sector del diagrama de sectors fa $' +
+            ang + '^\\circ$. Quantes persones representa?',
+          resposta: '$' + n + '$ persones',
+          passos: ['Cada sector és ' + ang + ' graus de $360$: ' + ang + ' : 360.',
+                   '$' + tot + ' \\cdot ' + ang + ' : 360 = ' + n + '$']
+        };
+      }
+      ang = r.tria([18, 36, 45, 72, 90, 144, 180]);
+      return {
+        enunciat: 'Quin percentatge representa un sector de $' + ang + '^\\circ$ en un diagrama de sectors?',
+        resposta: '$' + coma(ang / 3.6) + '\\,\\%$',
+        passos: ['Tot el cercle són $360^\\circ$ i és el $100\\,\\%$.',
+                 '$' + ang + ' : 360 \\cdot 100 = ' + coma(ang / 3.6) + '\\,\\%$']
+      };
+    }
+  });
+
+  /* -------------------------------------------- repàs: Pitàgores i semblança */
+  var TRIPLETS = [[3, 4, 5], [6, 8, 10], [5, 12, 13], [9, 12, 15], [8, 15, 17], [7, 24, 25]];
+
+  reg({
+    id: 'pit-hipotenusa', sabers: [REP], nivell: 1, cap: '',
+    fn: function (r) {
+      var t = r.tria(TRIPLETS);
+      return {
+        enunciat: 'Un triangle rectangle té els catets de $' + t[0] + '$ cm i $' + t[1] +
+          '$ cm. Quant fa la hipotenusa?',
+        resposta: '$' + t[2] + '$ cm',
+        passos: ['$h^2 = ' + t[0] + '^2 + ' + t[1] + '^2 = ' + (t[0] * t[0] + t[1] * t[1]) + '$',
+                 '$h = \\sqrt{' + t[2] * t[2] + '} = ' + t[2] + '$ cm']
+      };
+    }
+  });
+
+  reg({
+    id: 'pit-catet', sabers: [REP], nivell: 1, cap: '',
+    fn: function (r) {
+      var t = r.tria(TRIPLETS);
+      return {
+        enunciat: 'Un triangle rectangle té la hipotenusa de $' + t[2] + '$ cm i un catet de $' + t[0] +
+          '$ cm. Quant fa l\'altre catet?',
+        resposta: '$' + t[1] + '$ cm',
+        passos: ['$c^2 = ' + t[2] + '^2 - ' + t[0] + '^2 = ' + (t[2] * t[2] - t[0] * t[0]) + '$',
+                 '$c = \\sqrt{' + t[1] * t[1] + '} = ' + t[1] + '$ cm']
+      };
+    }
+  });
+
+  /* ------------------------------------------ llenguatge algebraic i identitats */
+  reg({
+    id: 'ide-notable', capCal: true, sabers: [LLE], nivell: 1,
+    cap: 'Desenvolupa amb una identitat notable.',
+    fn: function (r) {
+      var a = r.entre(1, 9), f = r.enter(3);
+      if (f === 0) {
+        return { enunciat: '$(x + ' + a + ')^2$', resposta: '$x^2 + ' + (2 * a) + 'x + ' + (a * a) + '$',
+                 passos: ['$(a+b)^2 = a^2 + 2ab + b^2$', '$x^2 + 2 \\cdot x \\cdot ' + a + ' + ' + a +
+                          '^2 = x^2 + ' + (2 * a) + 'x + ' + (a * a) + '$'] };
+      }
+      if (f === 1) {
+        return { enunciat: '$(x - ' + a + ')^2$', resposta: '$x^2 - ' + (2 * a) + 'x + ' + (a * a) + '$',
+                 passos: ['$(a-b)^2 = a^2 - 2ab + b^2$', '$x^2 - 2 \\cdot x \\cdot ' + a + ' + ' + a +
+                          '^2 = x^2 - ' + (2 * a) + 'x + ' + (a * a) + '$'] };
+      }
+      return { enunciat: '$(x + ' + a + ')(x - ' + a + ')$', resposta: '$x^2 - ' + (a * a) + '$',
+               passos: ['$(a+b)(a-b) = a^2 - b^2$', '$x^2 - ' + a + '^2 = x^2 - ' + (a * a) + '$'] };
+    }
+  });
+
+  reg({
+    id: 'ide-caca', capCal: true, sabers: [LLE], nivell: 1,
+    cap: 'Aquesta igualtat és correcta? Si no ho és, escriu-ne la bona.',
+    fn: function (r) {
+      var a = r.entre(2, 9), f = r.enter(4);
+      if (f === 0) {
+        return { enunciat: '$(x + ' + a + ')^2 = x^2 + ' + a * a + '$', resposta: 'No: falta el doble producte',
+                 passos: ['Falta el terme del mig: $2 \\cdot x \\cdot ' + a + '$.',
+                          '$(x + ' + a + ')^2 = x^2 + ' + 2 * a + 'x + ' + a * a + '$'] };
+      }
+      if (f === 1) {
+        return { enunciat: '$(x - ' + a + ')^2 = x^2 - ' + a * a + '$', resposta: 'No: falta el doble producte',
+                 passos: ['El quadrat d\'una resta no és la resta de quadrats.',
+                          '$(x - ' + a + ')^2 = x^2 - ' + 2 * a + 'x + ' + a * a + '$'] };
+      }
+      if (f === 2) {
+        return { enunciat: '$(x + ' + a + ')(x - ' + a + ') = x^2 - ' + a * a + '$', resposta: 'Sí, és correcta',
+                 passos: ['Suma per diferència: $(a+b)(a-b) = a^2 - b^2$.'] };
+      }
+      return { enunciat: '$(x + ' + a + ')^2 = x^2 + ' + 2 * a + 'x + ' + a * a + '$', resposta: 'Sí, és correcta',
+               passos: ['Quadrat d\'una suma: $a^2 + 2ab + b^2$ amb $a = x$ i $b = ' + a + '$.'] };
+    }
+  });
+
+  reg({
+    id: 'ide-patro', capCal: true, sabers: [LLE, '4eso-apl-lec'], nivell: 1,
+    cap: 'Escriu la fórmula del terme que ocupa el lloc $n$ d\'aquesta successió.',
+    fn: function (r) {
+      var d = r.entre(2, 6), c = r.entre(-2, 6), t = [], i;
+      for (i = 1; i <= 4; i++) t.push(d * i + c);
+      var f = d + 'n' + (c > 0 ? ' + ' + c : c < 0 ? ' - ' + (-c) : '');
+      return {
+        enunciat: '$' + t.join(', ') + ', \\ldots$',
+        resposta: '$' + f + '$',
+        passos: ['Cada terme és $' + d + '$ més gran que l\'anterior: la fórmula comença per $' + d + 'n$.',
+                 'Per al lloc $1$: $' + d + ' \\cdot 1 = ' + d + '$ i cal arribar a $' + t[0] +
+                 '$, o sigui ' + (c === 0 ? 'no cal res més' : (c > 0 ? 'sumar ' : 'restar ') + Math.abs(c)) + '.',
+                 '$a_n = ' + f + '$']
+      };
+    }
+  });
+
+  /* ------------------------------------------------- equació de 2n grau == */
+  reg({
+    id: 'eq2-x2k', capCal: true, sabers: [EQ2], nivell: 1,
+    cap: 'Resol aquestes equacions.',
+    fn: function (r) {
+      var a = r.tria([1, 1, 2, 3, 4, 5]), s = r.entre(2, 9), k = a * s * s;
+      return {
+        enunciat: '$' + (a === 1 ? '' : a) + 'x^2 = ' + k + '$',
+        resposta: '$x = ' + s + '$ o $x = -' + s + '$',
+        passos: a === 1 ? ['$x = \\pm\\sqrt{' + k + '} = \\pm ' + s + '$']
+          : ['Primer es divideix entre $' + a + '$: $x^2 = ' + (k / a) + '$.',
+             '$x = \\pm\\sqrt{' + (k / a) + '} = \\pm ' + s + '$']
+      };
+    }
+  });
+
+  reg({
+    id: 'eq2-parentesi', capCal: true, sabers: [EQ2], nivell: 1,
+    cap: 'Resol aquestes equacions.',
+    fn: function (r) {
+      var a = r.entre(-5, 5) || 3, s = r.entre(2, 5), k = s * s;
+      return {
+        enunciat: '$(' + xMes(-a) + ')^2 = ' + k + '$',
+        resposta: '$x = ' + (a + s) + '$ o $x = ' + (a - s) + '$',
+        passos: ['Arrel als dos membres: $' + xMes(-a) + ' = \\pm ' + s + '$.',
+                 '$x = ' + a + ' + ' + s + ' = ' + (a + s) + '$ i $x = ' + a + ' - ' + s + ' = ' + (a - s) + '$']
+      };
+    }
+  });
+
+  reg({
+    id: 'eq2-producte', capCal: true, sabers: [EQ2], nivell: 1,
+    cap: 'Resol aquestes equacions.',
+    fn: function (r) {
+      var p = r.entre(-6, 6) || 2, q;
+      do { q = r.entre(-6, 6); } while (q === p);
+      if (r.enter(4) === 0) {
+        p = r.entre(2, 8);
+        return { enunciat: '$x(x - ' + p + ') = 0$', resposta: '$x = 0$ o $x = ' + p + '$',
+                 passos: ['Un producte és zero si un dels factors ho és.',
+                          '$x = 0$ o $x - ' + p + ' = 0$, o sigui $x = ' + p + '$']};
+      }
+      return {
+        enunciat: '$(' + xMes(-p) + ')(' + xMes(-q) + ') = 0$',
+        resposta: '$x = ' + p + '$ o $x = ' + q + '$',
+        passos: ['Un producte és zero si un dels factors ho és.',
+                 '$' + xMes(-p) + ' = 0 \\Rightarrow x = ' + p + '$',
+                 '$' + xMes(-q) + ' = 0 \\Rightarrow x = ' + q + '$']
+      };
+    }
+  });
+
+  reg({
+    id: 'eq2-incompleta', capCal: true, sabers: [EQ2], nivell: 1,
+    cap: 'Resol aquestes equacions traient factor comú.',
+    fn: function (r) {
+      var a = r.entre(2, 9), m = r.tria([1, 2, 3]);
+      return {
+        enunciat: '$' + (m === 1 ? '' : m) + 'x^2 - ' + (m * a) + 'x = 0$',
+        resposta: '$x = 0$ o $x = ' + a + '$',
+        passos: ['Factor comú: $' + (m === 1 ? '' : m) + 'x\\,(x - ' + a + ') = 0$.',
+                 '$x = 0$ o $x - ' + a + ' = 0$, o sigui $x = ' + a + '$']
+      };
+    }
+  });
+
+  reg({
+    id: 'eq2-discriminant', capCal: true, sabers: [EQ2], nivell: 1,
+    cap: 'Calcula el discriminant i digues quantes solucions reals té l\'equació.',
+    fn: function (r) {
+      var a = r.tria([1, 1, 2]), b = r.entre(-6, 6), c = r.entre(-4, 5), d = b * b - 4 * a * c,
+          eq = (a === 1 ? '' : a) + 'x^2 ' + (b < 0 ? '- ' + (-b) : '+ ' + b) + 'x ' +
+               (c < 0 ? '- ' + (-c) : '+ ' + c) + ' = 0';
+      return {
+        enunciat: '$' + eq + '$',
+        resposta: '$\\Delta = ' + d + '$: ' + (d > 0 ? 'dues solucions' : d === 0 ? 'una solució' : 'cap solució real'),
+        passos: ['$\\Delta = b^2 - 4ac = ' + restand(b) + '^2 - 4 \\cdot ' + a + ' \\cdot ' + restand(c) +
+                 ' = ' + d + '$',
+                 d > 0 ? '$\\Delta > 0$: dues solucions.' : d === 0 ? '$\\Delta = 0$: una solució.' :
+                 '$\\Delta < 0$: cap solució real.']
+      };
+    }
+  });
+
+  reg({
+    id: 'eq2-formula', capCal: true, sabers: [EQ2], nivell: 1,
+    cap: 'Resol amb la fórmula de l\'equació de 2n grau.',
+    fn: function (r) {
+      var p = r.entre(-5, 5) || 1, q;
+      do { q = r.entre(-5, 5); } while (q === p || q === 0);
+      var b = -(p + q), c = p * q, d = b * b - 4 * c, s = Math.abs(p - q), lo = Math.min(p, q),
+          hi = Math.max(p, q);
+      var eq = 'x^2' + (b === 0 ? '' : b < 0 ? ' - ' + (-b) + 'x' : ' + ' + b + 'x') +
+               (c < 0 ? ' - ' + (-c) : ' + ' + c) + ' = 0';
+      return {
+        enunciat: '$' + eq + '$',
+        resposta: '$x = ' + hi + '$ o $x = ' + lo + '$',
+        passos: ['$a = 1$, $b = ' + b + '$, $c = ' + c + '$.',
+                 '$\\Delta = ' + restand(b) + '^2 - 4 \\cdot 1 \\cdot ' + restand(c) + ' = ' + d +
+                 '$ i $\\sqrt{\\Delta} = ' + s + '$.',
+                 '$x = \\dfrac{' + (-b) + ' \\pm ' + s + '}{2}$, o sigui $x = ' + hi + '$ i $x = ' + lo + '$']
+      };
+    }
+  });
+
+  /* ---------------------------------------------------- funció quadràtica == */
+  /** ax^2 + bx + c en LaTeX, sense termes nuls. */
+  function polinomi2(a, b, c) {
+    var t = (a === 1 ? '' : a === -1 ? '-' : a) + 'x^2';
+    if (b) t += (b < 0 ? ' - ' : ' + ') + (Math.abs(b) === 1 ? '' : Math.abs(b)) + 'x';
+    if (c) t += (c < 0 ? ' - ' : ' + ') + Math.abs(c);
+    return t;
+  }
+
+  reg({
+    id: 'qua-valor', sabers: [QUA], nivell: 1, cap: '',
+    fn: function (r) {
+      var a = r.tria([1, 2, 3, -1, -2]), c = r.entre(-4, 5), x = r.entre(-3, 3) || 2, y = a * x * x + c;
+      return {
+        enunciat: 'Calcula $y$ quan $x = ' + x + '$ a la funció $y = ' + polinomi2(a, 0, c) + '$.',
+        resposta: '$y = ' + y + '$',
+        passos: ['$y = ' + (a === 1 ? '' : a === -1 ? '-' : a + ' \\cdot ') + '(' + x + ')^2' +
+                 (c ? (c < 0 ? ' - ' : ' + ') + Math.abs(c) : '') + '$',
+                 '$y = ' + (a * x * x) + (c ? (c < 0 ? ' - ' : ' + ') + Math.abs(c) : '') + ' = ' + y + '$']
+      };
+    }
+  });
+
+  reg({
+    id: 'qua-vertex', sabers: [QUA], nivell: 1, cap: '',
+    fn: function (r) {
+      var a = r.tria([1, 1, 2, -1]), h = r.entre(-3, 4) || 2, c = r.entre(-5, 6), b = -2 * a * h,
+          k = a * h * h + b * h + c;
+      return {
+        enunciat: 'Troba el vèrtex de la paràbola $y = ' + polinomi2(a, b, c) + '$.',
+        resposta: '$V(' + h + ', ' + k + ')$',
+        passos: ['L\'abscissa del vèrtex és $x = \\dfrac{-b}{2a} = \\dfrac{' + (-b) + '}{' + (2 * a) +
+                 '} = ' + h + '$.',
+                 'Es substitueix: $y = ' + a + ' \\cdot ' + restand(h) + '^2 + ' + restand(b) + ' \\cdot ' +
+                 restand(h) + ' + ' + restand(c) + ' = ' + k + '$.',
+                 '$V(' + h + ', ' + k + ')$']
+      };
+    }
+  });
+
+  reg({
+    id: 'qua-talls', sabers: [QUA], nivell: 1, cap: '',
+    fn: function (r) {
+      var p = r.entre(-4, 5) || 2, q;
+      do { q = r.entre(-4, 5) || 3; } while (q === p);
+      var lo = Math.min(p, q), hi = Math.max(p, q);
+      return {
+        enunciat: 'Troba els punts de tall amb els eixos de $y = ' + polinomi2(1, -(p + q), p * q) + '$.',
+        resposta: 'Eix $OY$: $(0, ' + (p * q) + ')$. Eix $OX$: $(' + lo + ', 0)$ i $(' + hi + ', 0)$',
+        passos: ['Amb $x = 0$: $y = ' + (p * q) + '$.',
+                 'Amb $y = 0$: $' + polinomi2(1, -(p + q), p * q) + ' = 0$ es factoritza com $(' +
+                 xMes(-p) + ')(' + xMes(-q) + ') = 0$.',
+                 'Les arrels són $x = ' + lo + '$ i $x = ' + hi + '$.']
+      };
+    }
+  });
+
+  reg({
+    id: 'qua-branques', capCal: true, sabers: [QUA], nivell: 1,
+    cap: 'Les branques d\'aquesta paràbola van cap amunt o cap avall? Té un màxim o un mínim?',
+    fn: function (r) {
+      var a = r.tria([1, 2, 3, -1, -2, -3]), b = r.entre(-4, 4), c = r.entre(-3, 5);
+      return {
+        enunciat: '$y = ' + polinomi2(a, b, c) + '$',
+        resposta: a > 0 ? 'Cap amunt; el vèrtex és un mínim' : 'Cap avall; el vèrtex és un màxim',
+        passos: ['Només importa el signe de $a = ' + a + '$.',
+                 a > 0 ? '$a > 0$: les branques van cap amunt i el vèrtex és el punt més baix (mínim).' :
+                         '$a < 0$: les branques van cap avall i el vèrtex és el punt més alt (màxim).']
+      };
+    }
+  });
+
+  /* --------------------------------- magnituds inversament proporcionals == */
+  reg({
+    id: 'inv-regla', sabers: [INV], nivell: 1, cap: '',
+    fn: function (r) {
+      var k = r.tria([12, 24, 36, 48, 60]), ds = divisors(k).filter(function (d) { return d > 1 && d < k; }),
+          n1 = r.tria(ds), n2;
+      do { n2 = r.tria(ds); } while (n2 === n1);
+      var c = r.enter(2) === 0;
+      return {
+        enunciat: c ? '$' + n1 + '$ obrers fan una feina en $' + (k / n1) + '$ dies. Quants dies trigarien $' + n2 + '$ obrers?'
+                    : 'Amb $' + n1 + '$ aixetes, un dipòsit s\'omple en $' + (k / n1) +
+                      '$ h. Quantes hores trigaria amb $' + n2 + '$ aixetes?',
+        resposta: '$' + (k / n2) + '$ ' + (c ? 'dies' : 'hores'),
+        passos: ['Si n\'hi ha més, triguen menys: és inversa. El producte es manté: $' + n1 + ' \\cdot ' +
+                 (k / n1) + ' = ' + k + '$.', '$' + k + ' : ' + n2 + ' = ' + (k / n2) + '$']
+      };
+    }
+  });
+
+  reg({
+    id: 'inv-area', sabers: [INV], nivell: 1, cap: '',
+    fn: function (r) {
+      var A = r.tria([12, 18, 24, 36, 48]), b = r.tria(divisors(A).filter(function (d) { return d > 1 && d < A; }));
+      return {
+        enunciat: 'Un rectangle té $' + A + '$ cm$^2$ d\'àrea. Si la base fa $' + b + '$ cm, quant fa l\'alçada?',
+        resposta: '$' + (A / b) + '$ cm',
+        passos: ['Base i alçada són inversament proporcionals: $b \\cdot h = A = ' + A + '$.',
+                 '$h = ' + A + ' : ' + b + ' = ' + (A / b) + '$ cm']
+      };
+    }
+  });
+
+  reg({
+    id: 'inv-hiperbola', sabers: [INV], nivell: 1, cap: '',
+    fn: function (r) {
+      var k = r.tria([6, 8, 12, 24, -6, -12]), x;
+      if (r.enter(2) === 0) {
+        x = r.tria(divisors(Math.abs(k)).filter(function (d) { return d <= 8; }));
+        return {
+          enunciat: 'Calcula $y$ quan $x = ' + x + '$ a la funció $y = \\dfrac{' + k + '}{x}$.',
+          resposta: '$y = ' + (k / x) + '$',
+          passos: ['$y = \\dfrac{' + k + '}{' + x + '} = ' + (k / x) + '$']
+        };
+      }
+      return {
+        enunciat: 'En quins quadrants és la gràfica de $y = \\dfrac{' + k + '}{x}$?',
+        resposta: k > 0 ? 'Al primer i al tercer' : 'Al segon i al quart',
+        passos: [k > 0 ? '$k > 0$: $x$ i $y$ tenen el mateix signe, o sigui primer i tercer quadrant.' :
+                         '$k < 0$: $x$ i $y$ tenen signe contrari, o sigui segon i quart quadrant.']
+      };
+    }
+  });
+
+  reg({
+    id: 'inv-tipus', capCal: true, sabers: [INV], nivell: 1,
+    cap: 'Aquestes magnituds són directament o inversament proporcionals? Quina és la constant?',
+    fn: function (r) {
+      var directa = r.enter(2) === 0, k, xs = [1, 2, 3, 4], ys;
+      if (directa) { k = r.entre(2, 6); ys = xs.map(function (x) { return k * x; }); }
+      else { k = r.tria([12, 24]); ys = xs.map(function (x) { return k / x; }); }
+      return {
+        enunciat: '$x$: $' + xs.join(',\\ ') + '$ i $y$: $' + ys.join(',\\ ') + '$',
+        resposta: directa ? 'Directament proporcionals; $y/x = ' + k + '$' :
+                            'Inversament proporcionals; $x \\cdot y = ' + k + '$',
+        passos: directa ? ['El quocient $y/x$ és sempre $' + k + '$.'] :
+                          ['El producte $x \\cdot y$ és sempre $' + k + '$.']
+      };
+    }
+  });
+
+  /* ------------------------------------------------ funció exponencial == */
+  reg({
+    id: 'exp-valor', capCal: true, sabers: [EXP], nivell: 1,
+    cap: 'Calcula el valor de la funció.',
+    fn: function (r) {
+      var b = r.tria([2, 3, 5, 10]), x = r.entre(0, b === 2 ? 5 : 3), c = r.tria([1, 1, 2, 3]),
+          v = c * Math.pow(b, x);
+      return {
+        enunciat: '$f(x) = ' + (c === 1 ? '' : c + ' \\cdot ') + b + '^x$, calcula $f(' + x + ')$',
+        resposta: '$' + v + '$',
+        passos: ['$f(' + x + ') = ' + (c === 1 ? '' : c + ' \\cdot ') + b + '^{' + x + '} = ' +
+                 (c === 1 ? '' : c + ' \\cdot ') + Math.pow(b, x) + ' = ' + v + '$']
+      };
+    }
+  });
+
+  reg({
+    id: 'exp-creix', capCal: true, sabers: [EXP], nivell: 1,
+    cap: 'Aquesta funció creix o decreix? Per què?',
+    fn: function (r) {
+      var b = r.tria([2, 3, 10, 1.5, 0.5, 0.1, 0.8, 0.25]), creix = b > 1;
+      return {
+        enunciat: '$y = ' + coma(b) + '^x$',
+        resposta: creix ? 'Creix, perquè $b > 1$' : 'Decreix, perquè $0 < b < 1$',
+        passos: ['En $y = b^x$ només importa la base: ' + (creix ? '$b = ' + coma(b) + ' > 1$, i cada pas de $x$ multiplica per $b$: augmenta.'
+                 : '$b = ' + coma(b) + '$ és entre $0$ i $1$, i cada pas de $x$ multiplica per un nombre més petit que $1$: disminueix.')]
+      };
+    }
+  });
+
+  reg({
+    id: 'exp-context', sabers: [EXP], nivell: 1, cap: '',
+    fn: function (r) {
+      var n0 = r.tria([5, 10, 20]), f = r.tria([2, 3]), t = r.entre(2, 4), v = n0 * Math.pow(f, t);
+      return {
+        enunciat: 'Un cultiu té $' + n0 + '$ bacteris i ' + (f === 2 ? 'es duplica' : 'es triplica') +
+          ' cada hora. Quants bacteris hi haurà al cap de $' + t + '$ hores?',
+        resposta: '$' + milers(v) + '$ bacteris',
+        passos: ['Cada hora es multiplica per $' + f + '$: $N = ' + n0 + ' \\cdot ' + f + '^{' + t + '}$.',
+                 '$' + n0 + ' \\cdot ' + Math.pow(f, t) + ' = ' + milers(v) + '$']
+      };
+    }
+  });
+
+  reg({
+    id: 'exp-tall', capCal: true, sabers: [EXP], nivell: 1,
+    cap: 'On talla la gràfica aquest eix?',
+    fn: function (r) {
+      var c = r.tria([2, 3, 4, 5]), b = r.tria([2, 3, 5]);
+      if (r.enter(2) === 0) {
+        return { enunciat: 'L\'eix $OY$ a $y = ' + c + ' \\cdot ' + b + '^x$',
+                 resposta: '$(0, ' + c + ')$',
+                 passos: ['Amb $x = 0$: $y = ' + c + ' \\cdot ' + b + '^0 = ' + c + ' \\cdot 1 = ' + c + '$.'] };
+      }
+      return { enunciat: 'L\'eix $OX$ a $y = ' + c + ' \\cdot ' + b + '^x$',
+               resposta: 'No el talla mai',
+               passos: ['$' + b + '^x$ és sempre positiu, així que $y$ mai no val $0$.',
+                        'L\'eix $OX$ (la recta $y = 0$) és una asímptota.'] };
+    }
+  });
+
+  /* ---------------------------------------------------- estadística == */
+  reg({
+    id: 'est-recorregut', capCal: true, sabers: [ESV], nivell: 1,
+    cap: 'Calcula el recorregut d\'aquestes dades.',
+    fn: function (r) {
+      var n = r.entre(6, 8), d = [], i;
+      for (i = 0; i < n; i++) d.push(r.entre(2, 30));
+      var mx = Math.max.apply(null, d), mn = Math.min.apply(null, d);
+      return {
+        enunciat: '$' + d.join(',\\ ') + '$',
+        resposta: '$' + (mx - mn) + '$',
+        passos: ['Recorregut = dada més gran $-$ dada més petita.', '$' + mx + ' - ' + mn + ' = ' + (mx - mn) + '$']
+      };
+    }
+  });
+
+  reg({
+    id: 'est-desv-mitjana', capCal: true, sabers: [ESV], nivell: 1,
+    cap: 'Calcula la mitjana i la desviació mitjana d\'aquestes dades.',
+    fn: function (r) {
+      var m, ds, s, n = 4, i;
+      do {
+        m = r.entre(6, 14); ds = [];
+        for (i = 0; i < n - 1; i++) ds.push(r.entre(-4, 4));
+        ds.push(-ds.reduce(function (a, b) { return a + b; }, 0));
+        s = ds.reduce(function (a, b) { return a + Math.abs(b); }, 0);
+      } while (s % n !== 0 || s === 0 || Math.abs(ds[n - 1]) > 6);
+      var xs = ds.map(function (d) { return m + d; });
+      return {
+        enunciat: '$' + xs.join(',\\ ') + '$',
+        resposta: 'Mitjana $' + m + '$; desviació mitjana $' + (s / n) + '$',
+        passos: ['Mitjana: $\\dfrac{' + xs.join(' + ') + '}{' + n + '} = ' + m + '$.',
+                 'Desviacions respecte de la mitjana (en valor absolut): $' +
+                 ds.map(function (d) { return Math.abs(d); }).join(',\\ ') + '$.',
+                 'Desviació mitjana: $\\dfrac{' + s + '}{' + n + '} = ' + (s / n) + '$']
+      };
+    }
+  });
+
+  reg({
+    id: 'est-marca', capCal: true, sabers: [ESV], nivell: 1,
+    cap: 'Quina és la marca de classe d\'aquest interval?',
+    fn: function (r) {
+      var a = r.tria([0, 10, 20, 30, 40, 150, 160]), w = r.tria([4, 10, 20]), b = a + w;
+      return {
+        enunciat: '$[' + a + ',\\ ' + b + ')$',
+        resposta: '$' + (a + b) / 2 + '$',
+        passos: ['La marca de classe és el punt mig de l\'interval.', '$\\dfrac{' + a + ' + ' + b + '}{2} = ' + (a + b) / 2 + '$']
+      };
+    }
+  });
+
+  reg({
+    id: 'est-mitjana-taula', capCal: true, sabers: [ESV], nivell: 1,
+    cap: 'Calcula la mitjana d\'aquesta taula de freqüències.',
+    fn: function (r) {
+      var xs, fs, n, s, i;
+      do {
+        xs = [r.entre(1, 3), 0, 0]; xs[1] = xs[0] + r.entre(1, 2); xs[2] = xs[1] + r.entre(1, 2);
+        fs = [r.entre(1, 5), r.entre(1, 5), r.entre(1, 5)];
+        n = fs[0] + fs[1] + fs[2];
+        s = xs[0] * fs[0] + xs[1] * fs[1] + xs[2] * fs[2];
+      } while (s % n !== 0);
+      var termes = [];
+      for (i = 0; i < 3; i++) termes.push(xs[i] + ' \\cdot ' + fs[i]);
+      return {
+        enunciat: '$x_i$: $' + xs.join(',\\ ') + '$ i $f_i$: $' + fs.join(',\\ ') + '$',
+        resposta: '$' + s / n + '$',
+        passos: ['$\\bar{x} = \\dfrac{\\sum x_i f_i}{N} = \\dfrac{' + termes.join(' + ') + '}{' + n + '}$',
+                 '$= \\dfrac{' + s + '}{' + n + '} = ' + s / n + '$']
+      };
+    }
+  });
+
+  /* ------------------------------------------------------ combinatòria == */
+  reg({
+    id: 'com-factorial', capCal: true, sabers: [COM], nivell: 1,
+    cap: 'Calcula aquests factorials.',
+    fn: function (r) {
+      var n = r.entre(3, 6), fact = function (k) { return k <= 1 ? 1 : k * fact(k - 1); }, m;
+      if (r.enter(2) === 0) {
+        return { enunciat: '$' + n + '!$', resposta: '$' + fact(n) + '$',
+                 passos: ['$' + n + '! = ' + Array.apply(null, Array(n)).map(function (_, i) { return n - i; }).join(' \\cdot ') +
+                          ' = ' + fact(n) + '$'] };
+      }
+      m = n - r.entre(1, 2);
+      var factors = Array.apply(null, Array(n - m)).map(function (_, i) { return n - i; });
+      return { enunciat: '$' + n + '! : ' + m + '!$', resposta: '$' + fact(n) / fact(m) + '$',
+               passos: ['Es simplifica: $' + n + '! : ' + m + '! = ' + factors.join(' \\cdot ') +
+                        (factors.length > 1 ? ' = ' + fact(n) / fact(m) : '') + '$'] };
+    }
+  });
+
+  var CONJUNTS = [['camises', 'pantalons', 'conjunts'], ['entrants', 'plats principals', 'menús'],
+                  ['samarretes', 'gorres', 'combinacions'], ['camins de A a B', 'camins de B a C', 'rutes de A a C']];
+
+  reg({
+    id: 'com-arbre', sabers: [COM], nivell: 1, cap: '',
+    fn: function (r) {
+      var c = r.tria(CONJUNTS), a = r.entre(2, 4), b = r.entre(2, 4);
+      return {
+        enunciat: 'Hi ha $' + a + '$ ' + c[0] + ' i $' + b + '$ ' + c[1] + '. Quants ' + c[2] + ' diferents es poden fer?',
+        resposta: '$' + a * b + '$',
+        passos: ['Cada una de les $' + a + '$ primeres opcions es combina amb les $' + b + '$ segones (un arbre).',
+                 '$' + a + ' \\cdot ' + b + ' = ' + a * b + '$']
+      };
+    }
+  });
+
+  reg({
+    id: 'com-permutacions', sabers: [COM], nivell: 1, cap: '',
+    fn: function (r) {
+      var n = r.entre(3, 5), v = [1, 1, 2, 6, 24, 120][n];
+      return {
+        enunciat: 'De quantes maneres es poden posar $' + n + '$ persones en fila?',
+        resposta: '$' + v + '$',
+        passos: ['Per al primer lloc hi ha $' + n + '$ opcions, per al segon una menys, i així successivament.',
+                 '$' + n + '! = ' + v + '$']
+      };
+    }
+  });
+
+  /* ------------------------------------------------------- probabilitat == */
+  /** `1 bola vermella`, `3 boles vermelles`. */
+  function boles(n, color) {
+    return n === 1 ? '$1$ bola ' + color[0] : '$' + n + '$ boles ' + color[1];
+  }
+
+  reg({
+    id: 'pro-bossa', sabers: [PRO], nivell: 1, cap: '',
+    fn: function (r) {
+      var v = r.entre(1, 4), b = r.entre(1, 4), g = r.entre(0, 3), t = v + b + g, c = r.enter(3),
+          col = [['vermella', 'vermelles'], ['blava', 'blaves'], ['verda', 'verdes']],
+          q = c === 2 && g === 0 ? 0 : c, n = [v, b, g][q];
+      return {
+        enunciat: 'Una bossa té ' + boles(v, col[0]) + (g ? ', ' : ' i ') + boles(b, col[1]) +
+          (g ? ' i ' + boles(g, col[2]) : '') + '. En traiem una a l\'atzar. Quina és la probabilitat que sigui ' +
+          col[q][0] + '?',
+        resposta: '$' + fracTex(n, t) + '$',
+        passos: ['Casos favorables: $' + n + '$. Casos possibles: $' + t + '$.',
+                 '$P = \\dfrac{' + n + '}{' + t + '}' + (fracTex(n, t) !== '\\dfrac{' + n + '}{' + t + '}' ? ' = ' + fracTex(n, t) : '') + '$']
+      };
+    }
+  });
+
+  reg({
+    id: 'pro-contrari', sabers: [PRO], nivell: 2, cap: '',
+    fn: function (r) {
+      var d = r.tria([4, 5, 8, 10]), n = r.entre(1, d - 1);
+      return {
+        enunciat: 'La probabilitat que un tren arribi tard és $' + fracTex(n, d) +
+          '$. Quina és la probabilitat que no arribi tard?',
+        resposta: '$' + fracTex(d - n, d) + '$',
+        passos: ['El succés contrari: $P(\\text{no A}) = 1 - P(A)$.', '$1 - ' + fracTex(n, d) + ' = ' + fracTex(d - n, d) + '$']
+      };
+    }
+  });
+
+  var DAU = [['un nombre parell', 3], ['un nombre imparell', 3], ['un múltiple de $3$', 2],
+             ['un nombre més gran que $4$', 2], ['un $6$', 1], ['un nombre més petit que $3$', 2],
+             ['un nombre que no sigui el $6$', 5]];
+
+  reg({
+    id: 'pro-dau', sabers: [PRO], nivell: 1, cap: '',
+    fn: function (r) {
+      var e = r.tria(DAU);
+      return {
+        enunciat: 'Llancem un dau. Quina és la probabilitat de treure ' + e[0] + '?',
+        resposta: '$' + fracTex(e[1], 6) + '$',
+        passos: ['Casos possibles: $6$. Casos favorables: $' + e[1] + '$.', '$P = \\dfrac{' + e[1] + '}{6}' + (fracTex(e[1], 6) !== '\\dfrac{' + e[1] + '}{6}' ? ' = ' + fracTex(e[1], 6) : '') + '$']
+      };
+    }
+  });
+
+  reg({
+    id: 'pro-venn', sabers: [PRO], nivell: 2, cap: '',
+    fn: function (r) {
+      var t = r.tria([20, 30]), a, b, c;
+      do {
+        a = r.entre(6, t * 0.6); b = r.entre(4, t * 0.5); c = r.entre(1, Math.min(a, b) - 1);
+      } while (a + b - c >= t);
+      var u = a + b - c;
+      return {
+        enunciat: 'De $' + t + '$ alumnes, $' + a + '$ fan anglès, $' + b + '$ francès i $' + c +
+          '$ les dues llengües. Quina és la probabilitat que un alumne triat faci anglès o francès?',
+        resposta: '$' + fracTex(u, t) + '$',
+        passos: ['$P(A \\cup B) = P(A) + P(B) - P(A \\cap B)$, comptant alumnes: $' + a + ' + ' + b + ' - ' + c + ' = ' + u + '$.',
+                 '$P = \\dfrac{' + u + '}{' + t + '}' + (fracTex(u, t) !== '\\dfrac{' + u + '}{' + t + '}' ? ' = ' + fracTex(u, t) : '') + '$']
+      };
+    }
+  });
+
+  reg({
+    id: 'pro-condicionada', sabers: [PRO], nivell: 1, cap: '',
+    fn: function (r) {
+      var t = r.tria([20, 30]), a = r.tria([10, 12, 15]), c = r.tria([4, 5, 6, 8, 9]);
+      while (c >= a) c--;
+      return {
+        enunciat: 'A una classe de $' + t + '$ alumnes, $' + a + '$ fan teatre i $' + c +
+          '$ fan teatre i música. Triem un alumne que fa teatre: quina és la probabilitat que també faci música?',
+        resposta: '$' + fracTex(c, a) + '$',
+        passos: ['Ara només mirem els que fan teatre: $' + a + '$ alumnes.',
+                 '$P(\\text{música} \\mid \\text{teatre}) = \\dfrac{' + c + '}{' + a + '} = ' + fracTex(c, a) + '$']
+      };
+    }
+  });
+
+  reg({
+    id: 'pro-composta', sabers: [PRO], nivell: 1, cap: '',
+    fn: function (r) {
+      var v = r.entre(2, 4), b = r.entre(2, 3), t = v + b, num = v * (v - 1), den = t * (t - 1);
+      return {
+        enunciat: 'Una urna té $' + v + '$ boles vermelles i $' + b + '$ blaves. En traiem dues, una darrere de l\'altra i sense tornar-les. ' +
+          'Quina és la probabilitat que les dues siguin vermelles?',
+        resposta: '$' + fracTex(num, den) + '$',
+        passos: ['Primera: $\\dfrac{' + v + '}{' + t + '}$. Segona (queden $' + (t - 1) + '$ boles, $' + (v - 1) + '$ vermelles): $\\dfrac{' + (v - 1) + '}{' + (t - 1) + '}$.',
+                 '$P = \\dfrac{' + v + '}{' + t + '} \\cdot \\dfrac{' + (v - 1) + '}{' + (t - 1) + '} = ' + fracTex(num, den) + '$']
+      };
+    }
+  });
+
+  reg({
+    id: 'pro-grans-nombres', sabers: [PRO], nivell: 1, cap: '',
+    fn: function (r) {
+      var n = r.tria([50, 100]), c = n / 2 + r.entre(-n / 10, n / 10), f = c / n;
+      return {
+        enunciat: 'Tirem una moneda $' + n + '$ cops i surten $' + c + '$ cares. Quina és la freqüència relativa de cares?',
+        resposta: '$' + coma(f) + '$',
+        passos: ['$f = ' + c + ' : ' + n + ' = ' + coma(f) + '$.',
+                 'Llei dels grans nombres: amb molts més tirs, la freqüència s\'acosta a la probabilitat teòrica, $0{,}5$.']
+      };
+    }
+  });
+
+  /* ------------------------------------------- comprensió lectora de 4t == */
+  var PROBLEMES4 = [
+    ['Un telèfon de $100$ € té un $20\\,\\%$ de rebaixa i un val de $5$ €. Quant paguem?',
+     '$75$ €', ['La rebaixa és el $20\\,\\%$ de $100$, o sigui $20$ €: queden $80$ €.', 'Amb el val: $80 - 5 = 75$ €.']],
+    ['Una escala de $5$ m s\'aguanta contra una paret amb el peu a $3$ m de la paret. A quina alçada toca la paret?',
+     '$4$ m', ['L\'escala és la hipotenusa: $h = 5$, un catet val $3$.', '$c^2 = 5^2 - 3^2 = 16$, o sigui $c = 4$ m.']],
+    ['Un rectangle té un perímetre de $20$ cm i un costat de $4$ cm. Quant fa l\'altre costat?',
+     '$6$ cm', ['Dos costats de $4$ cm sumen $8$ cm.', 'Queden $20 - 8 = 12$ cm per als altres dos: $6$ cm cadascun.']],
+    ['La mitjana de $4$ notes és $7$. Tres notes són $6$, $8$ i $5$. Quina és la quarta?',
+     '$9$', ['La suma de les quatre és $4 \\cdot 7 = 28$.', '$28 - (6 + 8 + 5) = 9$.']],
+    ['En una classe de $25$ alumnes, $10$ practiquen futbol. Quin percentatge no practica futbol?',
+     '$60\\,\\%$', ['Practica futbol el $\\dfrac{10}{25} = 0{,}4$, o sigui el $40\\,\\%$.', 'No practica futbol el $100 - 40 = 60\\,\\%$.']],
+    ['Un préstec de $1\\,000$ € amb un $5\\,\\%$ d\'interès simple anual dura $2$ anys. Quin és el total que cal tornar?',
+     '$1\\,100$ €', ['Interès d\'un any: $1\\,000 \\cdot 0{,}05 = 50$ €.', 'En dos anys: $100$ €, i el total és $1\\,100$ €.']],
+    ['Un diagrama de sectors té $80$ persones. El sector dels que van en bus fa $90^\\circ$. Quantes en són?',
+     '$20$ persones', ['$90^\\circ$ són la quarta part de $360^\\circ$ ($90 \\cdot 4 = 360$).', 'Són la quarta part de les persones: $80 : 4 = 20$.']],
+    ['Una funció dona el benefici d\'una botiga: $B(x) = -x^2 + 6x$, amb $x$ en centenars d\'euros invertits. Per a $x = 2$, quin és el benefici?',
+     '$8$', ['$B(2) = -2^2 + 6 \\cdot 2 = -4 + 12 = 8$.']],
+    ['En un joc es guanya el $20\\,\\%$ de les partides. Si jugues $50$ vegades, quantes en guanyaràs?',
+     '$10$ partides', ['El $20\\,\\%$ de $50$ és $50 \\cdot 0{,}20 = 10$.']],
+    ['Un autocar fa $120$ km a $60$ km/h. A $80$ km/h, quant trigaria?',
+     '$1{,}5$ h', ['A $60$ km/h triga $120 : 60 = 2$ h; la velocitat i el temps són inversament proporcionals.',
+                  'A $80$ km/h: $120 : 80 = 1{,}5$ h.']]
+  ];
+
+  reg({
+    id: 'lec-problema4', sabers: ['4eso-apl-lec'], nivell: 1, cap: '',
+    fn: function (r) {
+      var p = r.tria(PROBLEMES4);
+      return { enunciat: p[0], resposta: p[1], passos: p[2] };
+    }
+  });
+
+  var VOCAB4 = [
+    ['Què és la hipotenusa d\'un triangle rectangle?', 'El costat oposat a l\'angle recte (el més llarg)',
+     'Els altres dos costats s\'anomenen catets.'],
+    ['Què és el discriminant d\'una equació de segon grau?', 'L\'expressió $\\Delta = b^2 - 4ac$',
+     'Segons el seu signe sabem quantes solucions reals té l\'equació.'],
+    ['Què és el vèrtex d\'una paràbola?', 'El punt més alt o més baix de la paràbola',
+     'És on la paràbola canvia de creixent a decreixent, o a l\'inrevés.'],
+    ['Què és un nombre irracional?', 'Un nombre amb infinits decimals sense període',
+     'No es pot escriure com a fracció; per exemple $\\sqrt{2}$ o $\\pi$.'],
+    ['Què és el factor multiplicador d\'un augment del $20\\,\\%$?', '$1{,}20$',
+     'Multiplicar per $1{,}20$ equival a sumar el $20\\,\\%$.'],
+    ['Què és una asímptota?', 'Una recta de la qual la gràfica s\'acosta sense arribar-hi a tocar',
+     'A $y = 2^x$, l\'eix $OX$ n\'és una.'],
+    ['Què és el recorregut d\'un conjunt de dades?', 'La diferència entre la dada més gran i la més petita',
+     'Mesura la dispersió de les dades.'],
+    ['Què és la probabilitat condicionada?', 'La probabilitat d\'un succés sabent que ja n\'ha passat un altre',
+     'Es llegeix «$P(A \\mid B)$»: probabilitat d\'$A$ sabent $B$.'],
+    ['Què és la marca de classe d\'un interval?', 'El punt mig de l\'interval',
+     'Representa tots els valors del grup en els càlculs.'],
+    ['Què són magnituds inversament proporcionals?', 'Quan una es multiplica, l\'altra es divideix pel mateix nombre',
+     'El seu producte es manté constant.']
+  ];
+
+  reg({
+    id: 'lec-vocab4', sabers: ['4eso-apl-lec'], nivell: 1, cap: '',
+    fn: function (r) {
+      var d = r.tria(VOCAB4);
+      return { enunciat: d[0], resposta: d[1], passos: [d[2]] };
     }
   });
 

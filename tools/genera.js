@@ -166,6 +166,106 @@ function aritmetica(it, errors, aplicades) {
     if (!r.startsWith(String((n - 2) * 180)))
       errors.push(`${it.gen}/${it.llavor}: suma d'angles incorrecta`);
   }
+
+  /* ---- 4t d'ESO · Aplicades -------------------------------------------- */
+  const nums = t => (String(t).match(/-?\d+(?:\{,\}\d+)?/g) || []).map(decimal);
+  const dols = t => (String(t).match(/\$(\d+)\$/g) || []).map(x => +x.slice(1, -1));
+  // Expressió en x amb ^, producte implícit i parèntesis: `(x - 3)(x + 5)`, `2x^2 - 4x`.
+  const poli = (expr, x) => {
+    const js = expr.replace(/\\cdot/g, '*').replace(/\s+/g, '')
+      .replace(/\^/g, '**').replace(/(\d|\))x/g, '$1*x').replace(/(\d|\))\(/g, '$1*(')
+      .replace(/\)(?=\()/g, ')*').replace(/x\(/g, 'x*(').replace(/x/g, '(' + x + ')')
+      .replace(/(\((?:[^()]|\([^()]*\))*\))\*\*(\d)/g, 'Math.pow($1,$2)');
+    if (!/^[-+*/().\dMathpow,]+$/.test(js)) throw new Error('expressió inesperada: ' + expr);
+    return Function('return (' + js + ');')();
+  };
+  const solucions = t => (t.match(/x = (-?\d+)/g) || []).map(q => +q.replace('x = ', ''));
+  if (['eq2-x2k', 'eq2-parentesi', 'eq2-producte', 'eq2-incompleta', 'eq2-formula'].includes(it.gen)) {
+    compta();
+    const [esq, dre] = mat(it.enunciat).split('=');
+    const xs = solucions(it.resposta.replace(/\$/g, ' '));
+    if (xs.length !== 2 && !(it.gen === 'eq2-x2k' && xs.length === 2)) malament('no hi ha dues solucions');
+    xs.forEach(x => { if (poli(esq, x) !== poli(dre, x)) malament(`x = ${x} no és solució`); });
+    if (new Set(xs).size !== xs.length) malament('solucions repetides');
+  }
+  if (it.gen === 'eq2-discriminant') {
+    compta();
+    const [a, b, c] = (() => {
+      const m = mat(it.enunciat).split('=')[0];
+      const a = +((m.match(/^(\d*)x\^2/) || [])[1] || 1);
+      const b = +((m.match(/([+-]) *(\d+)x(?! *\^)/) || []).slice(1, 3).join('') || 0);
+      const c = +(m.replace(/^.*x\^2/, '').replace(/[+-] *\d+x/, '').replace(/\s+/g, '') || 0);
+      return [a, b, c];
+    })();
+    const d = b * b - 4 * a * c;
+    if (+(it.resposta.match(/Delta = (-?\d+)/) || [])[1] !== d) malament('discriminant incorrecte');
+    const tipus = d > 0 ? 'dues' : d === 0 ? 'una' : 'cap';
+    if (!new RegExp(tipus).test(it.resposta)) malament('nombre de solucions incorrecte');
+  }
+  if (it.gen === 'qua-vertex') {
+    compta();
+    const f = mat(it.enunciat.replace(/^.*y = /, '$')).replace(/\$/g, '');
+    const [h, k] = nums(it.resposta.match(/\((.*)\)/)[1]);
+    const y = x => poli(f.replace(/\.$/, ''), x);
+    if (y(h) !== k) malament('el vèrtex no és a la paràbola');
+    if (!(y(h - 1) - k === y(h + 1) - k && Math.sign(y(h + 1) - k) !== 0)) malament('no és el vèrtex (simetria)');
+  }
+  if (it.gen === 'qua-talls') {
+    compta();
+    const f = it.enunciat.match(/y = ([^$]*)\$/)[1];
+    const [c0, p, q] = [nums(it.resposta.match(/OY\$: \$\(0, (-?\d+)\)/)[1])[0],
+                        ...nums(it.resposta.match(/OX\$: \$\((-?\d+), 0\)\$ i \$\((-?\d+), 0\)/).slice(1, 3).join(' '))];
+    if (poli(f, 0) !== c0 || poli(f, p) !== 0 || poli(f, q) !== 0) malament('punts de tall incorrectes');
+  }
+  if (it.gen === 'qua-valor') {
+    compta();
+    const f = it.enunciat.match(/y = ([^$]*)\$/)[1], x = +it.enunciat.match(/x = (-?\d+)/)[1];
+    if (poli(f, x) !== +it.resposta.match(/-?\d+/)[0]) malament('valor de la funció incorrecte');
+  }
+  if (it.gen === 'pct-variacio') {
+    compta();
+    const [preu, p] = dols(it.enunciat.replace(/\\,\\%/g, ''));
+    const nou = preu * (1 + (/augmenta/.test(e) ? 1 : -1) * p / 100);
+    if (Math.abs(nou - decimal(mat(it.resposta))) > 1e-9) malament('preu nou incorrecte');
+  }
+  if (it.gen === 'pct-iva') {
+    compta();
+    const [base, p] = dols(it.enunciat.replace(/\\,\\%/g, ''));
+    if (Math.abs(base * (1 + p / 100) - decimal(mat(it.resposta))) > 1e-9) malament('IVA incorrecte');
+  }
+  if (it.gen === 'pct-ponderada') {
+    compta();
+    const v = dols(it.enunciat.replace(/\\,\\%/g, ''));
+    if (Math.abs((v[0] * v[2] + v[1] * v[3]) / 100 - decimal(mat(it.resposta))) > 1e-9) malament('mitjana ponderada incorrecta');
+  }
+  if (it.gen === 'pit-hipotenusa' || it.gen === 'pit-catet') {
+    compta();
+    const [a, b] = dols(it.enunciat), x = +mat(it.resposta);
+    const ok = it.gen === 'pit-hipotenusa' ? a * a + b * b === x * x : a * a === b * b + x * x;
+    if (!ok) malament('Pitàgores no es compleix');
+  }
+  if (it.gen === 'est-desv-mitjana') {
+    compta();
+    const xs = nums(mat(it.enunciat)), m = xs.reduce((a, b) => a + b, 0) / xs.length,
+      dm = xs.reduce((a, b) => a + Math.abs(b - m), 0) / xs.length;
+    const [rm, rd] = nums(it.resposta.replace(/[^\d,{}]+/g, ' ').trim().split(/\s+/).join(' '));
+    if (rm !== m || rd !== dm) malament('mitjana o desviació mitjana incorrectes');
+  }
+  if (it.gen === 'pro-venn') {
+    compta();
+    const [t, a, b, c] = dols(it.enunciat), [n, d] = fraccio(it.resposta);
+    if ((a + b - c) / t !== n / d) malament('probabilitat de la unió incorrecta');
+  }
+  if (it.gen === 'pro-composta') {
+    compta();
+    const [v, b] = dols(it.enunciat), [n, d] = fraccio(it.resposta);
+    if (Math.abs(v * (v - 1) / ((v + b) * (v + b - 1)) - n / d) > 1e-9) malament('probabilitat composta incorrecta');
+  }
+  if (it.gen === 'exp-context') {
+    compta();
+    const [n0, t] = dols(it.enunciat), f = /duplica/.test(e) ? 2 : 3;
+    if (n0 * f ** t !== +mat(it.resposta).replace(/\\,/g, '')) malament('població incorrecta');
+  }
 }
 
 function comprova() {
@@ -199,7 +299,11 @@ function comprova() {
 
   ['div-mcd', 'div-mcm', 'arr-exacta', 'pol-diagonals', 'pol-angles',
    'equ-un-pas', 'equ-dos-passos', 'equ-dues-bandes', 'equ-parentesi', 'alg-comprova',
-   'fd-a-decimal', 'fd-a-fraccio', 'pro-regla-tres', 'are-basica', 'vol-cossos']
+   'fd-a-decimal', 'fd-a-fraccio', 'pro-regla-tres', 'are-basica', 'vol-cossos',
+   'eq2-x2k', 'eq2-parentesi', 'eq2-producte', 'eq2-incompleta', 'eq2-formula',
+   'eq2-discriminant', 'qua-vertex', 'qua-talls', 'qua-valor', 'pct-variacio',
+   'pct-iva', 'pct-ponderada', 'pit-hipotenusa', 'pit-catet', 'est-desv-mitjana',
+   'pro-venn', 'pro-composta', 'exp-context']
     .forEach(g => {
       if (!aplicades[g]) {
         errors.push(`${g}: la comprovació aritmètica no s'ha pogut aplicar ` +
