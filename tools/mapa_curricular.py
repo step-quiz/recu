@@ -582,12 +582,14 @@ BLOCS_DE_FRACCIONS = {"fraccions", "decimals", "percentatges",
 BLOCS_D_ARRELS = {"arr-entre", "rea-classifica", "trig-notables", "trig-reduccio"}
 
 # Ítems fora del banc a tot arreu. El banc de repàs és de resposta múltiple i
-# aquests tres enunciats es refereixen a unes opcions que aquí no s'imprimeixen
+# aquests enunciats es refereixen a unes opcions que aquí no s'imprimeixen
 # ("quin d'aquests valors pot tenir x?"). Sense la llista, no es poden respondre.
 EXCLOSOS = {
     "f1-8": "«quin d'aquests valors» — necessita les opcions del test",
     "f1-11": "«quin d'aquests parells» — necessita les opcions del test",
     "f12-238b": "«quin d'aquests és un exemple» — necessita les opcions del test",
+    "f11-369a": "«quina d'aquestes variables» — necessita les opcions del test",
+    "f11-369b": "«quina d'aquestes variables» — necessita les opcions del test",
 }
 
 # Fitxers de "Mates amb Bogdan": material d'ampliació, no genera preguntes.

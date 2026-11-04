@@ -145,7 +145,7 @@ d'aquell nivell— fins que la tornis a posar a «general».
 Serveix per al cas que ho va motivar: una prova de mínims amb un parell de
 preguntes més exigents, sense haver de tocar el nivell general.
 
-Els nivells que un contingut no té surten **desactivats**: només 47 dels 76
+Els nivells que un contingut no té surten **desactivats**: només 49 dels 76
 en tenen els tres. Angles de 1r d'ESO, per exemple, té 25 preguntes i totes de
 nivell 1.
 
@@ -252,7 +252,7 @@ contingut de 1r d'ESO a una prova de 2n, la pregunta va on li toca segons el
 currículum. Amb l'ordre «Barrejat» o «De fàcil a difícil» s'afegeix al final,
 perquè allà la posició curricular no vol dir res.
 
-El dau només pot existir on la pregunta ve d'un generador. Les 821 preguntes que
+El dau només pot existir on la pregunta ve d'un generador. Les 878 preguntes que
 venen del banc de `repas` són text ja escrit i no es poden reparametritzar; les
 766 pròpies sí, i el pou és infinit. 59 dels setanta-sis sabers tenen
 material propi, i a aquests, a la pràctica, no se'ls acaben mai les preguntes. Per decidir si una pregunta et va bé, l'has d'estar mirant.
@@ -310,7 +310,7 @@ tenies.
 
 ```
 El .docx del departament  →  l'estructura: 76 sabers, amb les seves hores
-repas (banc de 1029 items)→  821 preguntes, amb les seves solucions
+repas (banc de 1029 items)→  878 preguntes, amb les seves solucions
 assets/js/generadors.js   →  766 preguntes pròpies, i infinites variants
 llibre (296 PDFs)         →  referències per saber (al mapa; ara no es mostren)
 Mates amb Bogdan (12 PDF) →  material d'ampliació (al mapa; ara no es mostra)
@@ -319,7 +319,7 @@ Mates amb Bogdan (12 PDF) →  material d'ampliació (al mapa; ara no es mostra)
 Les referències al llibre i a Mates amb Bogdan les feia servir el *pla de repàs*,
 que s'ha tret de l'eina. `compila.py` les continua escrivint a `mapa.js`.
 
-Són **1587 preguntes** al catàleg. Un cop compilades, l'eina no distingeix les
+Són **1644 preguntes** al catàleg. Un cop compilades, l'eina no distingeix les
 d'un origen de les de l'altre.
 Els enunciats, les figures SVG i les resolucions són literalment els de `repas`;
 el que canvia és que aquí es fan servir com a **resposta oberta**, sense les
@@ -449,7 +449,7 @@ la regla de tres, l'àrea i el volum.
     assets/js/composa.js        repartiment i tria de preguntes (funció pura)
     assets/js/full.js           construcció dels dos documents imprimibles (prova i correcció)
     assets/js/app.js            controlador: arbre, estat i render
-    assets/js/banc.js           GENERAT — els 1587 ítems amb solució
+    assets/js/banc.js           GENERAT — els 1644 ítems amb solució
     assets/js/mapa.js           GENERAT — currículum, cobertura i índex del llibre
     assets/lib/katex/           KaTeX en local
 
@@ -571,11 +571,13 @@ rectes) no és al Repartiment i no té cap saber.
 preguntes de nivell 1: el banc `repas` no té material d'aquests continguts (el mateix
 passa amb l'exponencial d'A).
 
-**Pendent: posar al dia 1r–3r.** `compila.py --afegeix-repas` ha afegit 4t sense tocar
-res de 1r–3r (comprovat ítem per ítem amb el `banc.js` d'abans i el de després). El
-`repas` actual és més nou que el que va alimentar 1r–3r; per portar-los-hi cal una
-compilació completa (`--repas ../repas-main --llibre ../llibre-main`), que canvia ítems,
-dificultats i, per tant, el codi d'una prova ja generada. És el pas següent.
+**1r–3r al dia amb el `repas` nou.** Després d'afegir 4t amb `--afegeix-repas`, s'ha fet la
+compilació completa (`--repas ../repas-main --llibre ../llibre-main`). Canvis: 57 ítems
+nous (1.644 en total, dels quals 878 de `repas`), `dif` recalibrat (86 ítems canvien de nivell),
+15 solucions i 6 notes corregides i dos ítems de resposta múltiple més als exclosos
+(`f11-369a/b`). Els 766 ítems propis no es mouen. Una prova de 1r–3r generada abans
+d'aquest canvi pot donar una altra prova en regenerar-la. El llibre es tria ara pels
+llibres que referencia el mapa (`cursos_de_llibre`), no pels cursos de l'eina.
 
 ---
 

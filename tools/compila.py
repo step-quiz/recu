@@ -248,6 +248,21 @@ def item_de_repas(full, it, titol_bloc, bloc):
     }
 
 
+def cursos_de_llibre():
+    """
+    Llibres que el mapa referencia. No coincideixen amb els cursos de l'eina:
+    4t Acadèmiques (`4eso-aca`) fa servir el llibre `4eso`, i 4t Aplicades el
+    `4eso-apl`. Es llegeixen els ids que hi ha a les referències `llibre=[…]`.
+    """
+    ids = []
+    for curs in CURSOS:
+        for s in curs["sabers"]:
+            for (c, _u, _a) in s["llibre"]:
+                if c not in ids:
+                    ids.append(c)
+    return ids
+
+
 def llibre_de_curs(c, ruta_llibre, avisos):
     """
     Títols de les unitats i activitats d'un curs, per a les referències al
@@ -333,7 +348,7 @@ def repas_de_les_fonts(ruta_repas, ruta_llibre):
     # en afegir 3r el seu llibre no s'hi va llegir mai i el pla de repàs de
     # 3r sortia sense cap referència.
     llibre = {}
-    for c in [curs["id"] for curs in CURSOS]:
+    for c in cursos_de_llibre():
         d = llibre_de_curs(c, ruta_llibre, avisos)
         if d:
             llibre[c] = d
@@ -409,11 +424,11 @@ def repas_afegint(ruta_repas, sortida):
                 it["sabers"] = [sid]
                 items[g] = it
     llibre = dict(base["llibre"])
-    for c in CURSOS:
-        if c["id"] not in llibre:
-            d = llibre_de_curs(c["id"], None, [])
+    for c in cursos_de_llibre():
+        if c not in llibre:
+            d = llibre_de_curs(c, None, [])
             if d:
-                llibre[c["id"]] = d
+                llibre[c] = d
     return {"items": items, "per_saber": per_saber, "llibre": llibre,
             "vetats": fonts["vetats"], "avisos": avisos}
 
